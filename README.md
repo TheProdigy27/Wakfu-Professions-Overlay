@@ -18,13 +18,14 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 - **Ordre de craft** : les intermédiaires d'abord, avec le métier et le niveau requis.
 - **Plans** : un craft qu'il faut d'abord apprendre l'indique, avec le nom du plan à utiliser, par exemple « Nécessite : Plan "Kokordon" ».
 - Case **« je l'ai »** et quantités possédées, choix **crafter / acheter** pour chaque intermédiaire, choix de la **variante** de recette quand il y en a plusieurs.
+- **Quantités mises à jour en jeu** (option des réglages) : les objets de la liste que vous ramassez, craftez, achetez ou vendez s'ajoutent ou se retirent tout seuls, d'après le chat de Wakfu, et la case « je l'ai » se coche dès que vous avez le compte. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.
 - Mode **compact**, **opacité** réglable, **raccourci** global (`Ctrl+Maj+W` par défaut) pour afficher ou masquer le panneau sans quitter le jeu.
 - Interface en **français, anglais, espagnol et portugais**. Les noms des objets suivent la langue choisie : ils viennent directement des données du jeu.
 - Listes enregistrées au fil de l'eau ; les 10 dernières restent dans « Récents ».
 
 ## Ce qu'elle ne fait pas
 
-L'application **n'interagit jamais avec le jeu** : elle ne lit ni son écran, ni sa mémoire, ni ses fichiers ; elle n'intercepte pas son trafic réseau et ne simule aucune touche. Elle se contente d'afficher une fenêtre au premier plan.
+L'application **n'interagit jamais avec le jeu** : elle ne lit ni son écran ni sa mémoire ; elle n'intercepte pas son trafic réseau et ne simule aucune touche. Elle se contente d'afficher une fenêtre au premier plan.
 
 Le raccourci global est intercepté par Windows : le jeu ne le reçoit pas. Choisissez une combinaison que vous n'utilisez pas dans Wakfu.
 
@@ -45,7 +46,7 @@ Configuration requise : Windows 10 ou 11, 64 bits. Comptez environ 400 Mo de mé
 - **Langue** : au démarrage, celle de Windows (l'anglais si ce n'est pas l'une des quatre ci-dessus). Elle se change dans les réglages, ou dès l'écran d'accueil.
 - **Avec Wakfu** : cochez « Afficher le panneau au lancement de Wakfu » dans les réglages. L'application démarre alors avec Windows et attend dans la zone de notification ; le panneau s'affiche quand le jeu démarre et se masque à sa fermeture.
 - **Retour** (← en haut à gauche, `Alt+←` ou le bouton « précédent » de la souris) : revient à l'écran d'avant, par exemple aux Métiers après un clic de trop. Un objet ouvert par erreur puis quitté ainsi, sans rien y modifier, ne reste pas dans « Récents ».
-- **Réglages** (⚙) : langue, raccourci, opacité, lancement avec Windows ou avec Wakfu, mises à jour, accélération matérielle.
+- **Réglages** (⚙) : langue, raccourci, opacité, quantités mises à jour avec le chat de Wakfu, lancement avec Windows ou avec Wakfu, mises à jour, accélération matérielle.
 - **Journal** : menu de l'icône dans la zone de notification, « Ouvrir le journal ».
 
 ## Mises à jour
@@ -66,6 +67,8 @@ Aucune télémétrie, aucun compte. L'application ne contacte que :
 - `github.com` : recherche et téléchargement des mises à jour de l'application.
 
 Tout le reste (listes, réglages, journal) reste sur votre PC, dans `%APPDATA%\Wakfu Professions Overlay`.
+
+Avec l'option « quantités mises à jour avec le chat de Wakfu », l'application lit aussi le chat que Wakfu écrit sur votre PC (`%APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log`). Seules les lignes d'objets ramassés ou perdus lui servent ; rien de ce chat n'est enregistré ni envoyé.
 
 ## Licence
 

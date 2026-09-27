@@ -161,6 +161,10 @@ export const fr = {
     showWithWakfuHint: "Fonctionne quand l'application est lancée : cochez aussi « Lancer avec Windows » pour qu'elle attende le jeu.",
     autoUpdate: "Installer automatiquement les mises à jour de l'application",
     packagedOnly: "Disponible dans la version installée de l'application.",
+    owned: 'Quantités possédées',
+    ownedFromChat: 'Les mettre à jour avec le chat de Wakfu : objets ramassés, craftés, achetés ou vendus',
+    ownedFromChatHint:
+      "Pour les objets de la liste en cours, dès que l'option est cochée. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.",
     performance: 'Performances',
     hardwareAcceleration: 'Accélération matérielle',
     nextStart: 'Prise en compte au prochain démarrage.',

@@ -1,10 +1,12 @@
 // État du panneau (Zustand) : données du jeu, liste en cours et historique (enregistrés par main), crafts par métier,
-// réglages, fenêtre.
+// réglages, fenêtre, objets ramassés ou perdus en jeu.
 import { useMemo } from 'react';
 import { create } from 'zustand';
+import { applyChatChanges } from '../../core/chat/applyChat';
+import type { ChatItemChange } from '../../core/chat/chatLine';
 import type { SnapshotChange } from '../../core/data/diffIndex';
 import type { DataStatus } from '../../core/data/dataStatus';
-import type { GameIndexFile } from '../../core/data/indexFile';
+import type { GameIndexFile, Names } from '../../core/data/indexFile';
 import { loadIndex, type GameIndex } from '../../core/data/loadIndex';
 import { LOCALE_TAGS, matchLocale, messages, type Locale, type Messages } from '../../core/i18n';
 import { withJobLevel, type JobLevels } from '../../core/jobs/jobCrafts';
@@ -228,6 +230,8 @@ export function useNeeds(): { catalog: Catalog; list: CraftList; result: NeedsRe
 
 /** Index compact courant : chaque langue en tire son catalogue. */
 let indexFile: GameIndexFile | null = null;
+/** Noms des objets dans les quatre langues : le chat de Wakfu les donne dans celle du client de jeu. */
+let namesById = new Map<number, Names>();
 
 /** Noms du jeu dans la langue de l'interface, et recherche sur ces noms. */
 function buildCatalog(file: GameIndexFile, locale: Locale): Catalog {
@@ -241,6 +245,7 @@ async function refreshCatalog(): Promise<void> {
   const file = await window.api.getIndex();
   if (!file) return;
   indexFile = file;
+  namesById = new Map(file.items.map(([id, names]) => [id, names]));
   const catalog = buildCatalog(file, currentLocale());
   const { list, notices } = usePanel.getState();
   const reconciled = list ? reconcile(list, catalog.index) : null;
@@ -256,6 +261,14 @@ function applyLocale(locale: Locale): void {
   document.documentElement.lang = LOCALE_TAGS[locale];
   const { catalog } = usePanel.getState();
   if (indexFile && catalog && catalog.index.locale !== locale) usePanel.setState({ catalog: buildCatalog(indexFile, locale) });
+}
+
+/** Objets ramassés ou perdus en jeu : quantités possédées de la liste en cours, sauf si elle est en lecture seule. */
+function applyChat(changes: ChatItemChange[]): void {
+  const { loaded, list, catalog } = usePanel.getState();
+  if (!loaded || !list || !catalog || isObsolete(list, catalog.index)) return;
+  const next = applyChatChanges(list, changes, (id) => namesById.get(id));
+  if (next !== list) usePanel.setState({ list: next });
 }
 
 /** Chaque modification des listes part vers main, qui écrit state.json au plus 300 ms plus tard. */
@@ -280,6 +293,7 @@ export async function initStore(): Promise<void> {
     applyLocale(app.locale);
   });
   api.onUpdate((update) => usePanel.setState({ update }));
+  api.onChatChanges(applyChat);
   api.onOpenSettings(() => {
     if (usePanel.getState().window.compact) api.setCompact(false);
     usePanel.setState({ settingsOpen: true, onboarding: false });

@@ -145,6 +145,10 @@ export const en: Messages = {
     showWithWakfuHint: 'Works while the app is running: also tick "Launch with Windows" so that it waits for the game.',
     autoUpdate: 'Install app updates automatically',
     packagedOnly: 'Available in the installed version of the app.',
+    owned: 'Owned quantities',
+    ownedFromChat: 'Update them from the Wakfu chat: items picked up, crafted, bought or sold',
+    ownedFromChatHint:
+      'For the items of the current list, as soon as the option is ticked. What you already had (inventory, bank) and trades between players are still entered by hand.',
     performance: 'Performance',
     hardwareAcceleration: 'Hardware acceleration',
     nextStart: 'Takes effect on next launch.',

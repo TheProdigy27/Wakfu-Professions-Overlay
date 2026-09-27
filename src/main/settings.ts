@@ -55,6 +55,7 @@ export class SettingsController {
       hotkey: { accelerator: s.hotkeys.toggle, registered: this.hotkey.registered },
       launchAtLogin: s.launchAtLogin,
       showWithWakfu: s.showWithWakfu,
+      ownedFromChat: s.ownedFromChat,
       autoUpdate: s.autoUpdate,
       hardwareAcceleration: s.hardwareAcceleration,
       hardwareAccelerationActive: this.hardwareAccelerationActive,

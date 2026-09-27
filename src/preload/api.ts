@@ -1,4 +1,5 @@
 // API exposée au panneau par le preload (window.api) et canaux IPC autorisés. Types seulement côté renderer.
+import type { ChatItemChange } from '../core/chat/chatLine';
 import type { DataStatus } from '../core/data/dataStatus';
 import type { GameIndexFile } from '../core/data/indexFile';
 import type { Locale } from '../core/i18n/locale';
@@ -33,6 +34,8 @@ export interface AppState {
   launchAtLogin: boolean;
   /** Panneau affiché au lancement de Wakfu, masqué à sa fermeture. */
   showWithWakfu: boolean;
+  /** Quantités possédées mises à jour avec le chat de Wakfu. */
+  ownedFromChat: boolean;
   autoUpdate: boolean;
   hardwareAcceleration: boolean;
   /** Valeur au démarrage : un changement ne prend effet qu'au prochain lancement. */
@@ -62,8 +65,14 @@ export type UpdateStatus =
   | { state: 'error'; reason: 'check' | 'publishing' | 'not-published' }
   | { state: 'error'; reason: 'download'; version: string };
 
-export type BooleanOption = 'launchAtLogin' | 'showWithWakfu' | 'autoUpdate' | 'hardwareAcceleration';
-export const BOOLEAN_OPTIONS: readonly BooleanOption[] = ['launchAtLogin', 'showWithWakfu', 'autoUpdate', 'hardwareAcceleration'];
+export type BooleanOption = 'launchAtLogin' | 'showWithWakfu' | 'ownedFromChat' | 'autoUpdate' | 'hardwareAcceleration';
+export const BOOLEAN_OPTIONS: readonly BooleanOption[] = [
+  'launchAtLogin',
+  'showWithWakfu',
+  'ownedFromChat',
+  'autoUpdate',
+  'hardwareAcceleration',
+];
 
 export interface SavedLists {
   current: CraftList | null;
@@ -102,6 +111,8 @@ export interface PanelApi {
   saveHistory(history: CraftList[]): void;
   saveRecipePrefs(prefs: RecipePrefs): void;
   saveJobLevels(levels: JobLevels): void;
+  /** Objets ramassés ou perdus en jeu, lus dans le chat de Wakfu (réglage ownedFromChat). */
+  onChatChanges(listener: (changes: ChatItemChange[]) => void): () => void;
   setHotkey(accelerator: string): Promise<HotkeyChange>;
   /** Pendant la saisie d'un nouveau raccourci, l'actuel est désactivé. */
   suspendHotkey(suspended: boolean): void;
@@ -142,6 +153,7 @@ export const IPC = {
   saveHistory: 'lists:save-history',
   saveRecipePrefs: 'lists:save-prefs',
   saveJobLevels: 'jobs:save-levels',
+  chatChanges: 'chat:changes',
   setHotkey: 'settings:set-hotkey',
   suspendHotkey: 'settings:suspend-hotkey',
   setOption: 'settings:set-option',

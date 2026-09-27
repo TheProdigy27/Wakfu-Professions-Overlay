@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { computeNeeds, type NeedNode } from '../../../src/core/needs/computeNeeds';
 import { shoppingList } from '../../../src/core/needs/shopping';
 import {
+  addOwned,
   chooseRecipe,
   hasAll,
   MAX_HISTORY,
@@ -16,8 +17,10 @@ import {
   setView,
   toggleCollapsed,
   toggleHave,
+  treeItemIds,
   type CraftList,
 } from '../../../src/core/state/craftList';
+import { withSnapshot } from '../../../src/core/state/reconcile';
 import { loadFixture } from '../../helpers/fixture';
 import { IDS, needsCases, observe } from '../../helpers/needsCases';
 
@@ -88,6 +91,27 @@ describe('quantités', () => {
     list = setOwned(list, IDS.POUDRE, 0);
     expect(list.owned).toEqual({});
     expect(setOwned(coiffe(), IDS.POUDRE, -3).owned).toEqual({});
+  });
+
+  it('ajouter ou retirer une quantité possédée reste entre 0 et le maximum', () => {
+    let list = addOwned(coiffe(), IDS.POUDRE, 5, t1);
+    expect(list.owned).toEqual({ [IDS.POUDRE]: 5 });
+    expect(list.updatedAt).toBe(t1.toISOString());
+    list = addOwned(list, IDS.POUDRE, 3);
+    expect(list.owned).toEqual({ [IDS.POUDRE]: 8 });
+    expect(addOwned(list, IDS.POUDRE, -20).owned).toEqual({});
+    expect(addOwned(list, IDS.POUDRE, 1e9).owned).toEqual({ [IDS.POUDRE]: MAX_QTY });
+  });
+});
+
+describe('treeItemIds', () => {
+  it("objets de l'arbre complet d'après le snapshot, stock et achats compris", () => {
+    const list = setMode(setOwned(withSnapshot(coiffe(), index), IDS.COIFFE_M, 1), IDS.FIL, 'buy');
+    const ids = treeItemIds(list);
+    for (const id of [IDS.COIFFE_L, IDS.COIFFE_M, IDS.ORBE, IDS.FIBRE, IDS.FIL, IDS.POUDRE]) expect(ids.has(id)).toBe(true);
+    expect(ids.has(IDS.BAGUETTE)).toBe(false);
+    // Sans snapshot : la cible seule.
+    expect([...treeItemIds(coiffe())]).toEqual([IDS.COIFFE_L]);
   });
 });
 

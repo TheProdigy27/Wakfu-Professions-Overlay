@@ -1,10 +1,11 @@
 // Processus principal : instance unique, état sauvegardé, données du jeu, panneau, zone de notification, raccourci global,
-// affichage avec Wakfu, mises à jour de l'application.
+// affichage avec Wakfu, suivi du chat de Wakfu, mises à jour de l'application.
 import { fileURLToPath } from 'node:url';
 import { app, Menu, session, shell, type BrowserWindow } from 'electron';
 import iconPath from '../../resources/icon.ico?asset&asarUnpack';
 import { IPC } from '../preload/api';
 import { APP_USER_MODEL_ID } from './appId';
+import { ChatWatcher, chatLogPath } from './chatLog';
 import { GamedataService, type FetchLike } from './data/gamedataService';
 import { createIconLoader } from './data/iconCache';
 import { handleIconProtocol, registerIconScheme } from './data/iconProtocol';
@@ -27,6 +28,8 @@ const log = createLogger(dir);
  */
 const OFFLINE = process.env['WPO_OFFLINE'] === '1';
 const noNetwork: FetchLike = () => Promise.reject(new Error('réseau désactivé (WPO_OFFLINE)'));
+/** Tests : chat de Wakfu simulé, à la place de celui qu'écrit le jeu. */
+const CHAT_LOG = process.env['WPO_CHAT_LOG'] || chatLogPath(app.getPath('appData'));
 
 async function loadPanel(win: BrowserWindow): Promise<void> {
   const devServer = process.env['ELECTRON_RENDERER_URL'];
@@ -136,6 +139,13 @@ async function start(store: JsonStore): Promise<void> {
   // Après le cache : afficher le panneau lance la vérification des données, qui doit connaître la version en cache.
   wakfu.setEnabled(settings.settings.showWithWakfu);
   settings.onChange((state) => wakfu.setEnabled(state.showWithWakfu));
+  const chat = new ChatWatcher({
+    file: CHAT_LOG,
+    log,
+    onChanges: (changes) => panel.send(IPC.chatChanges, changes),
+  });
+  chat.setEnabled(settings.settings.ownedFromChat);
+  settings.onChange((state) => chat.setEnabled(state.ownedFromChat));
   updater.start();
   await data.check();
 }

@@ -6,7 +6,7 @@ import { MAX_JOB_LEVEL, type JobLevels } from '../jobs/jobCrafts';
 import { MAX_HISTORY, MAX_QTY, type CraftList, type RecipePrefs } from './craftList';
 import { DEFAULT_HOTKEY } from './hotkey';
 
-export const STATE_SCHEMA_VERSION = 4;
+export const STATE_SCHEMA_VERSION = 5;
 export const MIN_OPACITY = 0.3;
 
 export interface Rect {
@@ -29,6 +29,8 @@ export interface Settings {
   launchAtLogin: boolean;
   /** Panneau affiché au lancement de Wakfu, masqué à sa fermeture. */
   showWithWakfu: boolean;
+  /** Quantités possédées de la liste en cours mises à jour avec le chat de Wakfu (objets ramassés ou perdus). */
+  ownedFromChat: boolean;
   onboardingDone: boolean;
 }
 
@@ -81,6 +83,7 @@ export const SettingsSchema: z.ZodType<Settings> = z.object({
   autoUpdate: z.boolean(),
   launchAtLogin: z.boolean(),
   showWithWakfu: z.boolean(),
+  ownedFromChat: z.boolean(),
   onboardingDone: z.boolean(),
 });
 
@@ -103,6 +106,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   autoUpdate: true,
   launchAtLogin: false,
   showWithWakfu: false,
+  ownedFromChat: false,
   onboardingDone: false,
 };
 

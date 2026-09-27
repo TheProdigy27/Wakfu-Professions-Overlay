@@ -148,6 +148,10 @@ export const pt: Messages = {
     showWithWakfuHint: 'Funciona enquanto o aplicativo estiver aberto: marque também "Iniciar com o Windows" para que ele espere o jogo.',
     autoUpdate: 'Instalar automaticamente as atualizações do aplicativo',
     packagedOnly: 'Disponível na versão instalada do aplicativo.',
+    owned: 'Quantidades que tenho',
+    ownedFromChat: 'Atualizá-las com o chat do Wakfu: itens pegos, fabricados, comprados ou vendidos',
+    ownedFromChatHint:
+      'Para os itens da lista atual, assim que a opção estiver marcada. O que você já tinha (inventário, banco) e as trocas entre jogadores continuam sendo informados à mão.',
     performance: 'Desempenho',
     hardwareAcceleration: 'Aceleração de hardware',
     nextStart: 'Será aplicado na próxima inicialização.',

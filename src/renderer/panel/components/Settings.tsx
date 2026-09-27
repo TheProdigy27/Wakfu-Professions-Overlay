@@ -1,5 +1,5 @@
-// Réglages : langue, raccourci, opacité, lancement avec Windows, affichage avec Wakfu, mises à jour, accélération matérielle,
-// aide.
+// Réglages : langue, raccourci, opacité, quantités depuis le chat de Wakfu, lancement avec Windows, affichage avec Wakfu,
+// mises à jour, accélération matérielle, aide.
 import { useRef, useState, type KeyboardEvent } from 'react';
 import type { Messages } from '../../../core/i18n';
 import { acceleratorLabel, captureHotkey } from '../../../core/state/hotkey';
@@ -48,6 +48,19 @@ export function SettingsView() {
           />
           <span className="num">{m.common.percent(Math.round(opacity * 100))}</span>
         </label>
+      </section>
+
+      <section>
+        <h3>{t.owned}</h3>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={app.ownedFromChat}
+            onChange={(e) => api.setOption('ownedFromChat', e.target.checked)}
+          />
+          {t.ownedFromChat}
+        </label>
+        <p className="hint">{t.ownedFromChatHint}</p>
       </section>
 
       <section>

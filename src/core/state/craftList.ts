@@ -78,6 +78,21 @@ export function setOwned(list: CraftList, itemId: number, qty: number, now = new
   return touch(list, { owned }, now);
 }
 
+/** Ajoute (delta > 0) ou retire (delta < 0) une quantité possédée, sans descendre sous 0. */
+export function addOwned(list: CraftList, itemId: number, delta: number, now = new Date()): CraftList {
+  return setOwned(list, itemId, (list.owned[itemId] ?? 0) + delta, now);
+}
+
+/** Objets de l'arbre complet (cible, intermédiaires, ingrédients), quels que soient le stock et les achats : d'après le snapshot. */
+export function treeItemIds(list: CraftList): Set<number> {
+  const ids = new Set([list.target.itemId]);
+  for (const [itemId, recipe] of Object.entries(list.snapshot)) {
+    ids.add(Number(itemId));
+    for (let i = 0; i < recipe.ings.length; i += 2) ids.add(recipe.ings[i]!);
+  }
+  return ids;
+}
+
 /** Case « je l'ai » : cochée si la quantité possédée couvre toute la demande. */
 export function hasAll(list: CraftList, itemId: number, demand: number): boolean {
   return demand > 0 && (list.owned[itemId] ?? 0) >= demand;

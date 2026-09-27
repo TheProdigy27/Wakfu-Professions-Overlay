@@ -18,13 +18,14 @@ A craft preparation panel for **Wakfu**, shown on top of the game: search for an
 - **Craft order**: intermediates first, with the profession and level required.
 - **Blueprints**: a craft you must learn first says so, with the name of the blueprint to use, for example "Requires: "Kokoncord" Blueprint".
 - **"I have it"** checkbox and owned quantities, **craft / buy** choice for each intermediate, choice of recipe **variant** when there are several.
+- **Quantities updated in game** (settings option): the list items you pick up, craft, buy or sell are added or removed on their own, from the Wakfu chat, and the "I have it" box gets ticked as soon as you have enough. What you already had (inventory, bank) and trades between players are still entered by hand.
 - **Compact** mode, adjustable **opacity**, global **shortcut** (`Ctrl+Shift+W` by default) to show or hide the panel without leaving the game.
 - Interface in **English, French, Spanish and Portuguese**. Item names follow the language you choose: they come straight from the game data.
 - Lists are saved as you go; the last 10 stay under "Recent".
 
 ## What it does not do
 
-The app **never interacts with the game**: it does not read its screen, memory or files; it does not intercept its network traffic and does not simulate any key press. It only displays a window on top.
+The app **never interacts with the game**: it does not read its screen or memory; it does not intercept its network traffic and does not simulate any key press. It only displays a window on top.
 
 The global shortcut is intercepted by Windows: the game does not receive it. Choose a combination you do not use in Wakfu.
 
@@ -45,7 +46,7 @@ Requirements: Windows 10 or 11, 64-bit. Expect about 400 MB of RAM (Electron).
 - **Language**: the app starts in your Windows language (English if it is not one of the four above). Change it in the settings, or right away on the welcome screen.
 - **With Wakfu**: tick "Show the panel when Wakfu starts" in the settings. The app then launches with Windows and waits in the notification area; the panel appears when the game starts and hides when it closes.
 - **Back** (← at the top left, `Alt+←` or the mouse back button): returns to the previous screen, for example to Professions after a stray click. An item opened by mistake and left this way, without changing anything in it, does not stay in "Recent".
-- **Settings** (⚙): language, shortcut, opacity, launch with Windows or with Wakfu, updates, hardware acceleration.
+- **Settings** (⚙): language, shortcut, opacity, quantities updated from the Wakfu chat, launch with Windows or with Wakfu, updates, hardware acceleration.
 - **Log**: notification area icon menu, "Open log".
 
 ## Updates
@@ -66,6 +67,8 @@ No telemetry, no account. The app only contacts:
 - `github.com`: checking for and downloading app updates.
 
 Everything else (lists, settings, log) stays on your PC, in `%APPDATA%\Wakfu Professions Overlay`.
+
+With the "quantities updated from the Wakfu chat" option, the app also reads the chat that Wakfu writes on your PC (`%APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log`). Only the lines about items picked up or lost are used; nothing from this chat is saved or sent.
 
 ## License
 
