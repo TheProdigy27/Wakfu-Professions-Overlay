@@ -22,6 +22,8 @@ export const fr = {
     normalMode: 'Mode normal',
     hide: 'Masquer',
     hideWithHotkey: (hotkey: string) => `Masquer (${hotkey})`,
+    back: 'Retour',
+    backTitle: 'Retour (Alt+←, ou bouton « précédent » de la souris)',
   },
   views: { tree: 'Arbre', shopping: 'Courses', order: 'Ordre' },
   body: {

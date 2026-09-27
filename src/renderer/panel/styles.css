@@ -111,6 +111,17 @@ input[type='checkbox'] {
   line-height: 1;
 }
 
+.header-actions button:disabled {
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Bouton Retour, à gauche : même marge que les boutons de droite. */
+.header > .header-actions:first-child {
+  margin-left: -4px;
+}
+
 .search-row {
   display: flex;
   gap: 6px;

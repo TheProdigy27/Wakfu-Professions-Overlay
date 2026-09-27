@@ -19,6 +19,8 @@ export const en: Messages = {
     normalMode: 'Normal mode',
     hide: 'Hide',
     hideWithHotkey: (hotkey) => `Hide (${hotkey})`,
+    back: 'Back',
+    backTitle: 'Back (Alt+←, or the mouse back button)',
   },
   views: { tree: 'Tree', shopping: 'Shopping', order: 'Order' },
   body: {

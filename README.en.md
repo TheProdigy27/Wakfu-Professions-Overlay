@@ -44,6 +44,7 @@ Requirements: Windows 10 or 11, 64-bit. Expect about 400 MB of RAM (Electron).
 - **Panel not showing?** In exclusive full screen, Windows cannot display anything over the game. In Wakfu's options, switch to **windowed** or **borderless windowed** mode.
 - **Language**: the app starts in your Windows language (English if it is not one of the four above). Change it in the settings, or right away on the welcome screen.
 - **With Wakfu**: tick "Show the panel when Wakfu starts" in the settings. The app then launches with Windows and waits in the notification area; the panel appears when the game starts and hides when it closes.
+- **Back** (← at the top left, `Alt+←` or the mouse back button): returns to the previous screen, for example to Professions after a stray click. An item opened by mistake and left this way, without changing anything in it, does not stay in "Recent".
 - **Settings** (⚙): language, shortcut, opacity, launch with Windows or with Wakfu, updates, hardware acceleration.
 - **Log**: notification area icon menu, "Open log".
 

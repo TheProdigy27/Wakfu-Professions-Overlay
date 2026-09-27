@@ -19,6 +19,8 @@ export const es: Messages = {
     normalMode: 'Modo normal',
     hide: 'Ocultar',
     hideWithHotkey: (hotkey) => `Ocultar (${hotkey})`,
+    back: 'Atrás',
+    backTitle: 'Atrás (Alt+←, o el botón «atrás» del ratón)',
   },
   views: { tree: 'Árbol', shopping: 'Compras', order: 'Orden' },
   body: {

@@ -226,6 +226,34 @@ describe('application construite, hors réseau', () => {
     expect(await texts('.order-row .plan')).toEqual(['Requires: "Kokoncord" Blueprint']);
   });
 
+  it('retour : un objet ouvert par mégarde depuis les métiers ramène aux métiers puis à la liste d\'avant, sans trace dans les récents', async () => {
+    const target = () => page.locator('.target .item-name').innerText();
+    expect(await target()).toBe('Kokoncord');
+    await page.getByRole('button', { name: 'Professions' }).click();
+    await page.getByLabel('Profession').selectOption({ label: 'Tailor' });
+    await page.locator('.job-craft', { hasText: 'Durable Fiber' }).click();
+    expect(await target()).toBe('Durable Fiber');
+
+    // Alt+← : comme le bouton Retour. Les métiers reviennent tels qu'on les a laissés.
+    await page.keyboard.press('Alt+ArrowLeft');
+    await page.waitForSelector('.jobs');
+    expect(await page.getByLabel('Profession').inputValue()).toBe('79');
+    await page.getByRole('button', { name: 'Back' }).click();
+    expect(await page.locator('.jobs').count()).toBe(0);
+    expect(await target()).toBe('Kokoncord');
+    await page.getByRole('button', { name: 'Recent' }).click();
+    expect(await texts('.history-menu .item-name')).not.toContain('Durable Fiber');
+    await page.keyboard.press('Escape');
+
+    // Bouton « précédent » de la souris : écran d'avant, les métiers ouverts avant de choisir Kokoncord, avec la
+    // liste d'alors (la Coiffe Lardante mythique).
+    await page.evaluate("window.dispatchEvent(new MouseEvent('mouseup', { button: 3 }))");
+    await page.waitForSelector('.jobs');
+    await page.locator('.jobs .close').click();
+    expect(await target()).toBe('Larduous Hat');
+    expect(await page.locator('.target .meta').innerText()).toContain('Mythical');
+  });
+
   it('aucune erreur dans la console du panneau', () => {
     expect(consoleErrors).toEqual([]);
   });

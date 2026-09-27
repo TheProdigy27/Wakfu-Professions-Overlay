@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { DataStatus } from '../../core/data/dataStatus';
 import type { Messages } from '../../core/i18n';
 import { MAX_QTY, setTargetQty, setView, type ListView } from '../../core/state/craftList';
@@ -12,11 +13,12 @@ import { SearchBar } from './components/SearchBar';
 import { SettingsView } from './components/Settings';
 import { ShoppingList } from './components/ShoppingList';
 import { TreeView } from './components/TreeView';
-import { openSettings, updateList, useMessages, useNeeds, useObsolete, usePanel } from './store';
+import { goBack, openSettings, updateList, useCanGoBack, useMessages, useNeeds, useObsolete, usePanel } from './store';
 
 const VIEWS: ListView[] = ['tree', 'shopping', 'order'];
 
 export function App() {
+  useBackShortcuts();
   const compact = usePanel((s) => s.window.compact);
   const settingsOpen = usePanel((s) => s.settingsOpen) && !compact;
   const jobsOpen = usePanel((s) => s.jobsOpen) && !compact;
@@ -42,16 +44,47 @@ export function App() {
   );
 }
 
+/** Alt+← et bouton « précédent » de la souris : comme le bouton Retour. */
+function useBackShortcuts(): void {
+  useEffect(() => {
+    const onMouseUp = (event: MouseEvent) => {
+      if (event.button !== 3) return;
+      event.preventDefault();
+      goBack();
+    };
+    // defaultPrevented : touche déjà prise, par exemple par la saisie d'un nouveau raccourci dans les réglages.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || !event.altKey || event.key !== 'ArrowLeft') return;
+      event.preventDefault();
+      goBack();
+    };
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
+}
+
 function Header() {
   const m = useMessages();
   const compact = usePanel((s) => s.window.compact);
   const settingsOpen = usePanel((s) => s.settingsOpen);
   const hotkey = usePanel((s) => s.app?.hotkey);
+  const canGoBack = useCanGoBack();
   const needs = useNeeds();
   const target = needs?.catalog.index.items.get(needs.list.target.itemId);
   const t = m.header;
   return (
     <header className="header">
+      {!compact && (
+        <div className="header-actions">
+          <button type="button" title={t.backTitle} aria-label={t.back} disabled={!canGoBack} onClick={goBack}>
+            ←
+          </button>
+        </div>
+      )}
       <span className="title">
         {compact && needs ? (
           <>

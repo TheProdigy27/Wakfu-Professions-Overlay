@@ -12,6 +12,7 @@ import { NameVocabulary } from '../../core/match/vocabulary';
 import { createSearchIndex, type SearchIndex } from '../../core/match/searchIndex';
 import { computeNeeds, type NeedsResult } from '../../core/needs/computeNeeds';
 import { chooseRecipe, needsInput, newList, pushHistory, type CraftList, type RecipePrefs } from '../../core/state/craftList';
+import { listsAfterBack, pushScreen, type Screen } from '../../core/state/navigation';
 import { isObsolete, reconcile, withSnapshot } from '../../core/state/reconcile';
 import type { AppState, UpdateStatus, WindowState } from '../../preload/api';
 
@@ -52,6 +53,8 @@ interface PanelState {
   jobsFilter: JobsFilter;
   /** Niveau du joueur par métier, enregistré. */
   jobLevels: JobLevels;
+  /** Écrans quittés, le plus récent en dernier : bouton « Retour », le temps de la session. */
+  back: Screen[];
 }
 
 export const usePanel = create<PanelState>()(() => ({
@@ -70,14 +73,21 @@ export const usePanel = create<PanelState>()(() => ({
   jobsOpen: false,
   jobsFilter: { jobId: null, query: '', upgrades: true },
   jobLevels: {},
+  back: [],
 }));
+
+/** Écrans quittés, avec l'écran courant en plus : à appeler juste avant une navigation. */
+function leaving(s: PanelState): Screen[] {
+  return pushScreen(s.back, { jobs: s.jobsOpen, listId: s.list?.id ?? null });
+}
 
 /** Nouvelle liste : changer d'objet repart de zéro, l'ancienne liste passe dans l'historique. */
 export function selectTarget(itemId: number): void {
-  const { catalog, prefs, list, history } = usePanel.getState();
+  const state = usePanel.getState();
+  const { catalog, prefs, list, history } = state;
   if (!catalog) return;
   if (list?.target.itemId === itemId) {
-    usePanel.setState({ jobsOpen: false });
+    if (state.jobsOpen) usePanel.setState({ jobsOpen: false, back: leaving(state) });
     return;
   }
   usePanel.setState({
@@ -85,12 +95,14 @@ export function selectTarget(itemId: number): void {
     history: list ? pushHistory(history, list) : history,
     notices: [],
     jobsOpen: false,
+    back: leaving(state),
   });
 }
 
 /** Reprend une liste de l'historique, rapprochée des données du jeu si elles ont changé depuis. */
 export function restoreList(id: string): void {
-  const { catalog, list, history } = usePanel.getState();
+  const state = usePanel.getState();
+  const { catalog, list, history } = state;
   const chosen = history.find((l) => l.id === id);
   if (!chosen) return;
   const rest = history.filter((l) => l.id !== id);
@@ -100,6 +112,38 @@ export function restoreList(id: string): void {
     history: list ? pushHistory(rest, list) : rest,
     notices: reconciled.changes,
     jobsOpen: false,
+    back: leaving(state),
+  });
+}
+
+/** Retour possible : un écran quitté à retrouver, ou les réglages à fermer. Pas en mode compact. */
+export function useCanGoBack(): boolean {
+  return usePanel((s) => !s.window.compact && !s.onboarding && (s.settingsOpen || s.back.length > 0));
+}
+
+/**
+ * Retour à l'écran précédent : crafts par métier ouverts ou non, et la liste en cours à ce moment-là. Dans les
+ * réglages, les ferme.
+ */
+export function goBack(): void {
+  const state = usePanel.getState();
+  if (state.window.compact || state.onboarding) return;
+  if (state.settingsOpen) {
+    usePanel.setState({ settingsOpen: false });
+    return;
+  }
+  const screen = state.back.at(-1);
+  if (!screen) return;
+  const lists = listsAfterBack(state.list, state.history, screen.listId);
+  const changed = lists.current !== state.list;
+  const reconciled = changed && lists.current && state.catalog ? reconcile(lists.current, state.catalog.index) : null;
+  usePanel.setState({
+    back: state.back.slice(0, -1),
+    jobsOpen: screen.jobs,
+    list: reconciled?.list ?? lists.current,
+    history: lists.history,
+    // Bandeau des recettes modifiées : celui de la liste retrouvée.
+    ...(changed ? { notices: reconciled?.changes ?? [] } : {}),
   });
 }
 
@@ -124,7 +168,8 @@ export function openSettings(open: boolean): void {
 }
 
 export function openJobs(open: boolean): void {
-  usePanel.setState({ jobsOpen: open });
+  const state = usePanel.getState();
+  if (state.jobsOpen !== open) usePanel.setState({ jobsOpen: open, back: leaving(state) });
 }
 
 export function updateJobsFilter(patch: Partial<JobsFilter>): void {

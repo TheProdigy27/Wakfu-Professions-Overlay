@@ -19,6 +19,8 @@ export const pt: Messages = {
     normalMode: 'Modo normal',
     hide: 'Ocultar',
     hideWithHotkey: (hotkey) => `Ocultar (${hotkey})`,
+    back: 'Voltar',
+    backTitle: 'Voltar (Alt+←, ou o botão "voltar" do mouse)',
   },
   views: { tree: 'Árvore', shopping: 'Compras', order: 'Ordem' },
   body: {

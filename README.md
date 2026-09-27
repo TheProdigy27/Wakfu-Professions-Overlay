@@ -44,6 +44,7 @@ Configuration requise : Windows 10 ou 11, 64 bits. Comptez environ 400 Mo de mé
 - **Le panneau n'apparaît pas ?** En plein écran exclusif, Windows ne peut rien afficher par-dessus le jeu. Dans les options de Wakfu, passez en mode **fenêtré** ou **fenêtré sans bordure**.
 - **Langue** : au démarrage, celle de Windows (l'anglais si ce n'est pas l'une des quatre ci-dessus). Elle se change dans les réglages, ou dès l'écran d'accueil.
 - **Avec Wakfu** : cochez « Afficher le panneau au lancement de Wakfu » dans les réglages. L'application démarre alors avec Windows et attend dans la zone de notification ; le panneau s'affiche quand le jeu démarre et se masque à sa fermeture.
+- **Retour** (← en haut à gauche, `Alt+←` ou le bouton « précédent » de la souris) : revient à l'écran d'avant, par exemple aux Métiers après un clic de trop. Un objet ouvert par erreur puis quitté ainsi, sans rien y modifier, ne reste pas dans « Récents ».
 - **Réglages** (⚙) : langue, raccourci, opacité, lancement avec Windows ou avec Wakfu, mises à jour, accélération matérielle.
 - **Journal** : menu de l'icône dans la zone de notification, « Ouvrir le journal ».
 
