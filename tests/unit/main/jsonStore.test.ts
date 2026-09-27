@@ -5,7 +5,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defaultState, type PersistedState } from '../../../src/core/state/schema';
 import { JsonStore, SAVE_DELAY_MS } from '../../../src/main/store/jsonStore';
-import { readStateV1, readStateV3, STATE_V1_PATH, STATE_V3_PATH } from '../../helpers/fixture';
+import { readStateV1, readStateV4, STATE_V1_PATH, STATE_V4_PATH } from '../../helpers/fixture';
 
 let dir: string;
 beforeEach(async () => {
@@ -31,9 +31,9 @@ describe('JsonStore : chargement', () => {
   });
 
   it('relit un state.json au format courant', async () => {
-    await writeFile(statePath(), await readFile(STATE_V3_PATH));
+    await writeFile(statePath(), await readFile(STATE_V4_PATH));
     const store = new JsonStore({ dir });
-    expect(store.get()).toEqual(readStateV3());
+    expect(store.get()).toEqual(readStateV4());
     expect(store.loadProblem).toBeNull();
     expect(await readdir(dir)).toEqual(['state.json']);
   });
@@ -42,12 +42,17 @@ describe('JsonStore : chargement', () => {
     await writeFile(statePath(), await readFile(STATE_V1_PATH));
     const log = vi.fn();
     const store = new JsonStore({ dir, log });
-    // Format 1 → 3 : langue de Windows, panneau pas affiché avec Wakfu, tout le reste gardé.
+    // Format 1 → 4 : langue de Windows, panneau pas affiché avec Wakfu, aucun niveau de métier, tout le reste gardé.
     const v1 = readStateV1() as PersistedState;
-    expect(store.get()).toEqual({ ...v1, schemaVersion: 3, settings: { ...v1.settings, language: null, showWithWakfu: false } });
+    expect(store.get()).toEqual({
+      ...v1,
+      schemaVersion: 4,
+      settings: { ...v1.settings, language: null, showWithWakfu: false },
+      jobLevels: {},
+    });
     expect(store.loadProblem).toBeNull();
     expect(JSON.parse(await readFile(path.join(dir, 'state.v1.bak.json'), 'utf8'))).toEqual(v1);
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('migration du format 1 au format 3'));
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('migration du format 1 au format 4'));
   });
 
   it('fichier illisible : renommé state.corrupt-{date}.json, état vierge et problème signalé', async () => {
@@ -59,7 +64,7 @@ describe('JsonStore : chargement', () => {
   });
 
   it('fichier invalide (validation zod) : même traitement', async () => {
-    await writeFile(statePath(), JSON.stringify({ ...(readStateV3() as object), history: 'rien' }));
+    await writeFile(statePath(), JSON.stringify({ ...(readStateV4() as object), history: 'rien' }));
     const store = new JsonStore({ dir, now: NOW });
     expect(store.get()).toEqual(defaultState());
     expect(store.loadProblem?.kind).toBe('corrupt');
@@ -67,7 +72,7 @@ describe('JsonStore : chargement', () => {
   });
 
   it('fichier d\'une version plus récente de l\'application : gardé à côté, jamais écrasé', async () => {
-    const v9 = { ...(readStateV3() as object), schemaVersion: 9 };
+    const v9 = { ...(readStateV4() as object), schemaVersion: 9 };
     await writeFile(statePath(), JSON.stringify(v9));
     const store = new JsonStore({ dir });
     expect(store.get()).toEqual(defaultState());

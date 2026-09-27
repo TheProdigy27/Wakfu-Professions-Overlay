@@ -1,4 +1,5 @@
-// État du panneau (Zustand) : données du jeu, liste en cours et historique (enregistrés par main), réglages, fenêtre.
+// État du panneau (Zustand) : données du jeu, liste en cours et historique (enregistrés par main), crafts par métier,
+// réglages, fenêtre.
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { SnapshotChange } from '../../core/data/diffIndex';
@@ -6,6 +7,7 @@ import type { DataStatus } from '../../core/data/dataStatus';
 import type { GameIndexFile } from '../../core/data/indexFile';
 import { loadIndex, type GameIndex } from '../../core/data/loadIndex';
 import { LOCALE_TAGS, matchLocale, messages, type Locale, type Messages } from '../../core/i18n';
+import { withJobLevel, type JobLevels } from '../../core/jobs/jobCrafts';
 import { NameVocabulary } from '../../core/match/vocabulary';
 import { createSearchIndex, type SearchIndex } from '../../core/match/searchIndex';
 import { computeNeeds, type NeedsResult } from '../../core/needs/computeNeeds';
@@ -17,6 +19,14 @@ export interface Catalog {
   index: GameIndex;
   vocab: NameVocabulary;
   search: SearchIndex;
+}
+
+/** Crafts par métier : métier affiché et filtres, le temps de la session. */
+export interface JobsFilter {
+  /** null : le premier métier par ordre alphabétique. */
+  jobId: number | null;
+  query: string;
+  upgrades: boolean;
 }
 
 interface PanelState {
@@ -37,6 +47,11 @@ interface PanelState {
   settingsOpen: boolean;
   /** Accueil : premier lancement, ou « Revoir l'accueil » dans les réglages. */
   onboarding: boolean;
+  /** Crafts par métier, affichés à la place de la liste. */
+  jobsOpen: boolean;
+  jobsFilter: JobsFilter;
+  /** Niveau du joueur par métier, enregistré. */
+  jobLevels: JobLevels;
 }
 
 export const usePanel = create<PanelState>()(() => ({
@@ -52,16 +67,24 @@ export const usePanel = create<PanelState>()(() => ({
   notices: [],
   settingsOpen: false,
   onboarding: false,
+  jobsOpen: false,
+  jobsFilter: { jobId: null, query: '', upgrades: true },
+  jobLevels: {},
 }));
 
 /** Nouvelle liste : changer d'objet repart de zéro, l'ancienne liste passe dans l'historique. */
 export function selectTarget(itemId: number): void {
   const { catalog, prefs, list, history } = usePanel.getState();
-  if (!catalog || list?.target.itemId === itemId) return;
+  if (!catalog) return;
+  if (list?.target.itemId === itemId) {
+    usePanel.setState({ jobsOpen: false });
+    return;
+  }
   usePanel.setState({
     list: withSnapshot(newList(itemId, catalog.index.version, prefs), catalog.index),
     history: list ? pushHistory(history, list) : history,
     notices: [],
+    jobsOpen: false,
   });
 }
 
@@ -72,7 +95,12 @@ export function restoreList(id: string): void {
   if (!chosen) return;
   const rest = history.filter((l) => l.id !== id);
   const reconciled = catalog ? reconcile(chosen, catalog.index) : { list: chosen, changes: [] };
-  usePanel.setState({ list: reconciled.list, history: list ? pushHistory(rest, list) : rest, notices: reconciled.changes });
+  usePanel.setState({
+    list: reconciled.list,
+    history: list ? pushHistory(rest, list) : rest,
+    notices: reconciled.changes,
+    jobsOpen: false,
+  });
 }
 
 export function removeFromHistory(id: string): void {
@@ -93,6 +121,19 @@ export function selectRecipe(itemId: number, recipeId: number): void {
 
 export function openSettings(open: boolean): void {
   usePanel.setState({ settingsOpen: open });
+}
+
+export function openJobs(open: boolean): void {
+  usePanel.setState({ jobsOpen: open });
+}
+
+export function updateJobsFilter(patch: Partial<JobsFilter>): void {
+  usePanel.setState((s) => ({ jobsFilter: { ...s.jobsFilter, ...patch } }));
+}
+
+/** null : plus de filtre de niveau pour ce métier. */
+export function setJobLevel(jobId: number, level: number | null): void {
+  usePanel.setState((s) => ({ jobLevels: withJobLevel(s.jobLevels, jobId, level) }));
 }
 
 export function showOnboarding(show: boolean): void {
@@ -179,6 +220,7 @@ function persistChanges(): void {
     if (s.list !== prev.list) api.saveCurrent(s.list);
     if (s.history !== prev.history) api.saveHistory(s.history);
     if (s.prefs !== prev.prefs) api.saveRecipePrefs(s.prefs);
+    if (s.jobLevels !== prev.jobLevels) api.saveJobLevels(s.jobLevels);
   });
 }
 
@@ -213,6 +255,7 @@ export async function initStore(): Promise<void> {
     list: saved.current,
     history: saved.history,
     prefs: saved.recipePrefs,
+    jobLevels: saved.jobLevels,
     loaded: true,
   });
   applyLocale(app.locale);

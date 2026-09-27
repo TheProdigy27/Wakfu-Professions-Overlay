@@ -10,11 +10,13 @@ export function ItemIcon({ item }: { item: Item | undefined }) {
   // gfxId en échec (icône absente ou réseau indisponible) : image de remplacement.
   const [failed, setFailed] = useState<number>();
   if (!item || failed === item.gfxId) return <span className="icon icon-missing" aria-hidden="true" />;
+  // lazy : dans les longues listes (crafts par métier), seules les icônes proches de l'écran sont téléchargées.
   return (
     <img
       className="icon"
       src={`wicon://item/${item.gfxId}`}
       alt=""
+      loading="lazy"
       draggable={false}
       onError={() => setFailed(item.gfxId)}
     />

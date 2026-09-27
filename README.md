@@ -11,6 +11,7 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 ## Ce que fait l'application
 
 - **Recherche** d'un objet par son nom (tolérante aux fautes de frappe) ou son identifiant (`#29236`), avec une ligne par rareté.
+- **Crafts par métier** (bouton « Métiers ») : tout ce qu'un métier fabrique, rangé par niveau. Indiquez votre niveau, mémorisé pour chaque métier, pour ne voir que les crafts qui vous sont accessibles. Un clic prépare le craft.
 - **Arbre** de craft complet, sur autant de niveaux que nécessaire (intermédiaires compris).
 - **Liste de courses** agrégée : ce qu'il faut, ce que vous avez déjà, ce qui manque. Copie dans le presse-papiers.
 - **Provenance des ressources** récoltées : le métier et le niveau requis, par exemple « Mineur niv. 15 » à côté du Minerai de Cuivre. Les données du jeu ne disent pas quels monstres font tomber les autres ressources.

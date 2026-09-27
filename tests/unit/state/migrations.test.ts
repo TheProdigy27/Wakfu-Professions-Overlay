@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { migrate, NewerStateError, parseState, stateVersion, type Migration } from '../../../src/core/state/migrations';
 import { defaultState, PersistedStateSchema, STATE_SCHEMA_VERSION } from '../../../src/core/state/schema';
-import { readStateV1, readStateV2, readStateV3 } from '../../helpers/fixture';
+import { readStateV1, readStateV2, readStateV3, readStateV4 } from '../../helpers/fixture';
 import { IDS } from '../../helpers/needsCases';
 
 describe('state.json', () => {
@@ -19,6 +19,8 @@ describe('state.json', () => {
     expect(state.settings.language).toBeNull();
     // Format 3 : panneau pas affiché avec Wakfu.
     expect(state.settings.showWithWakfu).toBe(false);
+    // Format 4 : aucun niveau de métier indiqué.
+    expect(state.jobLevels).toEqual({});
   });
 
   it('la fixture v2 migrée garde la langue choisie', () => {
@@ -28,10 +30,17 @@ describe('state.json', () => {
     expect(state).toEqual({ ...parseState(readStateV1()), settings: { ...state.settings } });
   });
 
-  it('la fixture v3 est au format courant, affichée avec Wakfu', () => {
+  it('la fixture v3 migrée garde l\'affichage avec Wakfu', () => {
     const state = parseState(readStateV3());
     expect(state.settings).toMatchObject({ language: 'en', launchAtLogin: true, showWithWakfu: true });
     expect(state).toEqual({ ...parseState(readStateV2()), settings: { ...state.settings } });
+  });
+
+  it('la fixture v4 est au format courant, avec des niveaux de métier', () => {
+    const state = parseState(readStateV4());
+    expect(state).toEqual(readStateV4());
+    expect(state.jobLevels).toEqual({ 79: 125, 81: 60 });
+    expect(state).toEqual({ ...parseState(readStateV3()), jobLevels: state.jobLevels });
   });
 
   it("l'état par défaut est valide", () => {
@@ -45,7 +54,9 @@ describe('state.json', () => {
       return () => parseState(s);
     };
     expect(bad((s) => (s.settings.opacity = 0.1))).toThrow();
-    expect(() => parseState({ ...(readStateV3() as object), settings: { ...defaultState().settings, language: 'de' } })).toThrow();
+    expect(() => parseState({ ...(readStateV4() as object), settings: { ...defaultState().settings, language: 'de' } })).toThrow();
+    expect(() => parseState({ ...(readStateV4() as object), jobLevels: { 79: -1 } })).toThrow();
+    expect(() => parseState({ ...(readStateV4() as object), jobLevels: { tailleur: 125 } })).toThrow();
     expect(bad((s) => (s.current!.target.qty = 0))).toThrow();
     expect(bad((s) => ((s.current!.mode as Record<string, string>)['1'] = 'craft'))).toThrow();
     expect(bad((s) => ((s.current!.owned as Record<string, number>)['abc'] = 1))).toThrow();

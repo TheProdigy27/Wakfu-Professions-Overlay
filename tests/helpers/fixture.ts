@@ -11,6 +11,7 @@ export const FIXTURE_V2_PATH = path.join(FIXTURES, 'index-v2-modified.json');
 export const STATE_V1_PATH = path.join(FIXTURES, 'state-v1.json');
 export const STATE_V2_PATH = path.join(FIXTURES, 'state-v2.json');
 export const STATE_V3_PATH = path.join(FIXTURES, 'state-v3.json');
+export const STATE_V4_PATH = path.join(FIXTURES, 'state-v4.json');
 /** Fausse version suivante du jeu, dans index-v2-modified.json. */
 export const V2 = '1.93.2.0';
 
@@ -39,7 +40,12 @@ export function readStateV2(): unknown {
   return JSON.parse(readFileSync(STATE_V2_PATH, 'utf8'));
 }
 
-/** state.json au format courant (3) : celui de state-v2.json, affiché avec Wakfu et lancé avec Windows. */
+/** state.json au format 3 : celui de state-v2.json, affiché avec Wakfu et lancé avec Windows. */
 export function readStateV3(): unknown {
   return JSON.parse(readFileSync(STATE_V3_PATH, 'utf8'));
+}
+
+/** state.json au format courant (4) : celui de state-v3.json, avec des niveaux de métier (Tailleur 125, Ébéniste 60). */
+export function readStateV4(): unknown {
+  return JSON.parse(readFileSync(STATE_V4_PATH, 'utf8'));
 }

@@ -177,14 +177,21 @@ input[type='checkbox'] {
   flex: none;
 }
 
-.history-button {
+.history-button,
+.jobs-button {
+  flex: none;
   height: 100%;
   white-space: nowrap;
 }
 
-.history-button:disabled {
+.history-button:disabled,
+.jobs-button:disabled {
   color: var(--muted);
   cursor: default;
+}
+
+.jobs-button.active {
+  border-color: var(--accent);
 }
 
 .history-menu {
@@ -502,7 +509,8 @@ progress.download::-webkit-progress-value {
 }
 
 .shopping h3,
-.order h3 {
+.order h3,
+.jobs h3 {
   margin: 8px 8px 2px;
   font-size: 12px;
   font-weight: 600;
@@ -594,6 +602,99 @@ td.name-col {
 
 .order-row .meta {
   margin-left: auto;
+}
+
+/* Crafts par métier */
+.jobs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.jobs-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 6px 8px 0;
+}
+
+.jobs-tools select {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+.jobs-filter {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 3px 6px;
+}
+
+.jobs-level,
+.jobs-upgrades {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.jobs-level input {
+  width: 56px;
+}
+
+.jobs-head {
+  border-bottom: 1px solid var(--border);
+}
+
+.jobs-count {
+  margin: 6px 8px 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Niveau toujours visible en haut de la liste pendant le défilement. */
+.jobs .view {
+  padding-top: 0;
+}
+
+.jobs h3 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 6px 8px 2px;
+  background: var(--bg);
+}
+
+.jobs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.job-craft {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  text-align: left;
+}
+
+.job-craft:hover {
+  background: var(--surface);
+}
+
+.job-craft-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .status {

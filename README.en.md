@@ -11,6 +11,7 @@ A craft preparation panel for **Wakfu**, shown on top of the game: search for an
 ## What it does
 
 - **Search** for an item by name (typo-tolerant) or by ID (`#29236`), with one line per rarity.
+- **Crafts by profession** ("Professions" button): everything a profession makes, sorted by level. Enter your level, remembered for each profession, to see only the crafts available to you. One click prepares the craft.
 - Full craft **tree**, as many levels deep as needed (intermediates included).
 - Combined **shopping list**: what you need, what you already have, what is missing. Copy it to the clipboard.
 - **Where resources come from**: the gathering profession and required level, for example "Miner lvl. 15" next to Copper Ore. The game data does not say which monsters drop the other resources.

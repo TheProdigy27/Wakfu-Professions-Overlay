@@ -8,6 +8,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   1: (state) => ({ ...state, settings: { ...(state['settings'] as object), language: null } }),
   /** Réglage « Afficher le panneau au lancement de Wakfu », désactivé. */
   2: (state) => ({ ...state, settings: { ...(state['settings'] as object), showWithWakfu: false } }),
+  /** Niveaux de métier des crafts par métier : aucun indiqué. */
+  3: (state) => ({ ...state, jobLevels: {} }),
 };
 
 /** Fichier écrit par une version plus récente de l'application : on ne sait pas le relire, il ne doit pas être écrasé. */

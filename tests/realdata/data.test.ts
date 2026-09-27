@@ -5,6 +5,7 @@ import { buildIndex } from '../../src/core/data/buildIndex';
 import { parseIndexFile } from '../../src/core/data/indexFile';
 import { loadIndex } from '../../src/core/data/loadIndex';
 import { LOCALES, messages } from '../../src/core/i18n';
+import { jobCrafts, jobsByName } from '../../src/core/jobs/jobCrafts';
 import { readItemsFallback, readRawGamedata } from '../../src/main/data/gamedataService';
 import { loadFixture } from '../helpers/fixture';
 import { buildRealIndex, ensureRealRaw, REAL_DATA_VERSION, type RealIndex } from '../helpers/realData';
@@ -42,6 +43,21 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
     expect([...real.index.harvest.values()].filter((list) => list.length > 1).map((list) => list.length)).toEqual([]);
     // Aucune ressource récoltée ne se crafte.
     expect([...real.index.harvest.keys()].filter((id) => real.index.recipesByItem.has(id)).map(name)).toEqual([]);
+  });
+
+  it('crafts par métier : chaque objet craftable apparaît dans un seul métier ; liste calculée en moins de 20 ms', () => {
+    const counts = new Map<number, number>();
+    for (const { id } of jobsByName(real.index)) {
+      for (const group of jobCrafts(real.index, id).groups) {
+        for (const { item } of group.crafts) counts.set(item.id, (counts.get(item.id) ?? 0) + 1);
+      }
+    }
+    expect(counts.size).toBe(real.index.recipesByItem.size);
+    expect([...counts.values()].filter((n) => n > 1)).toEqual([]);
+    const t0 = performance.now();
+    const armurier = jobCrafts(real.index, 77, { query: 'e' });
+    expect(performance.now() - t0).toBeLessThan(20);
+    expect(armurier.total).toBe(960);
   });
 
   it('toutes les raretés présentes ont un nom, dans chaque langue', () => {

@@ -1,6 +1,7 @@
 // Test de bout en bout : l'application construite démarre hors réseau (WPO_OFFLINE) sur l'index
 // de fixture, puis parcours complet : recherche, T1a, case « je l'ai » partagée entre les vues, variante, ordre de
-// craft, mode compact, raccourci ; la liste est restaurée au redémarrage ; enfin l'interface passe en anglais.
+// craft, mode compact, raccourci ; la liste est restaurée au redémarrage ; l'interface passe en anglais ; enfin les
+// crafts par métier.
 // Cible : out/ (npm run build), ou l'exécutable empaqueté si WPO_E2E_EXE le désigne (release/win-unpacked/…).
 import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -185,6 +186,28 @@ describe('application construite, hors réseau', () => {
     await launch();
     expect(await page.locator('.target .item-name').innerText()).toBe('Larduous Hat');
     expect(await page.locator('.status').innerText()).toContain('Data 1.93.1.62');
+  });
+
+  it('crafts par métier : filtrés par niveau (retenu au redémarrage), un clic prépare le craft', async () => {
+    const openTailor = async () => {
+      await page.getByRole('button', { name: 'Professions' }).click();
+      await page.getByLabel('Profession').selectOption({ label: 'Tailor' });
+    };
+    await openTailor();
+    // Texte brut : les titres sont affichés en majuscules (CSS).
+    expect(await page.locator('.jobs h3').allTextContents()).toEqual(['Tailor lvl. 70', 'Tailor lvl. 78', 'Tailor lvl. 80']);
+    expect(await texts('.job-craft .item-name')).toEqual(['Durable Fiber', 'Larduous Hat', 'Larduous Hat']);
+    await page.getByLabel('My level').fill('78');
+    expect(await page.locator('.jobs-count').innerText()).toBe('2 of 3 crafts');
+    expect(await texts('.job-craft .item-name')).toEqual(['Durable Fiber', 'Larduous Hat']);
+
+    await close();
+    await launch();
+    await openTailor();
+    expect(await page.getByLabel('My level').inputValue()).toBe('78');
+    await page.locator('.job-craft', { hasText: 'Larduous Hat' }).click();
+    expect(await page.locator('.jobs').count()).toBe(0);
+    expect(await page.locator('.target .meta').innerText()).toBe('Lvl. 122 · Mythical · Helmet');
   });
 
   it('aucune erreur dans la console du panneau', () => {

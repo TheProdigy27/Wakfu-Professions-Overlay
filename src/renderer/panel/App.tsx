@@ -6,6 +6,7 @@ import { Banners } from './components/Banners';
 import { CraftOrder } from './components/CraftOrder';
 import { HistoryMenu } from './components/HistoryMenu';
 import { ItemIcon, ItemName, itemMeta } from './components/Item';
+import { JobsButton, JobsView } from './components/JobsView';
 import { Onboarding } from './components/Onboarding';
 import { SearchBar } from './components/SearchBar';
 import { SettingsView } from './components/Settings';
@@ -18,6 +19,7 @@ const VIEWS: ListView[] = ['tree', 'shopping', 'order'];
 export function App() {
   const compact = usePanel((s) => s.window.compact);
   const settingsOpen = usePanel((s) => s.settingsOpen) && !compact;
+  const jobsOpen = usePanel((s) => s.jobsOpen) && !compact;
   const onboarding = usePanel((s) => s.onboarding) && !compact;
   // Langue connue seulement avec l'état de l'application : rien n'est affiché avant, pour ne pas changer de langue à l'écran.
   const ready = usePanel((s) => s.app !== null);
@@ -28,11 +30,12 @@ export function App() {
       {!compact && !settingsOpen && (
         <div className="search-row">
           <SearchBar />
+          <JobsButton />
           <HistoryMenu />
         </div>
       )}
       {!compact && <Banners />}
-      <main className="content">{settingsOpen ? <SettingsView /> : <Body />}</main>
+      <main className="content">{settingsOpen ? <SettingsView /> : jobsOpen ? <JobsView /> : <Body />}</main>
       {!compact && <StatusBar />}
       {onboarding && <Onboarding />}
     </div>

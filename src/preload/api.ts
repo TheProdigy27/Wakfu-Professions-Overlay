@@ -2,6 +2,7 @@
 import type { DataStatus } from '../core/data/dataStatus';
 import type { GameIndexFile } from '../core/data/indexFile';
 import type { Locale } from '../core/i18n/locale';
+import type { JobLevels } from '../core/jobs/jobCrafts';
 import type { CraftList, RecipePrefs } from '../core/state/craftList';
 import type { HotkeyProblem } from '../core/state/hotkey';
 
@@ -68,6 +69,7 @@ export interface SavedLists {
   current: CraftList | null;
   history: CraftList[];
   recipePrefs: RecipePrefs;
+  jobLevels: JobLevels;
 }
 
 /**
@@ -93,12 +95,13 @@ export interface PanelApi {
   onApp(listener: (state: AppState) => void): () => void;
   /** Demande de la zone de notification : ouvrir les réglages. */
   onOpenSettings(listener: () => void): () => void;
-  /** Listes sauvegardées au dernier lancement. */
+  /** Listes et niveaux de métier sauvegardés au dernier lancement. */
   getLists(): Promise<SavedLists>;
   /** Enregistrement : state.json est écrit au plus 300 ms plus tard. */
   saveCurrent(list: CraftList | null): void;
   saveHistory(history: CraftList[]): void;
   saveRecipePrefs(prefs: RecipePrefs): void;
+  saveJobLevels(levels: JobLevels): void;
   setHotkey(accelerator: string): Promise<HotkeyChange>;
   /** Pendant la saisie d'un nouveau raccourci, l'actuel est désactivé. */
   suspendHotkey(suspended: boolean): void;
@@ -138,6 +141,7 @@ export const IPC = {
   saveCurrent: 'lists:save-current',
   saveHistory: 'lists:save-history',
   saveRecipePrefs: 'lists:save-prefs',
+  saveJobLevels: 'jobs:save-levels',
   setHotkey: 'settings:set-hotkey',
   suspendHotkey: 'settings:suspend-hotkey',
   setOption: 'settings:set-option',

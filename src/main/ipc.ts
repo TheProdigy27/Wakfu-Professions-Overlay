@@ -1,7 +1,7 @@
 // Canaux IPC du panneau (liste blanche de preload/api.ts). Seul le panneau peut les appeler ; tout ce qu'il envoie est validé.
 import { clipboard, ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import type { ZodType } from 'zod';
-import { CraftListSchema, HistorySchema, RecipePrefsSchema, type PersistedState } from '../core/state/schema';
+import { CraftListSchema, HistorySchema, JobLevelsSchema, RecipePrefsSchema, type PersistedState } from '../core/state/schema';
 import { IPC, type SavedLists } from '../preload/api';
 import type { GamedataService } from './data/gamedataService';
 import type { SettingsController } from './settings';
@@ -56,12 +56,13 @@ export function registerIpc({ data, updater, panel, store, settings, log, openLo
 
   handle(IPC.getApp, () => settings.state);
   handle(IPC.getLists, (): SavedLists => {
-    const { current, history, recipePrefs } = store.get();
-    return { current, history, recipePrefs };
+    const { current, history, recipePrefs, jobLevels } = store.get();
+    return { current, history, recipePrefs, jobLevels };
   });
   save(IPC.saveCurrent, 'current', CraftListSchema.nullable());
   save(IPC.saveHistory, 'history', HistorySchema);
   save(IPC.saveRecipePrefs, 'recipePrefs', RecipePrefsSchema);
+  save(IPC.saveJobLevels, 'jobLevels', JobLevelsSchema);
   handle(IPC.setHotkey, (value) => settings.setHotkey(value));
   on(IPC.suspendHotkey, (value) => settings.suspendHotkey(value === true));
   on(IPC.setOption, (name, value) => settings.setOption(name, value));

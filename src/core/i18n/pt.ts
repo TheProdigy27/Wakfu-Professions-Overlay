@@ -116,6 +116,21 @@ export const pt: Messages = {
     loading: 'Carregando os dados do jogo…',
     none: 'Nenhum item encontrado',
   },
+  jobs: {
+    button: 'Profissões',
+    title: 'Fabricações por profissão',
+    job: 'Profissão',
+    level: 'Meu nível',
+    levelTitle: 'Só as fabricações até este nível de profissão (lembrado para cada profissão)',
+    allLevels: 'todos',
+    filter: 'Filtrar por nome…',
+    upgrades: 'Melhorias',
+    upgradesTitle: 'Receitas de melhoria (raridade superior)',
+    count: (shown, total) =>
+      shown === total ? `${total} ${total === 1 ? 'fabricação' : 'fabricações'}` : `${shown} de ${total} fabricações`,
+    none: 'Nenhuma fabricação corresponde.',
+    choose: 'Preparar esta fabricação',
+  },
   settings: {
     title: 'Configurações',
     language: 'Idioma',

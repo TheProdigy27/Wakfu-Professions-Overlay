@@ -126,6 +126,22 @@ export const fr = {
     loading: 'Données du jeu en cours de chargement…',
     none: 'Aucun objet trouvé',
   },
+  /** Crafts par métier. */
+  jobs: {
+    button: 'Métiers',
+    title: 'Crafts par métier',
+    job: 'Métier',
+    level: 'Mon niveau',
+    levelTitle: 'Seulement les crafts de ce niveau de métier ou moins (mémorisé pour chaque métier)',
+    allLevels: 'tous',
+    filter: 'Filtrer par nom…',
+    upgrades: 'Améliorations',
+    upgradesTitle: "Recettes d'amélioration (rareté supérieure)",
+    count: (shown: number, total: number) =>
+      shown === total ? `${total} craft${total > 1 ? 's' : ''}` : `${shown} craft${shown > 1 ? 's' : ''} sur ${total}`,
+    none: 'Aucun craft ne correspond.',
+    choose: 'Préparer ce craft',
+  },
   settings: {
     title: 'Réglages',
     language: 'Langue',
