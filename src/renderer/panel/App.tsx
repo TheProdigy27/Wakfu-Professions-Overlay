@@ -39,7 +39,7 @@ export function App() {
 }
 
 function Header() {
-  const { compact, opacity } = usePanel((s) => s.window);
+  const compact = usePanel((s) => s.window.compact);
   const settingsOpen = usePanel((s) => s.settingsOpen);
   const hotkey = usePanel((s) => s.app?.hotkey);
   const needs = useNeeds();
@@ -56,19 +56,6 @@ function Header() {
         )}
       </span>
       <div className="header-actions">
-        {!compact && (
-          <input
-            type="range"
-            className="opacity"
-            min={0.3}
-            max={1}
-            step={0.05}
-            value={opacity}
-            title={`Opacité : ${Math.round(opacity * 100)} %`}
-            aria-label="Opacité"
-            onChange={(e) => window.api.setOpacity(Number(e.target.value))}
-          />
-        )}
         {!compact && (
           <button
             type="button"

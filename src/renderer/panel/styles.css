@@ -111,11 +111,6 @@ input[type='checkbox'] {
   line-height: 1;
 }
 
-.opacity {
-  width: 80px;
-  accent-color: var(--accent);
-}
-
 .search-row {
   display: flex;
   gap: 6px;

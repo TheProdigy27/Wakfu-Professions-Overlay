@@ -6,7 +6,9 @@ import electronUpdater from 'electron-updater';
 import type { UpdateStatus } from '../preload/api';
 
 const SIX_HOURS = 6 * 3600 * 1000;
-const NOT_PUBLISHED = ['ERR_UPDATER_NO_PUBLISHED_VERSIONS', 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND', 'HTTP_ERROR_404'];
+const NOT_PUBLISHED = ['ERR_UPDATER_NO_PUBLISHED_VERSIONS', 'HTTP_ERROR_404'];
+/** Étiquette déjà poussée, mais Release encore en construction : latest.yml n'y est pas encore (2 min environ). */
+const BEING_PUBLISHED = 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND';
 
 /**
  * Première ligne d'un message d'electron-updater, et l'URL en cause s'il y en a une : ses erreurs HTTP recopient
@@ -43,6 +45,8 @@ export class Updater {
     autoUpdater.logger = { info: log, warn: log, error: log };
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = this.enabled;
+    // Installeur complet (NSIS), pas d'installeur web.
+    autoUpdater.disableWebInstaller = true;
     autoUpdater.on('checking-for-update', () => this.set({ state: 'checking' }));
     autoUpdater.on('update-not-available', () => this.set({ state: 'latest' }));
     autoUpdater.on('update-available', (info) => this.set({ state: 'downloading', version: info.version, percent: 0 }));
@@ -55,7 +59,10 @@ export class Updater {
       // Détail déjà écrit dans le journal par le logger ci-dessus.
       let message = 'Recherche de mise à jour impossible : réseau indisponible ou GitHub injoignable.';
       if (this.current.state === 'downloading') message = `Téléchargement de la version ${this.current.version} interrompu.`;
-      // Dépôt sans version publiée (ou sans latest.yml), ou inaccessible (privé, renommé).
+      else if (error.code === BEING_PUBLISHED) {
+        message = 'Une nouvelle version est en cours de publication : réessayez dans quelques minutes.';
+      }
+      // Dépôt sans version publiée, ou inaccessible (privé, renommé).
       else if (NOT_PUBLISHED.includes(error.code ?? '') || /HttpError: 404\b/.test(String(error.message))) {
         message = 'Aucune version publiée n\'a été trouvée sur GitHub.';
       }

@@ -1,5 +1,5 @@
 // Réglages : raccourci, opacité, lancement avec Windows, mises à jour, accélération matérielle, aide.
-import { useState, type KeyboardEvent } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import { captureHotkey } from '../../../core/state/hotkey';
 import type { AppState } from '../../../preload/api';
 import { openSettings, showOnboarding, usePanel } from '../store';
@@ -159,11 +159,14 @@ function UpdateLine() {
 function HotkeyField({ app }: { app: AppState }) {
   const [capturing, setCapturing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const field = useRef<HTMLButtonElement>(null);
   const { api } = window;
 
   const start = () => {
     setMessage(null);
     setCapturing(true);
+    // Lancée par « Modifier » : le cadre doit recevoir les touches (le bouton cliqué, lui, disparaît).
+    field.current?.focus();
     // Sinon, appuyer sur le raccourci actuel masquerait le panneau au lieu d'être saisi.
     api.suspendHotkey(true);
   };
@@ -191,6 +194,7 @@ function HotkeyField({ app }: { app: AppState }) {
   return (
     <div className="hotkey-field">
       <button
+        ref={field}
         type="button"
         className={capturing ? 'hotkey capturing' : 'hotkey'}
         onClick={capturing ? undefined : start}

@@ -144,6 +144,14 @@ describe('application construite, hors réseau', () => {
     await page.waitForSelector('.app:not(.compact)');
   });
 
+  it('réglages : « Modifier » puis la combinaison au clavier change le raccourci, sans cliquer dans le cadre', async () => {
+    await page.getByRole('button', { name: 'Réglages' }).click();
+    await page.getByRole('button', { name: 'Modifier' }).click();
+    await page.keyboard.press('Control+Shift+F9');
+    await expect.poll(() => page.locator('.hotkey').innerText()).toBe('Ctrl+Maj+F9');
+    await page.getByRole('button', { name: 'Fermer' }).click();
+  });
+
   it('liste restaurée au redémarrage (objet, vue, variante)', async () => {
     await close();
     await launch();
