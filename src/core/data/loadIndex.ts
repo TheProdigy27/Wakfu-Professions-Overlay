@@ -1,8 +1,10 @@
-// Index en mémoire (Maps) construit à partir de l'index compact.
+// Index en mémoire (Maps) construit à partir de l'index compact, avec les noms d'une langue.
+import { LOCALES, type Locale } from '../i18n/locale';
 import type { GameIndexFile } from './indexFile';
 
 export interface Item {
   id: number;
+  /** Dans la langue de l'index. */
   name: string;
   level: number;
   rarity: number;
@@ -29,6 +31,8 @@ export interface Recipe {
 
 export interface GameIndex {
   version: string;
+  /** Langue des noms d'objets, de métiers et de types. */
+  locale: Locale;
   items: Map<number, Item>;
   recipes: Map<number, Recipe>;
   /** Recettes par objet produit, triées par niveau de métier puis id : la première est la recette par défaut. */
@@ -37,10 +41,11 @@ export interface GameIndex {
   types: Map<number, string>;
 }
 
-export function loadIndex(file: GameIndexFile): GameIndex {
+export function loadIndex(file: GameIndexFile, locale: Locale): GameIndex {
+  const lang = LOCALES.indexOf(locale);
   const items = new Map<number, Item>();
-  for (const [id, name, level, rarity, typeId, gfxId] of file.items) {
-    items.set(id, { id, name, level, rarity, typeId, gfxId });
+  for (const [id, names, level, rarity, typeId, gfxId] of file.items) {
+    items.set(id, { id, name: names[lang]!, level, rarity, typeId, gfxId });
   }
   const recipes = new Map<number, Recipe>();
   const recipesByItem = new Map<number, Recipe[]>();
@@ -56,11 +61,12 @@ export function loadIndex(file: GameIndexFile): GameIndex {
   for (const list of recipesByItem.values()) list.sort((a, b) => a.jobLevel - b.jobLevel || a.id - b.id);
   return {
     version: file.gameVersion,
+    locale,
     items,
     recipes,
     recipesByItem,
-    jobs: new Map(file.jobs),
-    types: new Map(file.types),
+    jobs: new Map(file.jobs.map(([id, names]) => [id, names[lang]!])),
+    types: new Map(file.types.map(([id, names]) => [id, names[lang]!])),
   };
 }
 

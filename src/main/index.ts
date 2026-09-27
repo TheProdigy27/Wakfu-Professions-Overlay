@@ -99,11 +99,8 @@ async function start(store: JsonStore): Promise<void> {
     },
   });
   if (!registered) {
-    tray.displayBalloon({
-      iconType: 'warning',
-      title: 'Raccourci indisponible',
-      content: `${settings.hotkeyLabel} est déjà utilisé par une autre application. Choisissez-en un autre dans les réglages du panneau.`,
-    });
+    const t = settings.messages.hotkeyBalloon;
+    tray.displayBalloon({ iconType: 'warning', title: t.title, content: t.content(settings.hotkeyLabel) });
   }
 
   app.on('second-instance', () => panel.show());
@@ -116,7 +113,7 @@ async function start(store: JsonStore): Promise<void> {
   app.on('window-all-closed', () => {});
 
   log(`démarrage ${app.getName()} ${app.getVersion()}${OFFLINE ? ' (hors réseau)' : ''}`);
-  if (store.loadProblem) log(store.loadProblem);
+  if (store.loadProblem) log(`state.json mis de côté (${store.loadProblem.file}), état vierge`);
   await data.loadCache();
   // Lancement avec Windows : l'application attend dans la zone de notification.
   if (!process.argv.includes(HIDDEN_ARG)) panel.show();

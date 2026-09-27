@@ -1,34 +1,30 @@
-// Accueil au premier lancement : raccourci, focus, plein écran, listes, données Ankama.
-import { showOnboarding, usePanel } from '../store';
+// Accueil au premier lancement : langue, raccourci, focus, plein écran, listes, données Ankama.
+import { acceleratorLabel } from '../../../core/state/hotkey';
+import { showOnboarding, useMessages, usePanel } from '../store';
+import { LanguageSelect } from './LanguageSelect';
 
 export function Onboarding() {
+  const m = useMessages();
   const hotkey = usePanel((s) => s.app?.hotkey);
+  const t = m.onboarding;
   return (
     <div className="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
       <div className="onboarding-card">
-        <h2 id="onboarding-title">Bienvenue</h2>
+        <div className="onboarding-head">
+          <h2 id="onboarding-title">{t.title}</h2>
+          <LanguageSelect />
+        </div>
         <ul>
-          <li>
-            <strong>Afficher / masquer</strong> : {hotkey?.label ?? 'le raccourci'} (modifiable dans les réglages ⚙), ou un clic
-            sur l'icône dans la zone de notification. Le panneau s'affiche sans prendre le clavier du jeu : cliquez dedans pour
-            écrire, puis dans le jeu pour y revenir.
-          </li>
-          <li>
-            <strong>Plein écran</strong> : Windows ne peut rien afficher par-dessus un jeu en plein écran exclusif. Réglez
-            Wakfu en mode fenêtré ou fenêtré sans bordure.
-          </li>
-          <li>
-            <strong>Vos listes</strong> sont enregistrées au fil de l'eau ; les 10 dernières restent dans « Récents », à
-            droite de la recherche.
-          </li>
-          <li>
-            <strong>Données du jeu</strong> : téléchargées depuis les serveurs d'Ankama au premier lancement, puis gardées
-            sur ce PC.
-          </li>
+          {t.tips(hotkey && acceleratorLabel(hotkey.accelerator, m)).map(([strong, rest]) => (
+            <li key={strong}>
+              <strong>{strong}</strong>
+              {rest}
+            </li>
+          ))}
         </ul>
-        <p className="about">Outil non officiel, non affilié à Ankama. Données et icônes © Ankama.</p>
+        <p className="about">{m.common.disclaimer}</p>
         <button type="button" className="primary" autoFocus onClick={() => showOnboarding(false)}>
-          Compris
+          {t.ok}
         </button>
       </div>
     </div>

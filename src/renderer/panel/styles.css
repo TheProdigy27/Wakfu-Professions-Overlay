@@ -744,9 +744,30 @@ p.error {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
 }
 
+.onboarding-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 6px;
+}
+
 .onboarding-card h2 {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 16px;
+}
+
+.onboarding-card .field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.onboarding-card .field select {
+  color: var(--text);
 }
 
 .onboarding-card ul {

@@ -1,6 +1,7 @@
-// Réglages : raccourci, lancement avec Windows, mises à jour, accélération matérielle, accueil.
+// Réglages : langue, raccourci, lancement avec Windows, mises à jour, accélération matérielle, accueil.
 import { app } from 'electron';
-import { acceleratorLabel, comboProblem, DEFAULT_HOTKEY, parseAccelerator } from '../core/state/hotkey';
+import { isLocale, matchLocale, messages, type Locale, type Messages } from '../core/i18n';
+import { acceleratorLabel, comboProblem, DEFAULT_HOTKEY, parseAccelerator, type HotkeyProblem } from '../core/state/hotkey';
 import type { Settings } from '../core/state/schema';
 import { BOOLEAN_OPTIONS, type AppState, type BooleanOption, type HotkeyChange } from '../preload/api';
 import type { ToggleHotkey } from './shortcuts';
@@ -9,15 +10,17 @@ import type { JsonStore } from './store/jsonStore';
 /** Argument du lancement avec Windows : l'application démarre dans la zone de notification, panneau masqué. */
 export const HIDDEN_ARG = '--hidden';
 
-function hotkeyProblem(accelerator: string): string | null {
+function hotkeyProblem(accelerator: string): HotkeyProblem | 'invalid' | null {
   const combo = parseAccelerator(accelerator);
-  return combo ? comboProblem(combo) : 'Raccourci invalide.';
+  return combo ? comboProblem(combo) : 'invalid';
 }
 
 export class SettingsController {
   private readonly listeners = new Set<(state: AppState) => void>();
   /** Valeur au démarrage : app.disableHardwareAcceleration() ne s'applique qu'avant app.whenReady(). */
   private readonly hardwareAccelerationActive: boolean;
+  /** Langue de Windows, si elle est traduite : celle de l'interface tant qu'on n'en a pas choisi une. */
+  private readonly systemLocale = matchLocale(app.getPreferredSystemLanguages());
 
   constructor(
     private readonly store: JsonStore,
@@ -32,14 +35,24 @@ export class SettingsController {
     return this.store.get().settings;
   }
 
+  get locale(): Locale {
+    return this.settings.language ?? this.systemLocale;
+  }
+
+  /** Textes de la zone de notification et des boîtes de dialogue. */
+  get messages(): Messages {
+    return messages(this.locale);
+  }
+
   get hotkeyLabel(): string {
-    return acceleratorLabel(this.settings.hotkeys.toggle);
+    return acceleratorLabel(this.settings.hotkeys.toggle, this.messages);
   }
 
   get state(): AppState {
     const s = this.settings;
     return {
-      hotkey: { accelerator: s.hotkeys.toggle, label: this.hotkeyLabel, registered: this.hotkey.registered },
+      locale: this.locale,
+      hotkey: { accelerator: s.hotkeys.toggle, registered: this.hotkey.registered },
       launchAtLogin: s.launchAtLogin,
       autoUpdate: s.autoUpdate,
       hardwareAcceleration: s.hardwareAcceleration,
@@ -59,6 +72,7 @@ export class SettingsController {
 
   /** Au démarrage : enregistre le raccourci mémorisé ; false s'il est déjà pris par une autre application. */
   start(): boolean {
+    this.log(`langue : ${this.locale}${this.settings.language ? '' : ' (celle de Windows)'}`);
     let accelerator = this.settings.hotkeys.toggle;
     if (hotkeyProblem(accelerator)) {
       this.log(`raccourci mémorisé ${accelerator} refusé : retour à ${DEFAULT_HOTKEY}`);
@@ -74,17 +88,16 @@ export class SettingsController {
 
   /** Nouveau raccourci, saisi dans les réglages. S'il est refusé, l'ancien reste en place. */
   setHotkey(accelerator: unknown): HotkeyChange {
-    if (typeof accelerator !== 'string') return { ok: false, message: 'Raccourci invalide.' };
+    if (typeof accelerator !== 'string') return { ok: false, problem: 'invalid' };
     const problem = hotkeyProblem(accelerator);
-    if (problem) return { ok: false, message: problem };
-    const label = acceleratorLabel(accelerator);
+    if (problem) return { ok: false, problem };
     const result = this.hotkey.set(accelerator);
     this.emit();
     if (result === 'taken') {
       this.log(`raccourci ${accelerator} : déjà utilisé par une autre application`);
-      return { ok: false, message: `${label} est déjà utilisé par une autre application : choisissez-en un autre.` };
+      return { ok: false, problem: 'taken' };
     }
-    if (result === 'invalid') return { ok: false, message: `${label} ne peut pas servir de raccourci global.` };
+    if (result === 'invalid') return { ok: false, problem: 'not-global' };
     if (accelerator !== this.settings.hotkeys.toggle) this.log(`raccourci : ${accelerator}`);
     this.patch({ hotkeys: { toggle: accelerator } });
     return { ok: true };
@@ -99,6 +112,12 @@ export class SettingsController {
     if (!BOOLEAN_OPTIONS.includes(name as BooleanOption) || typeof value !== 'boolean') return;
     this.patch({ [name as BooleanOption]: value });
     if (name === 'launchAtLogin') this.applyLoginItem();
+  }
+
+  setLanguage(locale: unknown): void {
+    if (!isLocale(locale) || locale === this.settings.language) return;
+    this.log(`langue : ${locale}`);
+    this.patch({ language: locale });
   }
 
   completeOnboarding(): void {

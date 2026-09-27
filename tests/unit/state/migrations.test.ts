@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { migrate, NewerStateError, parseState, stateVersion, type Migration } from '../../../src/core/state/migrations';
 import { defaultState, PersistedStateSchema, STATE_SCHEMA_VERSION } from '../../../src/core/state/schema';
-import { readStateV1 } from '../../helpers/fixture';
+import { readStateV1, readStateV2 } from '../../helpers/fixture';
 import { IDS } from '../../helpers/needsCases';
 
 describe('state.json', () => {
@@ -15,6 +15,14 @@ describe('state.json', () => {
     expect(state.recipePrefs).toEqual({ [IDS.ORBE]: 7362 });
     expect(state.settings.hotkeys.toggle).toBe('CommandOrControl+Alt+Shift+K');
     expect(state.window.normal).toEqual({ x: 1476, y: 24, width: 420, height: 640 });
+    // Format 2 : langue de Windows tant qu'on n'en a pas choisi une.
+    expect(state.settings.language).toBeNull();
+  });
+
+  it('la fixture v2 est au format courant, avec la langue choisie', () => {
+    const state = parseState(readStateV2());
+    expect(state.settings.language).toBe('en');
+    expect(state).toEqual({ ...parseState(readStateV1()), settings: { ...state.settings } });
   });
 
   it("l'état par défaut est valide", () => {
@@ -28,6 +36,7 @@ describe('state.json', () => {
       return () => parseState(s);
     };
     expect(bad((s) => (s.settings.opacity = 0.1))).toThrow();
+    expect(() => parseState({ ...(readStateV2() as object), settings: { ...defaultState().settings, language: 'de' } })).toThrow();
     expect(bad((s) => (s.current!.target.qty = 0))).toThrow();
     expect(bad((s) => ((s.current!.mode as Record<string, string>)['1'] = 'craft'))).toThrow();
     expect(bad((s) => ((s.current!.owned as Record<string, number>)['abc'] = 1))).toThrow();

@@ -65,6 +65,7 @@ export function registerIpc({ data, updater, panel, store, settings, log, openLo
   handle(IPC.setHotkey, (value) => settings.setHotkey(value));
   on(IPC.suspendHotkey, (value) => settings.suspendHotkey(value === true));
   on(IPC.setOption, (name, value) => settings.setOption(name, value));
+  on(IPC.setLanguage, (value) => settings.setLanguage(value));
   on(IPC.completeOnboarding, () => settings.completeOnboarding());
   on(IPC.restart, restart);
   handle(IPC.getUpdate, () => updater.status);

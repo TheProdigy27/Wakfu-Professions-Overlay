@@ -3,7 +3,13 @@ import { z } from 'zod';
 
 const id = z.number().int().nonnegative();
 const int = z.number().int();
-const frTitle = z.object({ fr: z.string() });
+/** Nom dans les langues de l'interface. Le français est toujours présent : il remplace une traduction absente. */
+const title = z.object({
+  fr: z.string(),
+  en: z.string().optional(),
+  es: z.string().optional(),
+  pt: z.string().optional(),
+});
 
 export const ConfigSchema = z.object({ version: z.string().regex(/^\d+(\.\d+)+$/) });
 
@@ -31,7 +37,7 @@ export const RawResultSchema = z.object({
 
 export const RawCategorySchema = z.object({
   definition: z.object({ id, isArchive: z.boolean(), isNoCraft: z.boolean(), isHidden: z.boolean() }),
-  title: frTitle,
+  title,
 });
 
 export const RawJobItemSchema = z.object({
@@ -42,13 +48,13 @@ export const RawJobItemSchema = z.object({
     itemTypeId: id,
     graphicParameters: z.object({ gfxId: id }),
   }),
-  title: frTitle,
+  title,
 });
 
 export const RawItemTypeSchema = z.object({
   definition: z.object({ id }),
   // 2 types n'ont pas de titre en 1.93.1.62.
-  title: z.object({ fr: z.string().optional() }).nullish(),
+  title: title.partial().nullish(),
 });
 
 /** items.json : téléchargé seulement en repli, si jobsItems.json ne couvre plus tous les ids. */
@@ -61,7 +67,7 @@ export const RawItemSchema = z.object({
       graphicParameters: z.object({ gfxId: id }),
     }),
   }),
-  title: frTitle,
+  title,
 });
 
 /** Les 6 fichiers toujours téléchargés (≈ 9,3 Mo en 1.93.1.62). */
@@ -81,6 +87,7 @@ export const RAW_FILE_NAMES = Object.keys(RAW_FILE_SCHEMAS) as RawFileName[];
 
 export type RawGamedata = { [K in RawFileName]: z.infer<(typeof RAW_FILE_SCHEMAS)[K]> };
 export type RawItem = z.infer<typeof RawItemSchema>;
+export type RawTitle = z.infer<typeof title>;
 
 /** Le format d'un fichier Ankama ne correspond plus à ce que l'application sait lire. */
 export class DataFormatError extends Error {

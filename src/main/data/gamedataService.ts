@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { copyFile, mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { buildIndex, DataBuildError, type MinCounts } from '../../core/data/buildIndex';
-import type { DataErrorCode, DataStatus } from '../../core/data/dataStatus';
+import type { DataError, DataErrorCode, DataStatus } from '../../core/data/dataStatus';
 import { parseIndexFile, readIndexHeader, type GameIndexFile } from '../../core/data/indexFile';
 import {
   DataFormatError,
@@ -22,7 +22,7 @@ const SIX_HOURS = 6 * 3600 * 1000;
 
 export type FetchLike = (url: string, init?: { signal?: AbortSignal }) => Promise<Response>;
 
-export type { DataErrorCode, DataStatus };
+export type { DataError, DataErrorCode, DataStatus };
 
 export interface GamedataServiceOptions {
   /** Dossier de l'application (%APPDATA%\<app>) : les données vont dans son sous-dossier data\. */
@@ -255,12 +255,7 @@ export class GamedataService {
       this.update({
         offline: true,
         lastCheckAt: this.now(),
-        error: this.file
-          ? null
-          : {
-              code: 'offline-no-data',
-              message: 'Connexion requise au premier lancement : les données du jeu n\'ont pas encore été téléchargées.',
-            },
+        error: this.file ? null : { code: 'offline-no-data', version: null, kept: null },
       });
       return;
     }
@@ -301,12 +296,8 @@ export class GamedataService {
 
   private fail(code: 'format' | 'network', err: unknown, version: string | null): void {
     this.log(`données ${version ?? ''} : ${errorText(err)}`);
-    const kept = this.file ? ` Les données ${this.file.gameVersion} restent utilisées.` : '';
-    const message =
-      code === 'format'
-        ? `Les données du jeu${version ? ` ${version}` : ''} ont un format que cette version de l'application ne sait pas lire : mettez à jour l'application.${kept}`
-        : `Téléchargement des données ${version} interrompu, nouvel essai plus tard.${kept}`;
-    this.update({ busy: null, error: { code, message }, lastCheckAt: this.now() });
+    const kept = this.file?.gameVersion ?? null;
+    this.update({ busy: null, error: { code, version, kept }, lastCheckAt: this.now() });
   }
 
   private async buildFromRaw(

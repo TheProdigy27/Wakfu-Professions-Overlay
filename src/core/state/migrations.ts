@@ -3,11 +3,10 @@ import { PersistedStateSchema, STATE_SCHEMA_VERSION, type PersistedState } from 
 
 export type Migration = (state: Record<string, unknown>) => Record<string, unknown>;
 
-/**
- * Aucune pour l'instant : le format 1 est le premier. La migration 1 → 2 (plusieurs objets par liste)
- * s'ajoutera ici, avec sa fixture tests/fixtures/state-v1.json déjà en place.
- */
-export const MIGRATIONS: Readonly<Record<number, Migration>> = {};
+export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  /** Réglage de la langue : celle de Windows tant qu'on n'en a pas choisi une. */
+  1: (state) => ({ ...state, settings: { ...(state['settings'] as object), language: null } }),
+};
 
 /** Fichier écrit par une version plus récente de l'application : on ne sait pas le relire, il ne doit pas être écrasé. */
 export class NewerStateError extends Error {

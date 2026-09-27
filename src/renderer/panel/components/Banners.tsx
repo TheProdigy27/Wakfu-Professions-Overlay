@@ -1,68 +1,69 @@
 // Bandeaux d'état : listes non relues ou non enregistrées, raccourci indisponible, recettes modifiées par une mise à jour du jeu,
 // nouvelle version de l'application prête à installer.
 import { useState } from 'react';
-import { dismissNotices, openSettings, usePanel } from '../store';
+import { describeChange } from '../../../core/data/diffIndex';
+import { acceleratorLabel } from '../../../core/state/hotkey';
+import { dismissNotices, openSettings, useMessages, usePanel } from '../store';
 
 export function Banners() {
+  const m = useMessages();
   const app = usePanel((s) => s.app);
   const update = usePanel((s) => s.update);
   const notices = usePanel((s) => s.notices);
-  const version = usePanel((s) => s.catalog?.index.version);
+  const index = usePanel((s) => s.catalog?.index);
   const [storeProblemSeen, setStoreProblemSeen] = useState(false);
   const [updateSeen, setUpdateSeen] = useState<string | null>(null);
   if (!app) return null;
+  const t = m.banners;
 
   return (
     <div className="banners">
       {update?.state === 'ready' && updateSeen !== update.version && (
         <div className="banner info" role="status">
-          <span>
-            La version {update.version} de l'application est prête
-            {app.autoUpdate ? ' : elle sera installée à la fermeture.' : '.'}
-          </span>
+          <span>{t.updateReady(update.version, app.autoUpdate)}</span>
           <button type="button" className="link" onClick={() => window.api.installUpdate()}>
-            Redémarrer maintenant
+            {m.common.restartNow}
           </button>
-          <button type="button" className="close" aria-label="Fermer" onClick={() => setUpdateSeen(update.version)}>
+          <button type="button" className="close" aria-label={m.common.close} onClick={() => setUpdateSeen(update.version)}>
             ✕
           </button>
         </div>
       )}
       {app.storeProblem && !storeProblemSeen && (
         <div className="banner warning" role="alert">
-          <span>{app.storeProblem}</span>
-          <button type="button" className="close" aria-label="Fermer" onClick={() => setStoreProblemSeen(true)}>
+          <span>{t.storeProblem[app.storeProblem.kind](app.storeProblem.file)}</span>
+          <button type="button" className="close" aria-label={m.common.close} onClick={() => setStoreProblemSeen(true)}>
             ✕
           </button>
         </div>
       )}
       {app.saveError && (
         <div className="banner error" role="alert">
-          <span>{app.saveError}</span>
+          <span>{t.saveError(app.saveError)}</span>
           <button type="button" className="link" onClick={() => window.api.openLog()}>
-            Journal
+            {t.log}
           </button>
         </div>
       )}
       {!app.hotkey.registered && (
         <div className="banner warning" role="alert">
-          <span>{app.hotkey.label} est déjà utilisé par une autre application : le panneau ne s'affiche plus au clavier.</span>
+          <span>{t.hotkeyTaken(acceleratorLabel(app.hotkey.accelerator, m))}</span>
           <button type="button" className="link" onClick={() => openSettings(true)}>
-            Choisir un autre raccourci
+            {t.chooseHotkey}
           </button>
         </div>
       )}
-      {notices.length > 0 && (
+      {notices.length > 0 && index && (
         <div className="banner info" role="status">
           <div>
-            <span>Recettes modifiées par la mise à jour du jeu{version ? ` (${version})` : ''} :</span>
+            <span>{t.recipesChanged(index.version)}</span>
             <ul>
-              {notices.map((notice) => (
-                <li key={notice}>{notice}</li>
+              {notices.map((change) => (
+                <li key={`${change.kind}-${change.itemId}`}>{describeChange(change, index, m)}</li>
               ))}
             </ul>
           </div>
-          <button type="button" className="close" aria-label="Fermer" onClick={dismissNotices}>
+          <button type="button" className="close" aria-label={m.common.close} onClick={dismissNotices}>
             ✕
           </button>
         </div>

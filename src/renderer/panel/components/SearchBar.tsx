@@ -1,10 +1,11 @@
 // Recherche manuelle : nom approximatif ou identifiant « #29236 ».
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { rarityColor } from '../../../core/data/rarity';
-import { selectTarget, usePanel } from '../store';
+import { selectTarget, useMessages, usePanel } from '../store';
 import { ItemIcon, itemMeta } from './Item';
 
 export function SearchBar() {
+  const m = useMessages();
   const catalog = usePanel((s) => s.catalog);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -36,7 +37,7 @@ export function SearchBar() {
     <div className="search">
       <input
         type="search"
-        placeholder={catalog ? 'Rechercher un objet (nom ou #id)…' : 'Données du jeu en cours de chargement…'}
+        placeholder={catalog ? m.search.placeholder : m.search.loading}
         disabled={!catalog}
         value={query}
         spellCheck={false}
@@ -51,7 +52,7 @@ export function SearchBar() {
       />
       {open && query.trim() && catalog && (
         <ul className="search-results" role="listbox">
-          {results.length === 0 && <li className="search-empty">Aucun objet trouvé</li>}
+          {results.length === 0 && <li className="search-empty">{m.search.none}</li>}
           {results.map((item, i) => (
             <li
               key={item.id}
@@ -70,7 +71,7 @@ export function SearchBar() {
                 <span className="item-name" style={{ color: rarityColor(item.rarity) }}>
                   {item.name}
                 </span>
-                <span className="meta">{itemMeta(catalog.index, item)}</span>
+                <span className="meta">{itemMeta(catalog.index, item, m)}</span>
               </div>
             </li>
           ))}

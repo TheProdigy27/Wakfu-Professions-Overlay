@@ -59,7 +59,7 @@ const subset: GameIndexFile = {
 
 // Fausse version suivante : Krak-Ertz 7 → 8 dans la recette par défaut de l'Orbe Durable (R6446),
 // variante R7362 de l'Orbe retirée, Baguette Deuh Pain retirée du jeu (objet et recette).
-const krak = keptItems.find((i) => i[1] === 'Krak-Ertz')![0];
+const krak = keptItems.find((i) => i[1][0] === 'Krak-Ertz')![0];
 const v2: GameIndexFile = structuredClone({ ...subset, gameVersion: V2 });
 const r6446 = v2.recipes.find((r) => r[0] === 6446)!;
 r6446[6][r6446[6].indexOf(krak) + 1] = 8;

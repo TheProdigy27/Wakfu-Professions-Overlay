@@ -1,21 +1,26 @@
 // Format de l'index compact écrit sur disque (data/index.json).
 import { z } from 'zod';
 
-/** Version du format d'index (côté code). La changer force la reconstruction depuis data/raw/{v}/. */
-export const INDEX_SCHEMA = 1;
+/**
+ * Version du format d'index (côté code). La changer force la reconstruction depuis data/raw/{v}/.
+ * 2 : noms dans les quatre langues de l'interface.
+ */
+export const INDEX_SCHEMA = 2;
 
 const int = z.number().int();
+/** Nom en fr, en, es et pt, dans l'ordre de LOCALES. */
+const names = z.tuple([z.string(), z.string(), z.string(), z.string()]);
 
 export const GameIndexFileSchema = z.object({
   indexSchema: z.literal(INDEX_SCHEMA),
   gameVersion: z.string().min(1),
   builtAt: z.string(),
-  /** [id, nom fr] des métiers retenus. */
-  jobs: z.array(z.tuple([int, z.string()])),
-  /** [id, libellé fr au singulier] des types d'objet. */
-  types: z.array(z.tuple([int, z.string()])),
-  /** [id, nom fr, niveau, rareté, typeId, gfxId] des objets cités par une recette. */
-  items: z.array(z.tuple([int, z.string(), int, int, int, int])),
+  /** [id, noms] des métiers retenus. */
+  jobs: z.array(z.tuple([int, names])),
+  /** [id, libellés au singulier] des types d'objet. */
+  types: z.array(z.tuple([int, names])),
+  /** [id, noms, niveau, rareté, typeId, gfxId] des objets cités par une recette. */
+  items: z.array(z.tuple([int, names, int, int, int, int])),
   /** [id, métier, niveau de métier, amélioration 0|1, objet produit, quantité produite, ingrédients à plat]. */
   recipes: z.array(z.tuple([int, int, int, z.union([z.literal(0), z.literal(1)]), int, int, z.array(int)])),
 });
@@ -23,6 +28,7 @@ export const GameIndexFileSchema = z.object({
 export type GameIndexFile = z.infer<typeof GameIndexFileSchema>;
 export type ItemTuple = GameIndexFile['items'][number];
 export type RecipeTuple = GameIndexFile['recipes'][number];
+export type Names = z.infer<typeof names>;
 
 export function parseIndexFile(json: unknown): GameIndexFile {
   return GameIndexFileSchema.parse(json);

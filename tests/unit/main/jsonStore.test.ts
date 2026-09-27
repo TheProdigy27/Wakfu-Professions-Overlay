@@ -5,7 +5,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defaultState, type PersistedState } from '../../../src/core/state/schema';
 import { JsonStore, SAVE_DELAY_MS } from '../../../src/main/store/jsonStore';
-import { readStateV1, STATE_V1_PATH } from '../../helpers/fixture';
+import { readStateV1, readStateV2, STATE_V1_PATH, STATE_V2_PATH } from '../../helpers/fixture';
 
 let dir: string;
 beforeEach(async () => {
@@ -31,49 +31,47 @@ describe('JsonStore : chargement', () => {
   });
 
   it('relit un state.json au format courant', async () => {
-    await writeFile(statePath(), await readFile(STATE_V1_PATH));
+    await writeFile(statePath(), await readFile(STATE_V2_PATH));
     const store = new JsonStore({ dir });
-    expect(store.get()).toEqual(readStateV1());
+    expect(store.get()).toEqual(readStateV2());
     expect(store.loadProblem).toBeNull();
     expect(await readdir(dir)).toEqual(['state.json']);
   });
 
   it('format ancien : copie state.v{n}.bak.json, puis migration', async () => {
-    const v0 = { ...(readStateV1() as object), schemaVersion: 0, obsolete: true };
-    await writeFile(statePath(), JSON.stringify(v0));
+    await writeFile(statePath(), await readFile(STATE_V1_PATH));
     const log = vi.fn();
-    const store = new JsonStore({
-      dir,
-      log,
-      migrations: { 0: ({ obsolete: _, ...rest }) => rest },
-    });
-    expect(store.get()).toEqual(readStateV1());
-    expect(JSON.parse(await readFile(path.join(dir, 'state.v0.bak.json'), 'utf8'))).toEqual(v0);
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('migration du format 0 au format 1'));
+    const store = new JsonStore({ dir, log });
+    // Format 1 → 2 : langue de Windows, tout le reste gardé.
+    const v1 = readStateV1() as PersistedState;
+    expect(store.get()).toEqual({ ...v1, schemaVersion: 2, settings: { ...v1.settings, language: null } });
+    expect(store.loadProblem).toBeNull();
+    expect(JSON.parse(await readFile(path.join(dir, 'state.v1.bak.json'), 'utf8'))).toEqual(v1);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('migration du format 1 au format 2'));
   });
 
-  it('fichier illisible : renommé state.corrupt-{date}.json, état vierge et message', async () => {
+  it('fichier illisible : renommé state.corrupt-{date}.json, état vierge et problème signalé', async () => {
     await writeFile(statePath(), '{"schemaVersion": 1, "settings": ');
     const store = new JsonStore({ dir, now: NOW });
     expect(store.get()).toEqual(defaultState());
-    expect(store.loadProblem).toMatch(/n'ont pas pu être relus.*state\.corrupt-2026-09-26T18-40-12-345Z\.json/);
+    expect(store.loadProblem).toEqual({ kind: 'corrupt', file: 'state.corrupt-2026-09-26T18-40-12-345Z.json' });
     expect(await readdir(dir)).toEqual(['state.corrupt-2026-09-26T18-40-12-345Z.json']);
   });
 
   it('fichier invalide (validation zod) : même traitement', async () => {
-    await writeFile(statePath(), JSON.stringify({ ...(readStateV1() as object), history: 'rien' }));
+    await writeFile(statePath(), JSON.stringify({ ...(readStateV2() as object), history: 'rien' }));
     const store = new JsonStore({ dir, now: NOW });
     expect(store.get()).toEqual(defaultState());
-    expect(store.loadProblem).not.toBeNull();
+    expect(store.loadProblem?.kind).toBe('corrupt');
     expect(existsSync(statePath())).toBe(false);
   });
 
   it('fichier d\'une version plus récente de l\'application : gardé à côté, jamais écrasé', async () => {
-    const v9 = { ...(readStateV1() as object), schemaVersion: 9 };
+    const v9 = { ...(readStateV2() as object), schemaVersion: 9 };
     await writeFile(statePath(), JSON.stringify(v9));
     const store = new JsonStore({ dir });
     expect(store.get()).toEqual(defaultState());
-    expect(store.loadProblem).toMatch(/version plus récente.*state\.v9\.bak\.json/);
+    expect(store.loadProblem).toEqual({ kind: 'newer', file: 'state.v9.bak.json' });
     expect(JSON.parse(await readFile(path.join(dir, 'state.v9.bak.json'), 'utf8'))).toEqual(v9);
   });
 });
@@ -116,7 +114,7 @@ describe('JsonStore : écriture', () => {
     await mkdir(`${statePath()}.tmp`);
     store.update(withOpacity(0.5));
     store.flush();
-    expect(store.saveError).toMatch(/n'ont pas pu être enregistrés/);
+    expect(store.saveError).toEqual(expect.any(String));
     await rm(`${statePath()}.tmp`, { recursive: true });
     store.flush();
     expect(store.saveError).toBeNull();

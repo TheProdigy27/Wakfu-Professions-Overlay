@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createSearchIndex } from '../../../src/core/match/searchIndex';
 import { NameVocabulary } from '../../../src/core/match/vocabulary';
+import type { Locale } from '../../../src/core/i18n';
 import { loadFixture } from '../../helpers/fixture';
 import { IDS } from '../../helpers/needsCases';
 
@@ -55,5 +56,26 @@ describe('createSearchIndex', () => {
     expect(search.search('')).toEqual([]);
     expect(search.search('e', 3)).toHaveLength(3);
     expect(search.search('bottes', 1)).toHaveLength(1);
+  });
+});
+
+describe('recherche dans les autres langues', () => {
+  const searchIn = (locale: Locale) => {
+    const localized = loadFixture(locale).index;
+    const s = createSearchIndex(localized, new NameVocabulary(localized));
+    return (query: string) => s.search(query).map((i) => [i.id, i.name]);
+  };
+
+  it('cherche les noms de la langue choisie', () => {
+    expect(searchIn('en')('larduous hat').slice(0, 2)).toEqual([
+      [IDS.COIFFE_M, 'Larduous Hat'],
+      [IDS.COIFFE_L, 'Larduous Hat'],
+    ]);
+    // Accents ignorés, comme en français : « chapeu banhoso » trouve « Chapéu Banhoso ».
+    expect(searchIn('pt')('chapeu banhoso')[0]).toEqual([IDS.COIFFE_M, 'Chapéu Banhoso']);
+    expect(searchIn('es')('sombrero pan')[0]).toEqual([IDS.COIFFE_M, 'Sombrero de Pan Z']);
+    // Le nom français n'est plus cherché ; l'identifiant, lui, marche dans toutes les langues.
+    expect(searchIn('en')('coiffe lardante')).toEqual([]);
+    expect(searchIn('es')(`#${IDS.COIFFE_L}`)).toEqual([[IDS.COIFFE_L, 'Sombrero de Pan Z']]);
   });
 });

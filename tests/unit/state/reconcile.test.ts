@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { describeChange } from '../../../src/core/data/diffIndex';
+import { fr } from '../../../src/core/i18n/fr';
 import { computeNeeds } from '../../../src/core/needs/computeNeeds';
 import { needsInput, setOwned, setTargetQty, type CraftList } from '../../../src/core/state/craftList';
 import { parseState } from '../../../src/core/state/migrations';
-import { isObsolete, reconcile, snapshotFor, withSnapshot } from '../../../src/core/state/reconcile';
+import { isObsolete, reconcile, snapshotFor, withSnapshot, type Reconciled } from '../../../src/core/state/reconcile';
 import { loadFixture, loadFixtureV2, readStateV1, V2 } from '../../helpers/fixture';
 import { IDS } from '../../helpers/needsCases';
 
@@ -11,6 +13,8 @@ const v2 = loadFixtureV2().index;
 const saved = parseState(readStateV1());
 const [orbeList, baguetteList] = saved.history as [CraftList, CraftList];
 const krak = [...v1.items.values()].find((i) => i.name === 'Krak-Ertz')!.id;
+/** Texte du bandeau pour chaque recette modifiée. */
+const notices = (r: Reconciled) => r.changes.map((change) => describeChange(change, v2, fr));
 const toObtain = (list: CraftList, index: typeof v1, itemId: number) =>
   computeNeeds(index, needsInput(list)).totals.get(itemId)?.toObtain;
 
@@ -34,14 +38,14 @@ describe('snapshot', () => {
 describe('reconcile, fixture « v2 modifiée »', () => {
   it('même version : rien à signaler', () => {
     const r = reconcile(saved.current!, v1);
-    expect(r).toEqual({ list: saved.current, notices: [], obsolete: false });
+    expect(r).toEqual({ list: saved.current, changes: [], obsolete: false });
   });
 
   it('recette modifiée : notice détaillée, recalcul avec les nouvelles données, stock et achats conservés', () => {
     const list = saved.current!;
     expect(toObtain(list, v1, krak)).toBe(35);
     const r = reconcile(list, v2);
-    expect(r.notices).toEqual(['Orbe Durable : Krak-Ertz 7 → 8']);
+    expect(notices(r)).toEqual(['Orbe Durable : Krak-Ertz 7 → 8']);
     expect(r.obsolete).toBe(false);
     expect(r.list.gameVersion).toBe(V2);
     expect(r.list.owned).toBe(list.owned);
@@ -49,13 +53,13 @@ describe('reconcile, fixture « v2 modifiée »', () => {
     expect(r.list.snapshot[IDS.ORBE]!.ings).toEqual([15862, 1, krak, 8]);
     expect(toObtain(r.list, v2, krak)).toBe(40);
     // Une fois rapprochée, la liste ne produit plus de notice.
-    expect(reconcile(r.list, v2).notices).toEqual([]);
+    expect(reconcile(r.list, v2).changes).toEqual([]);
   });
 
   it('variante choisie disparue : retour à la recette par défaut, avec une notice', () => {
     expect(orbeList.recipeChoice).toEqual({ [IDS.ORBE]: 7362 });
     const r = reconcile(orbeList, v2);
-    expect(r.notices).toEqual(["Orbe Durable : la recette choisie n'existe plus, recette par défaut utilisée"]);
+    expect(notices(r)).toEqual(["Orbe Durable : la recette choisie n'existe plus, recette par défaut utilisée"]);
     expect(r.list.recipeChoice).toEqual({});
     expect(r.list.snapshot[IDS.ORBE]!.recipeId).toBe(6446);
     expect(toObtain(r.list, v2, krak)).toBe(24);
@@ -64,7 +68,7 @@ describe('reconcile, fixture « v2 modifiée »', () => {
   it('objet cible disparu : liste obsolète, laissée telle quelle', () => {
     expect(isObsolete(baguetteList, v1)).toBe(false);
     const r = reconcile(baguetteList, v2);
-    expect(r).toEqual({ list: baguetteList, notices: [], obsolete: true });
+    expect(r).toEqual({ list: baguetteList, changes: [], obsolete: true });
   });
 
   it('les variantes invalides hors de l\'arbre sont retirées sans notice, les valides gardées', () => {
@@ -72,6 +76,6 @@ describe('reconcile, fixture « v2 modifiée »', () => {
     const list = { ...saved.current!, recipeChoice: { 999999: 6446, [IDS.PAIN_FARLE]: 2047 } };
     const r = reconcile(list, v2);
     expect(r.list.recipeChoice).toEqual({ [IDS.PAIN_FARLE]: 2047 });
-    expect(r.notices).toEqual(['Orbe Durable : Krak-Ertz 7 → 8']);
+    expect(notices(r)).toEqual(['Orbe Durable : Krak-Ertz 7 → 8']);
   });
 });

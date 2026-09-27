@@ -1,6 +1,7 @@
 // Construction de l'index compact à partir des fichiers bruts validés.
-import { INDEX_SCHEMA, type GameIndexFile, type ItemTuple, type RecipeTuple } from './indexFile';
-import type { RawGamedata, RawItem } from './rawSchemas';
+import { LOCALES } from '../i18n/locale';
+import { INDEX_SCHEMA, type GameIndexFile, type ItemTuple, type Names, type RecipeTuple } from './indexFile';
+import type { RawGamedata, RawItem, RawTitle } from './rawSchemas';
 
 export interface BuildReport {
   recipes: number;
@@ -38,9 +39,14 @@ export class DataBuildError extends Error {
   }
 }
 
-/** Retire le gabarit de pluriel d'Ankama : "Anneau{[~1]?x:}" → "Anneau". */
+/** Retire le gabarit de pluriel d'Ankama : "Anneau{[~1]?x:}" → "Anneau", "An{[~1]?éis:el}" → "Anel". */
 export function singularTitle(title: string): string {
   return title.replace(/\{\[~1\]\?([^:}]*):([^}]*)\}/g, '$2');
+}
+
+/** Nom dans chaque langue de l'interface ; le français remplace une traduction absente ou vide. */
+export function titleNames(title: RawTitle, transform: (name: string) => string = (name) => name): Names {
+  return LOCALES.map((locale) => transform(title[locale] || title.fr)) as Names;
 }
 
 function groupBy<T>(values: readonly T[], key: (v: T) => number): Map<number, T[]> {
@@ -61,10 +67,10 @@ export function buildIndex(
 ): { file: GameIndexFile; report: BuildReport } {
   const minCounts = options.minCounts ?? DEFAULT_MIN_COUNTS;
 
-  const jobs = new Map<number, string>();
+  const jobs = new Map<number, Names>();
   for (const c of raw.recipeCategories) {
     const d = c.definition;
-    if (!d.isArchive && !d.isHidden && !d.isNoCraft) jobs.set(d.id, c.title.fr);
+    if (!d.isArchive && !d.isHidden && !d.isNoCraft) jobs.set(d.id, titleNames(c.title));
   }
 
   const resultsByRecipe = groupBy(raw.recipeResults, (r) => r.recipeId);
@@ -102,23 +108,23 @@ export function buildIndex(
     const j = fromJobs.get(id);
     if (j) {
       const d = j.definition;
-      items.push([id, j.title.fr, d.level, d.rarity, d.itemTypeId, d.graphicParameters.gfxId]);
+      items.push([id, titleNames(j.title), d.level, d.rarity, d.itemTypeId, d.graphicParameters.gfxId]);
       continue;
     }
     const i = fromItems.get(id);
     if (i) {
       const d = i.definition.item;
-      items.push([id, i.title.fr, d.level, d.baseParameters.rarity, d.baseParameters.itemTypeId, d.graphicParameters.gfxId]);
+      items.push([id, titleNames(i.title), d.level, d.baseParameters.rarity, d.baseParameters.itemTypeId, d.graphicParameters.gfxId]);
       fallbackCount++;
       continue;
     }
     missing.push(id);
   }
 
-  const types: [number, string][] = [];
+  const types: [number, Names][] = [];
   for (const t of raw.itemTypes) {
-    const title = t.title?.fr;
-    if (title) types.push([t.definition.id, singularTitle(title)]);
+    const fr = t.title?.fr;
+    if (fr) types.push([t.definition.id, titleNames({ ...t.title, fr }, singularTitle)]);
   }
   types.sort((a, b) => a[0] - b[0]);
 

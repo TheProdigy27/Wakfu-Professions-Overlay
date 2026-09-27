@@ -4,7 +4,7 @@ import { rarityName } from '../../../core/data/rarity';
 import type { NeedsResult } from '../../../core/needs/computeNeeds';
 import { shoppingList, shoppingText, type ShoppingLine } from '../../../core/needs/shopping';
 import { hasAll, needsInput, setMissingOnly, setOwned, toggleHave, type CraftList } from '../../../core/state/craftList';
-import { updateList, type Catalog } from '../store';
+import { updateList, useMessages, type Catalog } from '../store';
 import { ItemIcon, ItemName } from './Item';
 
 interface ShoppingProps {
@@ -16,6 +16,8 @@ interface ShoppingProps {
 }
 
 export function ShoppingList({ catalog, list, result, compact = false }: ShoppingProps) {
+  const m = useMessages();
+  const t = m.shopping;
   const missingOnly = compact || list.ui.missingOnly;
   const { resources, bought } = shoppingList(catalog.index, result, needsInput(list), { missingOnly });
   const empty = resources.length === 0 && bought.length === 0;
@@ -26,20 +28,21 @@ export function ShoppingList({ catalog, list, result, compact = false }: Shoppin
         <div className="shopping-tools">
           <label className="filter">
             <input type="checkbox" checked={list.ui.missingOnly} onChange={(e) => updateList((l) => setMissingOnly(l, e.target.checked))} />
-            Seulement ce qui manque
+            {t.missingOnly}
           </label>
           <CopyButton catalog={catalog} list={list} result={result} />
         </div>
       )}
-      {empty && <p className="empty">{missingOnly ? 'Rien ne manque : vous avez tout.' : 'Aucune ressource à obtenir.'}</p>}
-      {resources.length > 0 && <Section title="Ressources" lines={resources} catalog={catalog} list={list} compact={compact} />}
-      {bought.length > 0 && <Section title="Intermédiaires achetés" lines={bought} catalog={catalog} list={list} compact={compact} />}
+      {empty && <p className="empty">{missingOnly ? t.nothingMissing : t.nothingToGet}</p>}
+      {resources.length > 0 && <Section title={t.resources} lines={resources} catalog={catalog} list={list} compact={compact} />}
+      {bought.length > 0 && <Section title={t.bought} lines={bought} catalog={catalog} list={list} compact={compact} />}
     </div>
   );
 }
 
 /** Copie ce qui reste à obtenir, en texte, dans le presse-papiers (pour une note, un message…). */
 function CopyButton({ catalog, list, result }: { catalog: Catalog; list: CraftList; result: NeedsResult }) {
+  const m = useMessages();
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
@@ -49,21 +52,23 @@ function CopyButton({ catalog, list, result }: { catalog: Catalog; list: CraftLi
 
   const copy = () => {
     const target = catalog.index.items.get(list.target.itemId);
-    const name = target ? `${target.name} (${rarityName(target.rarity)})` : `Objet inconnu #${list.target.itemId}`;
+    const name = target ? `${target.name} (${rarityName(target.rarity, m)})` : m.common.unknownItem(list.target.itemId);
     const lines = shoppingList(catalog.index, result, needsInput(list), { missingOnly: true });
-    window.api.copyText(shoppingText(catalog.index, `${name} ×${list.target.qty}`, lines));
+    window.api.copyText(shoppingText(catalog.index, `${name} ×${list.target.qty}`, lines, m));
     setCopied(true);
   };
 
   return (
-    <button type="button" className="copy" title="Copier ce qui reste à obtenir dans le presse-papiers" onClick={copy}>
-      {copied ? 'Copié ✓' : 'Copier'}
+    <button type="button" className="copy" title={m.shopping.copyTitle} onClick={copy}>
+      {copied ? m.shopping.copied : m.shopping.copy}
     </button>
   );
 }
 
 function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog; list: CraftList; compact: boolean }) {
   const { title, lines, catalog, list, compact } = props;
+  const m = useMessages();
+  const t = m.shopping;
   return (
     <section>
       {!compact && <h3>{title}</h3>}
@@ -72,10 +77,10 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
           <thead>
             <tr>
               <th />
-              <th className="name-col">Objet</th>
-              <th>Requis</th>
-              <th>Possédé</th>
-              <th>Reste</th>
+              <th className="name-col">{t.columns.item}</th>
+              <th>{t.columns.required}</th>
+              <th>{t.columns.owned}</th>
+              <th>{t.columns.missing}</th>
             </tr>
           </thead>
         )}
@@ -88,7 +93,7 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
                   <input
                     type="checkbox"
                     checked={hasAll(list, line.itemId, line.required)}
-                    title={`Je l'ai (${line.required})`}
+                    title={t.have(line.required)}
                     onChange={() => updateList((l) => toggleHave(l, line.itemId, line.required))}
                   />
                 </td>
@@ -106,12 +111,12 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
                       max={9999}
                       placeholder="0"
                       value={line.owned || ''}
-                      aria-label="Quantité possédée"
+                      aria-label={t.ownedLabel}
                       onChange={(e) => updateList((l) => setOwned(l, line.itemId, Number(e.target.value)))}
                     />
                   </td>
                 )}
-                <td className="num missing" title={compact ? `Reste à obtenir (sur ${line.required})` : undefined}>
+                <td className="num missing" title={compact ? t.missingTitle(line.required) : undefined}>
                   {compact ? `×${line.missing}` : line.missing}
                 </td>
               </tr>

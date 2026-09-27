@@ -2,6 +2,8 @@
 
 # Wakfu Professions Overlay
 
+**Français** · [English](README.en.md)
+
 Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vous cherchez un objet, il vous montre tout ce qu'il faut réunir pour le fabriquer.
 
 > **Outil non officiel, non affilié à Ankama.** Wakfu est une marque d'Ankama. Les données et les icônes du jeu (© Ankama) sont téléchargées depuis les serveurs publics d'Ankama sur votre PC ; elles ne sont ni incluses dans ce dépôt ni dans l'installeur.
@@ -14,6 +16,7 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 - **Ordre de craft** : les intermédiaires d'abord, avec le métier et le niveau requis.
 - Case **« je l'ai »** et quantités possédées, choix **crafter / acheter** pour chaque intermédiaire, choix de la **variante** de recette quand il y en a plusieurs.
 - Mode **compact**, **opacité** réglable, **raccourci** global (`Ctrl+Maj+W` par défaut) pour afficher ou masquer le panneau sans quitter le jeu.
+- Interface en **français, anglais, espagnol et portugais**. Les noms des objets suivent la langue choisie : ils viennent directement des données du jeu.
 - Listes enregistrées au fil de l'eau ; les 10 dernières restent dans « Récents ».
 
 ## Ce qu'elle ne fait pas
@@ -36,7 +39,8 @@ Configuration requise : Windows 10 ou 11, 64 bits. Comptez environ 400 Mo de mé
 
 - **Afficher / masquer** : `Ctrl+Maj+W`, ou un clic sur l'icône dans la zone de notification. Le panneau s'affiche sans prendre le clavier du jeu : cliquez dedans pour écrire, puis dans le jeu pour y revenir.
 - **Le panneau n'apparaît pas ?** En plein écran exclusif, Windows ne peut rien afficher par-dessus le jeu. Dans les options de Wakfu, passez en mode **fenêtré** ou **fenêtré sans bordure**.
-- **Réglages** (⚙) : raccourci, opacité, lancement avec Windows, mises à jour, accélération matérielle.
+- **Langue** : au démarrage, celle de Windows (l'anglais si ce n'est pas l'une des quatre ci-dessus). Elle se change dans les réglages, ou dès l'écran d'accueil.
+- **Réglages** (⚙) : langue, raccourci, opacité, lancement avec Windows, mises à jour, accélération matérielle.
 - **Journal** : menu de l'icône dans la zone de notification, « Ouvrir le journal ».
 
 ## Mises à jour

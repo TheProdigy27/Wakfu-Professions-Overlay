@@ -1,6 +1,7 @@
-// Raccourci global d'affichage (accélérateur Electron) : saisie au clavier, libellé français et garde-fous.
-// Un raccourci global est intercepté par Windows dans toutes les applications :
+// Raccourci global d'affichage (accélérateur Electron) : saisie au clavier, libellé dans la langue de l'interface
+// et garde-fous. Un raccourci global est intercepté par Windows dans toutes les applications :
 // on refuse les combinaisons qui gêneraient la saisie ailleurs, jeu compris.
+import type { Messages } from '../i18n';
 
 export const DEFAULT_HOTKEY = 'CommandOrControl+Shift+W';
 
@@ -45,24 +46,8 @@ const NAMED_KEY_SET = new Set(Object.values(NAMED_KEYS));
 /** Maj, Ctrl, Alt, Windows gauche et droite. */
 const MODIFIER_CODES = new Set([16, 17, 18, 91, 92]);
 
-const KEY_LABELS: Readonly<Record<string, string>> = {
-  Space: 'Espace',
-  PageUp: 'Page préc.',
-  PageDown: 'Page suiv.',
-  End: 'Fin',
-  Home: 'Début',
-  Left: 'Gauche',
-  Up: 'Haut',
-  Right: 'Droite',
-  Down: 'Bas',
-  Insert: 'Inser',
-  Delete: 'Suppr',
-  nummult: 'Pavé num. *',
-  numadd: 'Pavé num. +',
-  numsub: 'Pavé num. -',
-  numdec: 'Pavé num. .',
-  numdiv: 'Pavé num. /',
-};
+/** Touches du pavé numérique autres que les chiffres. */
+const NUMPAD_SYMBOLS: Readonly<Record<string, string>> = { nummult: '*', numadd: '+', numsub: '-', numdec: '.', numdiv: '/' };
 
 /**
  * keyCode (touche virtuelle) plutôt que key ou code : c'est ce qu'enregistre Windows, et une lettre y garde
@@ -82,41 +67,39 @@ function isKnownKey(key: string): boolean {
 const isCharacterKey = (key: string) => /^[A-Z0-9]$/.test(key);
 const isFunctionKey = (key: string) => /^F\d+$/.test(key);
 
+/**
+ * Raison de refuser une touche ou une combinaison (texte dans Messages.hotkey.problems) :
+ * - unsupported-key : ni lettre, ni chiffre, ni F1 à F24, ni pavé numérique, ni touche de navigation ;
+ * - no-modifier : sans Ctrl ni Alt, la touche serait bloquée dans toutes les applications, jeu compris ;
+ * - altgr : Ctrl+Alt équivaut à AltGr, et empêcherait de taper @, € ou # ;
+ * - single-modifier : une seule touche de modification avec une lettre ou un chiffre est déjà prise par la plupart des applications.
+ */
+export type HotkeyProblem = 'unsupported-key' | 'no-modifier' | 'altgr' | 'single-modifier';
+
 export type CaptureResult =
   | { status: 'pending' }
-  | { status: 'invalid'; message: string }
-  | { status: 'ok'; combo: Combo; accelerator: string; label: string };
+  | { status: 'invalid'; problem: HotkeyProblem }
+  | { status: 'ok'; combo: Combo; accelerator: string };
 
 /** Touche pressée pendant la saisie d'un raccourci : en attente (modificateur seul), refusée ou acceptée. */
 export function captureHotkey(input: KeyInput): CaptureResult {
   if (MODIFIER_CODES.has(input.keyCode)) return { status: 'pending' };
   const key = keyName(input.keyCode);
-  if (!key) {
-    return {
-      status: 'invalid',
-      message: 'Touche non prise en charge : utilisez une lettre, un chiffre, F1 à F24, le pavé numérique ou une touche de navigation.',
-    };
-  }
+  if (!key) return { status: 'invalid', problem: 'unsupported-key' };
   const combo: Combo = { ctrl: input.ctrlKey, alt: input.altKey, shift: input.shiftKey, meta: input.metaKey, key };
   const problem = comboProblem(combo);
-  if (problem) return { status: 'invalid', message: problem };
-  return { status: 'ok', combo, accelerator: toAccelerator(combo), label: hotkeyLabel(combo) };
+  if (problem) return { status: 'invalid', problem };
+  return { status: 'ok', combo, accelerator: toAccelerator(combo) };
 }
 
 /** Raison de refuser une combinaison, ou null si elle convient. */
-export function comboProblem(combo: Combo): string | null {
+export function comboProblem(combo: Combo): HotkeyProblem | null {
   const { ctrl, alt, shift, meta, key } = combo;
   if (isFunctionKey(key)) return null;
-  if (!ctrl && !alt && !meta) {
-    return 'Ajoutez Ctrl ou Alt : sans eux, la touche serait bloquée dans toutes les applications, jeu compris.';
-  }
+  if (!ctrl && !alt && !meta) return 'no-modifier';
   if (isCharacterKey(key)) {
-    if (ctrl && alt && !shift && !meta) {
-      return 'Ctrl+Alt équivaut à AltGr : cette combinaison empêcherait de taper des caractères comme @, € ou #. Ajoutez Maj.';
-    }
-    if (!meta && [ctrl, alt, shift].filter(Boolean).length < 2) {
-      return 'Une seule touche de modification avec une lettre ou un chiffre est déjà utilisée par la plupart des applications : ajoutez Maj.';
-    }
+    if (ctrl && alt && !shift && !meta) return 'altgr';
+    if (!meta && [ctrl, alt, shift].filter(Boolean).length < 2) return 'single-modifier';
   }
   return null;
 }
@@ -158,14 +141,18 @@ export function parseAccelerator(accelerator: string): Combo | null {
   return combo;
 }
 
-/** Libellé pour un clavier français : « Ctrl+Maj+W ». */
-export function hotkeyLabel(combo: Combo): string {
-  const key = KEY_LABELS[combo.key] ?? combo.key.replace(/^num(\d)$/, 'Pavé num. $1');
-  return [combo.ctrl && 'Ctrl', combo.alt && 'Alt', combo.shift && 'Maj', combo.meta && 'Win', key].filter(Boolean).join('+');
+/** Libellé avec les noms de touches d'un clavier dans cette langue : « Ctrl+Maj+W » en français. */
+export function hotkeyLabel(combo: Combo, m: Messages): string {
+  const { modifiers, keys, numpad } = m.hotkey;
+  const numKey = /^num(\d)$/.exec(combo.key)?.[1] ?? NUMPAD_SYMBOLS[combo.key];
+  const key = numKey ? numpad(numKey) : ((keys as Readonly<Record<string, string>>)[combo.key] ?? combo.key);
+  return [combo.ctrl && modifiers.ctrl, combo.alt && modifiers.alt, combo.shift && modifiers.shift, combo.meta && modifiers.meta, key]
+    .filter(Boolean)
+    .join('+');
 }
 
 /** Libellé d'un accélérateur enregistré ; l'accélérateur tel quel s'il n'est pas reconnu. */
-export function acceleratorLabel(accelerator: string): string {
+export function acceleratorLabel(accelerator: string, m: Messages): string {
   const combo = parseAccelerator(accelerator);
-  return combo ? hotkeyLabel(combo) : accelerator;
+  return combo ? hotkeyLabel(combo, m) : accelerator;
 }

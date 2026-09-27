@@ -57,16 +57,17 @@ export class Updater {
     autoUpdater.on('update-downloaded', (info) => this.set({ state: 'ready', version: info.version }));
     autoUpdater.on('error', (error: Error & { code?: string }) => {
       // Détail déjà écrit dans le journal par le logger ci-dessus.
-      let message = 'Recherche de mise à jour impossible : réseau indisponible ou GitHub injoignable.';
-      if (this.current.state === 'downloading') message = `Téléchargement de la version ${this.current.version} interrompu.`;
-      else if (error.code === BEING_PUBLISHED) {
-        message = 'Une nouvelle version est en cours de publication : réessayez dans quelques minutes.';
+      if (this.current.state === 'downloading') {
+        this.set({ state: 'error', reason: 'download', version: this.current.version });
+      } else if (error.code === BEING_PUBLISHED) {
+        this.set({ state: 'error', reason: 'publishing' });
       }
       // Dépôt sans version publiée, ou inaccessible (privé, renommé).
       else if (NOT_PUBLISHED.includes(error.code ?? '') || /HttpError: 404\b/.test(String(error.message))) {
-        message = 'Aucune version publiée n\'a été trouvée sur GitHub.';
+        this.set({ state: 'error', reason: 'not-published' });
+      } else {
+        this.set({ state: 'error', reason: 'check' });
       }
-      this.set({ state: 'error', message });
     });
   }
 

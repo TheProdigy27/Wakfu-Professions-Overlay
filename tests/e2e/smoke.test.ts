@@ -1,13 +1,14 @@
 // Test de bout en bout : l'application construite démarre hors réseau (WPO_OFFLINE) sur l'index
 // de fixture, puis parcours complet : recherche, T1a, case « je l'ai » partagée entre les vues, variante, ordre de
-// craft, mode compact ; enfin la liste est restaurée au redémarrage.
+// craft, mode compact, raccourci ; la liste est restaurée au redémarrage ; enfin l'interface passe en anglais.
 // Cible : out/ (npm run build), ou l'exécutable empaqueté si WPO_E2E_EXE le désigne (release/win-unpacked/…).
-import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { _electron as electron, type ElectronApplication, type Page } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { defaultState } from '../../src/core/state/schema';
 import { FIXTURE_PATH } from '../helpers/fixture';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -65,6 +66,9 @@ beforeAll(async () => {
   // Données du jeu déjà en cache, comme après un premier lancement : l'extrait de fixture tient lieu d'index.
   await mkdir(path.join(userData, 'data'));
   await copyFile(FIXTURE_PATH, path.join(userData, 'data', 'index.json'));
+  // Français imposé : sinon, la langue de l'interface serait celle de Windows.
+  const state = defaultState();
+  await writeFile(path.join(userData, 'state.json'), JSON.stringify({ ...state, settings: { ...state.settings, language: 'fr' } }));
   await launch();
 });
 
@@ -159,6 +163,28 @@ describe('application construite, hors réseau', () => {
     expect(await page.locator('.tabs .active').innerText()).toBe('Ordre');
     await page.getByRole('tab', { name: 'Arbre' }).click();
     expect((await texts('.row .item-name')).filter((n) => n === 'Fil de serrage')).toHaveLength(2);
+  });
+
+  it("langue : l'anglais choisi dans les réglages traduit l'interface et les noms du jeu, et reste au redémarrage", async () => {
+    await page.getByRole('button', { name: 'Réglages' }).click();
+    await page.getByLabel('Langue').selectOption('en');
+    await expect.poll(() => page.locator('.settings h2').innerText()).toBe('Settings');
+    expect(await page.locator('.hotkey').innerText()).toBe('Ctrl+Shift+F9');
+    await page.getByRole('button', { name: 'Close' }).click();
+    expect(await page.locator('.target .item-name').innerText()).toBe('Larduous Hat');
+    expect(await page.locator('.target .meta').innerText()).toBe('Lvl. 125 · Legendary · Helmet');
+    expect(await page.locator('.tabs .active').innerText()).toBe('Tree');
+    expect((await texts('.row .item-name')).filter((n) => n === 'Tensioning Wire')).toHaveLength(2);
+    // Recherche sur les noms anglais.
+    await page.locator('input[type=search]').fill('durable orb');
+    await page.waitForSelector('.search-results li[role=option]');
+    expect((await texts('.search-results li[role=option] .item-name'))[0]).toBe('Durable Orb');
+    await page.keyboard.press('Escape');
+
+    await close();
+    await launch();
+    expect(await page.locator('.target .item-name').innerText()).toBe('Larduous Hat');
+    expect(await page.locator('.status').innerText()).toContain('Data 1.93.1.62');
   });
 
   it('aucune erreur dans la console du panneau', () => {

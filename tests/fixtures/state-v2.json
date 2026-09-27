@@ -1,0 +1,226 @@
+{
+ "schemaVersion": 2,
+ "settings": {
+  "language": "en",
+  "hotkeys": {
+   "toggle": "CommandOrControl+Alt+Shift+K"
+  },
+  "opacity": 0.8,
+  "compact": false,
+  "hardwareAcceleration": true,
+  "autoUpdate": true,
+  "launchAtLogin": false,
+  "onboardingDone": true
+ },
+ "window": {
+  "normal": {
+   "x": 1476,
+   "y": 24,
+   "width": 420,
+   "height": 640
+  }
+ },
+ "recipePrefs": {
+  "22483": 7362
+ },
+ "current": {
+  "id": "b7c4f0e2-1111-4a8e-9d51-000000000001",
+  "createdAt": "2026-09-21T09:30:00.000Z",
+  "updatedAt": "2026-09-21T09:32:00.000Z",
+  "gameVersion": "1.93.1.62",
+  "target": {
+   "itemId": 23205,
+   "qty": 1
+  },
+  "owned": {
+   "27093": 10
+  },
+  "mode": {
+   "21664": "buy"
+  },
+  "recipeChoice": {},
+  "ui": {
+   "view": "shopping",
+   "missingOnly": false,
+   "collapsed": []
+  },
+  "snapshot": {
+   "16969": {
+    "recipeId": 6518,
+    "yield": 1,
+    "ings": [
+     22483,
+     2,
+     27093,
+     7,
+     23166,
+     2,
+     16160,
+     2,
+     21120,
+     15,
+     21031,
+     9
+    ]
+   },
+   "21031": {
+    "recipeId": 4610,
+    "yield": 1,
+    "ings": [
+     18115,
+     5,
+     9805,
+     5
+    ]
+   },
+   "21664": {
+    "recipeId": 4337,
+    "yield": 1,
+    "ings": [
+     18121,
+     5,
+     1783,
+     5
+    ]
+   },
+   "22483": {
+    "recipeId": 6446,
+    "yield": 1,
+    "ings": [
+     15862,
+     1,
+     15843,
+     7
+    ]
+   },
+   "23205": {
+    "recipeId": 6611,
+    "yield": 1,
+    "ings": [
+     27093,
+     14,
+     22483,
+     3,
+     23166,
+     3,
+     16969,
+     1,
+     16160,
+     3,
+     21120,
+     25,
+     21664,
+     14
+    ]
+   }
+  }
+ },
+ "history": [
+  {
+   "id": "b7c4f0e2-1111-4a8e-9d51-000000000002",
+   "createdAt": "2026-09-20T18:00:00.000Z",
+   "updatedAt": "2026-09-20T18:02:00.000Z",
+   "gameVersion": "1.93.1.62",
+   "target": {
+    "itemId": 22483,
+    "qty": 3
+   },
+   "owned": {},
+   "mode": {},
+   "recipeChoice": {
+    "22483": 7362
+   },
+   "ui": {
+    "view": "tree",
+    "missingOnly": false,
+    "collapsed": []
+   },
+   "snapshot": {
+    "22483": {
+     "recipeId": 7362,
+     "yield": 1,
+     "ings": [
+      26453,
+      1,
+      26452,
+      7
+     ]
+    }
+   }
+  },
+  {
+   "id": "b7c4f0e2-1111-4a8e-9d51-000000000003",
+   "createdAt": "2026-09-19T20:00:00.000Z",
+   "updatedAt": "2026-09-19T20:05:00.000Z",
+   "gameVersion": "1.93.1.62",
+   "target": {
+    "itemId": 9362,
+    "qty": 2
+   },
+   "owned": {},
+   "mode": {},
+   "recipeChoice": {},
+   "ui": {
+    "view": "tree",
+    "missingOnly": false,
+    "collapsed": []
+   },
+   "snapshot": {
+    "8211": {
+     "recipeId": 2403,
+     "yield": 4,
+     "ings": [
+      2340,
+      3,
+      21681,
+      1
+     ]
+    },
+    "9362": {
+     "recipeId": 2341,
+     "yield": 1,
+     "ings": [
+      11469,
+      57,
+      20665,
+      5,
+      20653,
+      3,
+      8211,
+      3
+     ]
+    },
+    "20653": {
+     "recipeId": 3863,
+     "yield": 1,
+     "ings": [
+      1851,
+      5,
+      11479,
+      5
+     ]
+    },
+    "20665": {
+     "recipeId": 3882,
+     "yield": 1,
+     "ings": [
+      1718,
+      5,
+      11440,
+      5
+     ]
+    },
+    "21681": {
+     "recipeId": 4539,
+     "yield": 1,
+     "ings": [
+      1902,
+      5,
+      6948,
+      5
+     ]
+    }
+   }
+  }
+ ]
+}

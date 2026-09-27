@@ -1,5 +1,7 @@
 // Erreur d'affichage : message et rechargement plutôt qu'un panneau vide ; le détail va dans le journal.
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { messages } from '../../../core/i18n';
+import { currentLocale } from '../store';
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   override state = { failed: false };
@@ -14,15 +16,16 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
 
   override render(): ReactNode {
     if (!this.state.failed) return this.props.children;
+    const m = messages(currentLocale());
     return (
       <div className="crash">
-        <p>Le panneau a rencontré une erreur. Vos listes sont enregistrées.</p>
+        <p>{m.crash.message}</p>
         <div className="buttons">
           <button type="button" className="primary" onClick={() => location.reload()}>
-            Recharger le panneau
+            {m.crash.reload}
           </button>
           <button type="button" onClick={() => window.api.openLog()}>
-            Ouvrir le journal
+            {m.common.openLog}
           </button>
         </div>
       </div>

@@ -17,19 +17,15 @@ export interface TrayOptions {
 }
 
 /** Aide du menu « Le panneau n'apparaît pas ? » : plein écran exclusif, raccourci pris. */
-async function showHelp(panel: PanelWindow, hotkeyLabel: string, registered: boolean): Promise<void> {
-  const hotkey = registered
-    ? `Le raccourci ${hotkeyLabel} affiche ou masque le panneau.`
-    : `Le raccourci ${hotkeyLabel} est déjà utilisé par une autre application : choisissez-en un autre dans les réglages du panneau.`;
+async function showHelp(panel: PanelWindow, settings: SettingsController): Promise<void> {
+  const t = settings.messages.help;
+  const label = settings.hotkeyLabel;
   const { response } = await dialog.showMessageBox({
     type: 'info',
     title: 'Wakfu Professions Overlay',
-    message: 'Le panneau n\'apparaît pas ?',
-    detail:
-      'En plein écran exclusif, Windows ne peut rien afficher par-dessus le jeu. Dans les options de Wakfu, ' +
-      'passez en mode fenêtré (ou fenêtré sans bordure), puis réaffichez le panneau.\n\n' +
-      `${hotkey} Un clic sur cette icône, dans la zone de notification, fait de même.`,
-    buttons: ['Afficher le panneau', 'Fermer'],
+    message: t.message,
+    detail: t.detail(settings.state.hotkey.registered ? t.hotkeyOk(label) : t.hotkeyTaken(label)),
+    buttons: [t.show, t.close],
     defaultId: 0,
     cancelId: 1,
     noLink: true,
@@ -39,36 +35,37 @@ async function showHelp(panel: PanelWindow, hotkeyLabel: string, registered: boo
 
 export function createTray({ icon, panel, data, settings, updater, openSettings, openLog }: TrayOptions): Tray {
   const tray = new Tray(icon);
-  tray.setToolTip('Wakfu Professions Overlay (outil non officiel, non affilié à Ankama)');
   const buildMenu = () => {
-    const { hotkey } = settings.state;
+    const t = settings.messages.tray;
     const update = updater.status;
     return Menu.buildFromTemplate([
       ...(update.state === 'ready'
-        ? [
-            { label: `Installer la version ${update.version} et redémarrer`, click: () => updater.install() },
-            { type: 'separator' as const },
-          ]
+        ? [{ label: t.installUpdate(update.version), click: () => updater.install() }, { type: 'separator' as const }]
         : []),
       {
-        label: hotkey.registered ? `Afficher / masquer le panneau (${hotkey.label})` : 'Afficher / masquer le panneau',
+        label: settings.state.hotkey.registered ? t.toggleWithHotkey(settings.hotkeyLabel) : t.toggle,
         click: () => panel.toggle(),
       },
-      { label: 'Mode compact', type: 'checkbox', checked: panel.state.compact, click: (item) => panel.setCompact(item.checked) },
-      { label: 'Réglages…', click: openSettings },
+      { label: t.compactMode, type: 'checkbox', checked: panel.state.compact, click: (item) => panel.setCompact(item.checked) },
+      { label: t.settings, click: openSettings },
       { type: 'separator' },
-      { label: 'Vérifier les données du jeu', click: () => void data.check() },
-      { label: 'Ouvrir le journal', click: openLog },
-      { label: 'Le panneau n\'apparaît pas ?', click: () => void showHelp(panel, hotkey.label, hotkey.registered) },
+      { label: t.checkData, click: () => void data.check() },
+      { label: t.openLog, click: openLog },
+      { label: t.help, click: () => void showHelp(panel, settings) },
       { type: 'separator' },
-      { label: 'Quitter', click: () => app.quit() },
+      { label: t.quit, click: () => app.quit() },
     ]);
   };
-  tray.setContextMenu(buildMenu());
-  panel.onState(() => tray.setContextMenu(buildMenu()));
-  settings.onChange(() => tray.setContextMenu(buildMenu()));
+  const refresh = () => {
+    tray.setToolTip(settings.messages.tray.tooltip);
+    tray.setContextMenu(buildMenu());
+  };
+  refresh();
+  panel.onState(refresh);
+  // Raccourci ou langue changés.
+  settings.onChange(refresh);
   // Pas à chaque pourcent téléchargé : le menu ne change qu'une fois la mise à jour prête.
-  updater.onChange((status) => status.state !== 'downloading' && tray.setContextMenu(buildMenu()));
+  updater.onChange((status) => status.state !== 'downloading' && refresh());
   tray.on('click', () => panel.toggle());
   return tray;
 }

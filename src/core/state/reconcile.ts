@@ -1,5 +1,5 @@
 // Rapprochement d'une liste sauvegardée avec les données du jeu chargées.
-import { describeChange, diffSnapshot, type RecipeSnapshot } from '../data/diffIndex';
+import { diffSnapshot, type RecipeSnapshot, type SnapshotChange } from '../data/diffIndex';
 import type { GameIndex } from '../data/loadIndex';
 import { computeNeeds, recipesUsed } from '../needs/computeNeeds';
 import type { CraftList } from './craftList';
@@ -25,8 +25,8 @@ export function isObsolete(list: CraftList, index: GameIndex): boolean {
 
 export interface Reconciled {
   list: CraftList;
-  /** Notices du bandeau, par exemple « Orbe Durable : Krak-Ertz 7 → 8 ». */
-  notices: string[];
+  /** Recettes modifiées, signalées dans un bandeau (describeChange). */
+  changes: SnapshotChange[];
   obsolete: boolean;
 }
 
@@ -35,14 +35,14 @@ export interface Reconciled {
  * par défaut, recettes modifiées signalées, quantités possédées conservées, snapshot et version mis à jour.
  */
 export function reconcile(list: CraftList, index: GameIndex): Reconciled {
-  if (isObsolete(list, index)) return { list, notices: [], obsolete: true };
-  if (list.gameVersion === index.version) return { list: withSnapshot(list, index), notices: [], obsolete: false };
+  if (isObsolete(list, index)) return { list, changes: [], obsolete: true };
+  if (list.gameVersion === index.version) return { list: withSnapshot(list, index), changes: [], obsolete: false };
 
-  const notices = diffSnapshot(list.snapshot, index).map((change) => describeChange(change, index));
+  const changes = diffSnapshot(list.snapshot, index);
   // Une variante disparue est retirée : la recette par défaut prend le relais.
   const recipeChoice = Object.fromEntries(
     Object.entries(list.recipeChoice).filter(([itemId, recipeId]) => index.recipes.get(recipeId)?.out === Number(itemId)),
   );
   const next: CraftList = { ...list, gameVersion: index.version, recipeChoice };
-  return { list: { ...next, snapshot: snapshotFor(index, next) }, notices, obsolete: false };
+  return { list: { ...next, snapshot: snapshotFor(index, next) }, changes, obsolete: false };
 }

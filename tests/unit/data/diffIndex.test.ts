@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { describeChange, diffSnapshot } from '../../../src/core/data/diffIndex';
-import type { GameIndexFile, ItemTuple } from '../../../src/core/data/indexFile';
+import type { GameIndexFile } from '../../../src/core/data/indexFile';
 import { loadIndex } from '../../../src/core/data/loadIndex';
+import { en } from '../../../src/core/i18n/en';
+import { fr } from '../../../src/core/i18n/fr';
 import { computeNeeds, recipesUsed } from '../../../src/core/needs/computeNeeds';
 import { loadFixture } from '../../helpers/fixture';
 import { IDS } from '../../helpers/needsCases';
-import { indexFile } from '../../helpers/synthetic';
+import { indexFile, type SyntheticItem } from '../../helpers/synthetic';
 
 describe('diffSnapshot', () => {
   const { file, index } = loadFixture();
@@ -22,26 +24,28 @@ describe('diffSnapshot', () => {
     const at = r6446[6].indexOf(krak);
     expect(r6446[6][at + 1]).toBe(7);
     r6446[6][at + 1] = 8;
-    const changes = diffSnapshot(snapshot, loadIndex(modified));
+    const changes = diffSnapshot(snapshot, loadIndex(modified, 'fr'));
     expect(changes).toEqual([
       { kind: 'recipe-changed', itemId: IDS.ORBE, recipeId: 6446, ings: [{ itemId: krak, before: 7, after: 8 }] },
     ]);
-    expect(describeChange(changes[0]!, index)).toBe('Orbe Durable : Krak-Ertz 7 → 8');
+    expect(describeChange(changes[0]!, index, fr)).toBe('Orbe Durable : Krak-Ertz 7 → 8');
+    // Noms de la langue de l'index, textes de la langue de l'interface.
+    expect(describeChange(changes[0]!, loadFixture('en').index, en)).toBe('Durable Orb: Krak-Ertz 7 → 8');
   });
 
   it('signale une recette ou un objet disparus', () => {
     const modified: GameIndexFile = structuredClone(file);
     modified.recipes = modified.recipes.filter((r) => r[4] !== IDS.FIL && r[4] !== IDS.FIBRE);
     modified.items = modified.items.filter((i) => i[0] !== IDS.FIBRE);
-    const next = loadIndex(modified);
+    const next = loadIndex(modified, 'fr');
     const changes = diffSnapshot(snapshot, next);
     const filRecipe = snapshot[IDS.FIL]!.recipeId;
     expect(changes).toEqual([
       { kind: 'item-removed', itemId: IDS.FIBRE },
       { kind: 'recipe-removed', itemId: IDS.FIL, recipeId: filRecipe },
     ]);
-    expect(describeChange(changes[0]!, next)).toBe(`Objet #${IDS.FIBRE} : objet retiré du jeu`);
-    expect(describeChange(changes[1]!, next)).toBe(
+    expect(describeChange(changes[0]!, next, fr)).toBe(`Objet #${IDS.FIBRE} : objet retiré du jeu`);
+    expect(describeChange(changes[1]!, next, fr)).toBe(
       "Fil Durable : la recette choisie n'existe plus, recette par défaut utilisée",
     );
   });
@@ -57,10 +61,11 @@ describe('diffSnapshot', () => {
         ],
         recipes: [[10, 1, 1, 0, 1, 1, [2, 3, 3, 1]]],
       }),
+      'fr',
     );
     const snap = recipesUsed(computeNeeds(before, { targets: [{ itemId: 1, qty: 1 }] }));
-    const items = [...before.items.values()].map((i): ItemTuple => [i.id, i.name, 1, 1, 0, 0]);
-    const after = loadIndex(indexFile({ items, recipes: [[10, 1, 1, 0, 1, 4, [2, 3, 4, 2]]] }));
+    const items = [...before.items.values()].map((i): SyntheticItem => [i.id, i.name, 1, 1, 0, 0]);
+    const after = loadIndex(indexFile({ items, recipes: [[10, 1, 1, 0, 1, 4, [2, 3, 4, 2]]] }), 'fr');
     const [change] = diffSnapshot(snap, after);
     expect(change).toEqual({
       kind: 'recipe-changed',
@@ -72,6 +77,7 @@ describe('diffSnapshot', () => {
         { itemId: 4, before: 0, after: 2 },
       ],
     });
-    expect(describeChange(change!, after)).toBe('Pain : rendement 1 → 4, Levure retiré (×1), Sel ajouté (×2)');
+    expect(describeChange(change!, after, fr)).toBe('Pain : rendement 1 → 4, Levure retiré (×1), Sel ajouté (×2)');
+    expect(describeChange(change!, after, en)).toBe('Pain: yield 1 → 4, Levure removed (×1), Sel added (×2)');
   });
 });

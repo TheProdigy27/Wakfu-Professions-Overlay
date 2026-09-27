@@ -45,7 +45,7 @@ export function buildRealIndex(): Promise<RealIndex> {
     const t1 = performance.now();
     const { file, report } = buildIndex(REAL_DATA_VERSION, raw);
     const t2 = performance.now();
-    return { file, index: loadIndex(file), report, readMs: t1 - t0, buildMs: t2 - t1 };
+    return { file, index: loadIndex(file, 'fr'), report, readMs: t1 - t0, buildMs: t2 - t1 };
   })();
   return cached;
 }

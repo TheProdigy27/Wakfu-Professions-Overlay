@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildIndex, DataBuildError, singularTitle } from '../../../src/core/data/buildIndex';
+import { buildIndex, DataBuildError, singularTitle, titleNames } from '../../../src/core/data/buildIndex';
 import { INDEX_SCHEMA } from '../../../src/core/data/indexFile';
 import { parseItemsFallback, parseRawFile, RAW_FILE_NAMES, type RawGamedata } from '../../../src/core/data/rawSchemas';
 import { SMALL_COUNTS, syntheticRaw, type SyntheticOptions } from '../../helpers/synthetic';
@@ -19,13 +19,15 @@ describe('buildIndex', () => {
       indexSchema: INDEX_SCHEMA,
       gameVersion: '1.0',
       builtAt: '2026-09-26T12:00:00.000Z',
-      jobs: [[40, 'Boulanger']],
-      types: [[1, 'Céréale']],
+      jobs: [[40, ['Boulanger', 'Baker', 'Panadero', 'Padeiro']]],
+      // Gabarit de pluriel retiré dans chaque langue.
+      types: [[1, ['Céréale', 'Cereal', 'Cereal', 'Cereal']]],
       items: [
-        [1, 'Blé', 1, 1, 1, 100],
-        [2, 'Farine', 5, 1, 1, 200],
-        [3, 'Pain', 10, 2, 1, 300],
-        [4, "Seau d'eau", 1, 1, 1, 400],
+        [1, ['Blé', 'Wheat', 'Trigo', 'Trigo'], 1, 1, 1, 100],
+        // Espagnol vide, portugais absent : nom français.
+        [2, ['Farine', 'Flour', 'Farine', 'Farine'], 5, 1, 1, 200],
+        [3, ['Pain', 'Pain', 'Pain', 'Pain'], 10, 2, 1, 300],
+        [4, ["Seau d'eau", "Seau d'eau", "Seau d'eau", "Seau d'eau"], 1, 1, 1, 400],
       ],
       recipes: [
         [10, 40, 5, 0, 2, 1, [1, 2]],
@@ -53,7 +55,7 @@ describe('buildIndex', () => {
 
     const withFallback = buildIndex('1.0', raw, { minCounts: SMALL_COUNTS, itemsFallback: parseItemsFallback(json.items) });
     expect(withFallback.report).toMatchObject({ missingItemIds: [], itemsFromFallback: 1 });
-    expect(withFallback.file.items.at(-1)).toEqual([5, 'Levure', 3, 1, 1, 500]);
+    expect(withFallback.file.items.at(-1)).toEqual([5, ['Levure', 'Levure', 'Levure', 'Levure'], 3, 1, 1, 500]);
   });
 
   it('refuse des données trop maigres (format probablement changé)', () => {
@@ -69,6 +71,16 @@ describe('singularTitle', () => {
     expect(singularTitle('Anneau{[~1]?x:}')).toBe('Anneau');
     expect(singularTitle('Hache{[~1]?s:} (Deux mains)')).toBe('Hache (Deux mains)');
     expect(singularTitle('Cheva{[~1]?ux:l}')).toBe('Cheval');
+    expect(singularTitle('An{[~1]?éis:el}')).toBe('Anel');
+    expect(singularTitle('Fish{[~1]?:}')).toBe('Fish');
     expect(singularTitle('Ressource')).toBe('Ressource');
+  });
+});
+
+describe('titleNames', () => {
+  it('un nom par langue, le français à la place d\'une traduction absente ou vide', () => {
+    expect(titleNames({ fr: 'Pain', en: 'Bread', es: 'Pan', pt: 'Pão' })).toEqual(['Pain', 'Bread', 'Pan', 'Pão']);
+    expect(titleNames({ fr: 'Pain', en: '', pt: 'Pão' })).toEqual(['Pain', 'Pain', 'Pain', 'Pão']);
+    expect(titleNames({ fr: 'Anneau{[~1]?x:}', pt: 'An{[~1]?éis:el}' }, singularTitle)).toEqual(['Anneau', 'Anneau', 'Anneau', 'Anel']);
   });
 });

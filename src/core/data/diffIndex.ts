@@ -1,4 +1,5 @@
 // Écarts entre les recettes mémorisées par une liste et un nouvel index.
+import type { Messages } from '../i18n';
 import type { GameIndex } from './loadIndex';
 
 /** itemId → recette utilisée au dernier calcul (ingrédients à plat : itemId, qty, itemId, qty…). */
@@ -68,22 +69,23 @@ export function diffSnapshot(snapshot: RecipeSnapshot, index: GameIndex): Snapsh
 }
 
 /** Texte de la notice, par exemple « Orbe Durable : Krak-Ertz 7 → 8 ». */
-export function describeChange(change: SnapshotChange, index: GameIndex): string {
-  const name = (id: number) => index.items.get(id)?.name ?? `Objet #${id}`;
+export function describeChange(change: SnapshotChange, index: GameIndex, m: Messages): string {
+  const t = m.changes;
+  const name = (id: number) => index.items.get(id)?.name ?? t.unknownItem(id);
   switch (change.kind) {
     case 'item-removed':
-      return `${name(change.itemId)} : objet retiré du jeu`;
+      return t.itemRemoved(name(change.itemId));
     case 'recipe-removed':
-      return `${name(change.itemId)} : la recette choisie n'existe plus, recette par défaut utilisée`;
+      return t.recipeRemoved(name(change.itemId));
     case 'recipe-changed': {
       const parts: string[] = [];
-      if (change.yield) parts.push(`rendement ${change.yield.before} → ${change.yield.after}`);
+      if (change.yield) parts.push(t.yield(change.yield.before, change.yield.after));
       for (const g of change.ings) {
-        if (g.before === 0) parts.push(`${name(g.itemId)} ajouté (×${g.after})`);
-        else if (g.after === 0) parts.push(`${name(g.itemId)} retiré (×${g.before})`);
-        else parts.push(`${name(g.itemId)} ${g.before} → ${g.after}`);
+        if (g.before === 0) parts.push(t.added(name(g.itemId), g.after));
+        else if (g.after === 0) parts.push(t.removed(name(g.itemId), g.before));
+        else parts.push(t.quantity(name(g.itemId), g.before, g.after));
       }
-      return `${name(change.itemId)} : ${parts.join(', ')}`;
+      return t.recipeChanged(name(change.itemId), parts);
     }
   }
 }

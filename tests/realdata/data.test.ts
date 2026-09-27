@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { buildIndex } from '../../src/core/data/buildIndex';
 import { parseIndexFile } from '../../src/core/data/indexFile';
 import { loadIndex } from '../../src/core/data/loadIndex';
-import { RARITY_NAMES } from '../../src/core/data/rarity';
+import { LOCALES, messages } from '../../src/core/i18n';
 import { readItemsFallback, readRawGamedata } from '../../src/main/data/gamedataService';
 import { loadFixture } from '../helpers/fixture';
 import { buildRealIndex, ensureRealRaw, REAL_DATA_VERSION, type RealIndex } from '../helpers/realData';
@@ -28,9 +28,19 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
     expect(real.index.recipesByItem.size).toBe(5159);
   });
 
-  it('toutes les raretés présentes ont un nom', () => {
+  it('toutes les raretés présentes ont un nom, dans chaque langue', () => {
     const rarities = new Set(real.file.items.map((i) => i[3]));
-    expect([...rarities].filter((r) => !(r in RARITY_NAMES))).toEqual([]);
+    for (const locale of LOCALES) {
+      expect([...rarities].filter((r) => !messages(locale).rarities[r])).toEqual([]);
+    }
+  });
+
+  it('noms dans les quatre langues, sans gabarit de pluriel ni nom vide', () => {
+    const names = [...real.file.items, ...real.file.jobs, ...real.file.types].flatMap((row) => row[1]);
+    expect(names.filter((n) => !n.trim() || n.includes('{['))).toEqual([]);
+    // Presque tous les objets ont un nom anglais distinct du français (quelques noms propres sont identiques).
+    const translated = real.file.items.filter((i) => i[1][1] !== i[1][0]).length;
+    expect(translated / real.file.items.length).toBeGreaterThan(0.95);
   });
 
   it('index ≤ 2 Mo, construit en ≤ 3 s (lecture et validation comprises)', () => {
@@ -49,7 +59,7 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
     const t1 = performance.now();
     const file = parseIndexFile(json);
     const t2 = performance.now();
-    loadIndex(file);
+    loadIndex(file, 'fr');
     const t3 = performance.now();
     console.log(`JSON.parse ${(t1 - t0).toFixed(0)} ms, validation ${(t2 - t1).toFixed(0)} ms, Maps ${(t3 - t2).toFixed(0)} ms`);
     expect(t3 - t2).toBeLessThan(50);
@@ -63,7 +73,7 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
     for (const i of file.items) expect(items.get(i[0])).toEqual(i);
     for (const r of file.recipes) expect(recipes.get(r[0])).toEqual(r);
     const jobs = new Map(real.file.jobs);
-    for (const [id, name] of file.jobs) expect(jobs.get(id)).toBe(name);
+    for (const [id, names] of file.jobs) expect(jobs.get(id)).toEqual(names);
   });
 });
 

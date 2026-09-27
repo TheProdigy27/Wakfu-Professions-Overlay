@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import type { GameIndex, Item } from '../../../core/data/loadIndex';
 import { rarityColor, rarityName } from '../../../core/data/rarity';
+import type { Messages } from '../../../core/i18n';
+import { useMessages } from '../store';
 
 export function ItemIcon({ item }: { item: Item | undefined }) {
   // gfxId en échec (icône absente ou réseau indisponible) : image de remplacement.
@@ -19,16 +21,17 @@ export function ItemIcon({ item }: { item: Item | undefined }) {
 }
 
 export function ItemName({ item, itemId }: { item: Item | undefined; itemId: number }) {
-  if (!item) return <span className="item-name unknown">Objet inconnu #{itemId}</span>;
+  const m = useMessages();
+  if (!item) return <span className="item-name unknown">{m.common.unknownItem(itemId)}</span>;
   return (
-    <span className="item-name" style={{ color: rarityColor(item.rarity) }} title={`${rarityName(item.rarity)}, niv. ${item.level}`}>
+    <span className="item-name" style={{ color: rarityColor(item.rarity) }} title={m.item.tooltip(rarityName(item.rarity, m), item.level)}>
       {item.name}
     </span>
   );
 }
 
 /** « Niv. 125 · Légendaire · Casque » */
-export function itemMeta(index: GameIndex, item: Item): string {
+export function itemMeta(index: GameIndex, item: Item, m: Messages): string {
   const type = index.types.get(item.typeId);
-  return [`Niv. ${item.level}`, rarityName(item.rarity), type].filter(Boolean).join(' · ');
+  return [m.item.level(item.level), rarityName(item.rarity, m), type].filter(Boolean).join(' · ');
 }

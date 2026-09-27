@@ -1,10 +1,11 @@
 // État sauvegardé dans state.json : schéma zod de la version courante et valeurs par défaut.
 // Chaque changement de forme passe par une migration (migrations.ts) et une fixture tests/fixtures/state-v{n}.json.
 import { z } from 'zod';
+import { LOCALES, type Locale } from '../i18n/locale';
 import { MAX_HISTORY, MAX_QTY, type CraftList, type RecipePrefs } from './craftList';
 import { DEFAULT_HOTKEY } from './hotkey';
 
-export const STATE_SCHEMA_VERSION = 1;
+export const STATE_SCHEMA_VERSION = 2;
 export const MIN_OPACITY = 0.3;
 
 export interface Rect {
@@ -15,6 +16,8 @@ export interface Rect {
 }
 
 export interface Settings {
+  /** Langue de l'interface ; null : celle de Windows (l'anglais si elle n'est pas traduite). */
+  language: Locale | null;
   hotkeys: { toggle: string };
   /** Entre MIN_OPACITY et 1. */
   opacity: number;
@@ -64,6 +67,7 @@ export const HistorySchema = z.array(CraftListSchema).max(MAX_HISTORY);
 export const RecipePrefsSchema: z.ZodType<RecipePrefs> = z.record(idKey, int);
 
 export const SettingsSchema: z.ZodType<Settings> = z.object({
+  language: z.enum(LOCALES).nullable(),
   hotkeys: z.object({ toggle: z.string().min(1).max(100) }),
   opacity: z.number().min(MIN_OPACITY).max(1),
   compact: z.boolean(),
@@ -83,6 +87,7 @@ export const PersistedStateSchema: z.ZodType<PersistedState> = z.object({
 });
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = {
+  language: null,
   hotkeys: { toggle: DEFAULT_HOTKEY },
   opacity: 0.95,
   compact: false,

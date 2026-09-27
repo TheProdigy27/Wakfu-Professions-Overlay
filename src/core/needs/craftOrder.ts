@@ -48,7 +48,7 @@ export function craftOrder(index: GameIndex, result: NeedsResult): CraftStep[] {
     .sort(
       (a, b) =>
         a.height - b.height ||
-        job(a.recipe).localeCompare(job(b.recipe), 'fr') ||
+        job(a.recipe).localeCompare(job(b.recipe), index.locale) ||
         a.recipe.jobLevel - b.recipe.jobLevel ||
         a.itemId - b.itemId,
     );

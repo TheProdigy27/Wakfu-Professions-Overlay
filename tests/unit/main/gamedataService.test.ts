@@ -51,7 +51,8 @@ describe('GamedataService', () => {
     await svc.check();
 
     expect(svc.status).toMatchObject({ version: V1, offline: false, busy: null, error: null });
-    expect(svc.indexFile?.items.map((i) => i[1])).toEqual(['Blé', 'Farine', 'Pain', "Seau d'eau"]);
+    expect(svc.indexFile?.items.map((i) => i[1][0])).toEqual(['Blé', 'Farine', 'Pain', "Seau d'eau"]);
+    expect(svc.indexFile?.items[0]?.[1]).toEqual(['Blé', 'Wheat', 'Trigo', 'Trigo']);
     expect(indexes).toEqual([[V1, null]]);
     expect(cdn.calls).toHaveLength(7); // config.json + 6 fichiers
     expect(JSON.parse(await readFile(dataPath('index.json'), 'utf8')).gameVersion).toBe(V1);
@@ -63,7 +64,7 @@ describe('GamedataService', () => {
     expect(busy.at(-1)).toEqual({ step: 'build', version: V1 });
   });
 
-  it('hors ligne sans cache : message clair, aucune donnée', async () => {
+  it('hors ligne sans cache : erreur signalée, aucune donnée', async () => {
     const cdn = mockCdn({}, V1);
     cdn.state.online = false;
     const svc = service(cdn);
@@ -71,10 +72,7 @@ describe('GamedataService', () => {
     await svc.check();
     expect(svc.indexFile).toBeNull();
     expect(svc.status).toMatchObject({ version: null, offline: true });
-    expect(svc.status.error).toEqual({
-      code: 'offline-no-data',
-      message: "Connexion requise au premier lancement : les données du jeu n'ont pas encore été téléchargées.",
-    });
+    expect(svc.status.error).toEqual({ code: 'offline-no-data', version: null, kept: null });
   });
 
   it('démarrage hors ligne avec cache : fonctionnement normal, badge hors ligne', async () => {
@@ -114,7 +112,7 @@ describe('GamedataService', () => {
     expect(existsSync(dataPath('raw', V2))).toBe(true);
   });
 
-  it('format inattendu dans la nouvelle version : index précédent conservé, message clair', async () => {
+  it('format inattendu dans la nouvelle version : index précédent conservé et signalé', async () => {
     const broken = syntheticRaw();
     broken.recipes = [{ id: 10, categoryId: 40, level: 5, isUpgrade: 'non', upgradeItemId: 0 }];
     const cdn = mockCdn({ [V1]: syntheticRaw(), [V2]: broken }, V1);
@@ -125,10 +123,7 @@ describe('GamedataService', () => {
 
     expect(svc.indexFile?.gameVersion).toBe(V1);
     expect(svc.status).toMatchObject({ version: V1, busy: null });
-    expect(svc.status.error).toEqual({
-      code: 'format',
-      message: `Les données du jeu ${V2} ont un format que cette version de l'application ne sait pas lire : mettez à jour l'application. Les données ${V1} restent utilisées.`,
-    });
+    expect(svc.status.error).toEqual({ code: 'format', version: V2, kept: V1 });
     // Les fichiers inutilisables sont supprimés pour être retéléchargés à la prochaine vérification.
     expect(existsSync(dataPath('raw', V2))).toBe(false);
     expect(JSON.parse(await readFile(dataPath('index.json'), 'utf8')).gameVersion).toBe(V1);
@@ -139,16 +134,14 @@ describe('GamedataService', () => {
     const svc = service(cdn, { minCounts: { recipes: 100, items: 1, jobs: 1 } });
     await svc.check();
     expect(svc.indexFile).toBeNull();
-    expect(svc.status.error?.code).toBe('format');
-    expect(svc.status.error?.message).not.toContain('restent utilisées');
+    expect(svc.status.error).toEqual({ code: 'format', version: V1, kept: null });
   });
 
   it('config.json au format inattendu', async () => {
     const { svc, cdn } = await installV1();
     cdn.state.configBody = { build: 'x' };
     await svc.check();
-    expect(svc.status.error?.code).toBe('format');
-    expect(svc.status.error?.message).toMatch(/^Les données du jeu ont un format/);
+    expect(svc.status.error).toEqual({ code: 'format', version: null, kept: V1 });
     expect(svc.indexFile?.gameVersion).toBe(V1);
   });
 
@@ -158,7 +151,7 @@ describe('GamedataService', () => {
     const svc = service(cdn);
     await svc.check();
     expect(svc.indexFile).toBeNull();
-    expect(svc.status.error).toEqual({ code: 'network', message: `Téléchargement des données ${V1} interrompu, nouvel essai plus tard.` });
+    expect(svc.status.error).toEqual({ code: 'network', version: V1, kept: null });
 
     cdn.state.failOn = undefined;
     cdn.calls.length = 0;
@@ -209,7 +202,7 @@ describe('GamedataService', () => {
     const svc = service(cdn, { log: (m) => logs.push(m) });
     await svc.check();
     expect(cdn.calls).toContain(`${V1}/items.json`);
-    expect(svc.indexFile?.items.find((i) => i[0] === 5)?.[1]).toBe('Levure');
+    expect(svc.indexFile?.items.find((i) => i[0] === 5)?.[1][0]).toBe('Levure');
     expect(logs.some((l) => l.includes('téléchargement de items.json'))).toBe(true);
 
     // Reconstruction hors ligne : items.json déjà présent est réutilisé.
@@ -218,7 +211,7 @@ describe('GamedataService', () => {
     await writeFile(dataPath('index.json'), '{}');
     const again = service(offline);
     await again.loadCache();
-    expect(again.indexFile?.items.find((i) => i[0] === 5)?.[1]).toBe('Levure');
+    expect(again.indexFile?.items.find((i) => i[0] === 5)?.[1][0]).toBe('Levure');
   });
 
   it('ids introuvables même dans items.json : index construit, ids signalés', async () => {

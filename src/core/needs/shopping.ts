@@ -1,5 +1,6 @@
 // Liste de courses : ce qui s'obtient autrement qu'en craftant.
 import { isCraftable, type GameIndex } from '../data/loadIndex';
+import type { Messages } from '../i18n';
 import type { NeedsInput, NeedsResult } from './computeNeeds';
 
 export interface ShoppingLine {
@@ -34,7 +35,8 @@ export function shoppingList(
     (isBought ? bought : resources).push(line);
   }
   const name = (id: number) => index.items.get(id)?.name ?? `#${id}`;
-  const byName = (a: ShoppingLine, b: ShoppingLine) => name(a.itemId).localeCompare(name(b.itemId), 'fr') || a.itemId - b.itemId;
+  const byName = (a: ShoppingLine, b: ShoppingLine) =>
+    name(a.itemId).localeCompare(name(b.itemId), index.locale) || a.itemId - b.itemId;
   return { resources: resources.sort(byName), bought: bought.sort(byName) };
 }
 
@@ -42,13 +44,14 @@ export function shoppingList(
  * Liste de courses en texte, pour le presse-papiers : seulement ce qui reste à obtenir.
  * `title` décrit l'objet cible, par exemple « Coiffe Lardante (Légendaire) ×1 ».
  */
-export function shoppingText(index: GameIndex, title: string, list: ShoppingList): string {
-  const name = (id: number) => index.items.get(id)?.name ?? `Objet inconnu #${id}`;
+export function shoppingText(index: GameIndex, title: string, list: ShoppingList, m: Messages): string {
+  const t = m.shopping;
+  const name = (id: number) => index.items.get(id)?.name ?? m.common.unknownItem(id);
   const section = (heading: string, lines: ShoppingLine[]) => {
     const missing = lines.filter((l) => l.missing > 0);
     return missing.length ? [heading, ...missing.map((l) => `- ${name(l.itemId)} ×${l.missing}`)] : [];
   };
-  const sections = [section('Ressources', list.resources), section('Intermédiaires achetés', list.bought)].filter((s) => s.length);
-  const body = sections.length ? sections.flatMap((s, i) => (i ? ['', ...s] : s)) : ['Rien ne manque.'];
-  return [`${title} : liste de courses`, '', ...body].join('\n');
+  const sections = [section(t.resources, list.resources), section(t.bought, list.bought)].filter((s) => s.length);
+  const body = sections.length ? sections.flatMap((s, i) => (i ? ['', ...s] : s)) : [t.textNothing];
+  return [t.textTitle(title), '', ...body].join('\n');
 }

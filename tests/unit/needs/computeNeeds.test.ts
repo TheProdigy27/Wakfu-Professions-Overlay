@@ -83,6 +83,7 @@ describe('computeNeeds', () => {
           [11, 1, 1, 0, 2, 1, [1, 1, 3, 3]],
         ],
       }),
+      'fr',
     );
     const res = computeNeeds(cyc, { targets: [{ itemId: 1, qty: 1 }] });
     const cycleNode = res.roots[0]!.children[0]!.children[0]!;
@@ -102,6 +103,7 @@ describe('computeNeeds', () => {
         ],
         recipes: [[10, 1, 1, 0, 1, 1, [2, 1, 999, 2]]],
       }),
+      'fr',
     );
     const input = { targets: [{ itemId: 1, qty: 1 }] };
     const res = computeNeeds(idx, input);
@@ -150,6 +152,7 @@ describe('craftOrder', () => {
           [15, 1, 10, 0, 5, 1, [9, 1]],
         ],
       }),
+      'fr',
     );
     const res = computeNeeds(idx, { targets: [1, 2, 3, 4, 5].map((itemId) => ({ itemId, qty: 1 })) });
     expect(craftOrder(idx, res).map((s) => s.itemId)).toEqual([4, 3, 2, 5, 1]);

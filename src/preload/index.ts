@@ -32,6 +32,7 @@ const api: PanelApi = {
   setHotkey: (accelerator) => ipcRenderer.invoke(IPC.setHotkey, accelerator),
   suspendHotkey: (suspended) => ipcRenderer.send(IPC.suspendHotkey, suspended),
   setOption: (name, value) => ipcRenderer.send(IPC.setOption, name, value),
+  setLanguage: (locale) => ipcRenderer.send(IPC.setLanguage, locale),
   completeOnboarding: () => ipcRenderer.send(IPC.completeOnboarding),
   restart: () => ipcRenderer.send(IPC.restart),
   getUpdate: () => ipcRenderer.invoke(IPC.getUpdate),

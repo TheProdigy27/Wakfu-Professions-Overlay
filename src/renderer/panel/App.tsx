@@ -1,5 +1,7 @@
 import type { DataStatus } from '../../core/data/dataStatus';
+import type { Messages } from '../../core/i18n';
 import { MAX_QTY, setTargetQty, setView, type ListView } from '../../core/state/craftList';
+import { acceleratorLabel } from '../../core/state/hotkey';
 import { Banners } from './components/Banners';
 import { CraftOrder } from './components/CraftOrder';
 import { HistoryMenu } from './components/HistoryMenu';
@@ -9,18 +11,17 @@ import { SearchBar } from './components/SearchBar';
 import { SettingsView } from './components/Settings';
 import { ShoppingList } from './components/ShoppingList';
 import { TreeView } from './components/TreeView';
-import { openSettings, updateList, useNeeds, useObsolete, usePanel } from './store';
+import { openSettings, updateList, useMessages, useNeeds, useObsolete, usePanel } from './store';
 
-const VIEWS: [ListView, string][] = [
-  ['tree', 'Arbre'],
-  ['shopping', 'Courses'],
-  ['order', 'Ordre'],
-];
+const VIEWS: ListView[] = ['tree', 'shopping', 'order'];
 
 export function App() {
   const compact = usePanel((s) => s.window.compact);
   const settingsOpen = usePanel((s) => s.settingsOpen) && !compact;
   const onboarding = usePanel((s) => s.onboarding) && !compact;
+  // Langue connue seulement avec l'état de l'application : rien n'est affiché avant, pour ne pas changer de langue à l'écran.
+  const ready = usePanel((s) => s.app !== null);
+  if (!ready) return <div className={compact ? 'app compact' : 'app'} />;
   return (
     <div className={compact ? 'app compact' : 'app'}>
       <Header />
@@ -39,11 +40,13 @@ export function App() {
 }
 
 function Header() {
+  const m = useMessages();
   const compact = usePanel((s) => s.window.compact);
   const settingsOpen = usePanel((s) => s.settingsOpen);
   const hotkey = usePanel((s) => s.app?.hotkey);
   const needs = useNeeds();
   const target = needs?.catalog.index.items.get(needs.list.target.itemId);
+  const t = m.header;
   return (
     <header className="header">
       <span className="title">
@@ -60,8 +63,8 @@ function Header() {
           <button
             type="button"
             className={settingsOpen ? 'active' : undefined}
-            title="Réglages"
-            aria-label="Réglages"
+            title={t.settings}
+            aria-label={t.settings}
             aria-pressed={settingsOpen}
             onClick={() => openSettings(!settingsOpen)}
           >
@@ -70,16 +73,16 @@ function Header() {
         )}
         <button
           type="button"
-          title={compact ? 'Mode normal' : 'Mode compact'}
-          aria-label={compact ? 'Mode normal' : 'Mode compact'}
+          title={compact ? t.normalMode : t.compactMode}
+          aria-label={compact ? t.normalMode : t.compactMode}
           onClick={() => window.api.setCompact(!compact)}
         >
           {compact ? '▢' : '▭'}
         </button>
         <button
           type="button"
-          title={hotkey?.registered ? `Masquer (${hotkey.label})` : 'Masquer'}
-          aria-label="Masquer"
+          title={hotkey?.registered ? t.hideWithHotkey(acceleratorLabel(hotkey.accelerator, m)) : t.hide}
+          aria-label={t.hide}
           onClick={() => window.api.hidePanel()}
         >
           ✕
@@ -90,6 +93,7 @@ function Header() {
 }
 
 function Body() {
+  const m = useMessages();
   const compact = usePanel((s) => s.window.compact);
   const catalog = usePanel((s) => s.catalog);
   const status = usePanel((s) => s.status);
@@ -100,7 +104,7 @@ function Body() {
     const busy = status?.busy;
     return (
       <div className="empty">
-        <p>{waitingMessage(status)}</p>
+        <p>{waitingMessage(status, m)}</p>
         {busy?.step === 'download' && <progress className="download" max={100} value={busy.percent} />}
       </div>
     );
@@ -108,20 +112,12 @@ function Body() {
   if (needs && obsolete) {
     return (
       <p className="empty">
-        L'objet de cette liste (#{needs.list.target.itemId}) n'existe plus dans les données du jeu {catalog.index.version}.
-        {!compact && ' Recherchez un objet de remplacement : cette liste restera dans les listes récentes.'}
+        {m.body.obsolete(needs.list.target.itemId, catalog.index.version)}
+        {!compact && ` ${m.body.obsoleteHint}`}
       </p>
     );
   }
-  if (!needs) {
-    return (
-      <p className="empty">
-        {compact
-          ? 'Aucun objet choisi.'
-          : 'Recherchez un objet à crafter, par son nom ou son identifiant (#29236).'}
-      </p>
-    );
-  }
+  if (!needs) return <p className="empty">{compact ? m.body.noTarget : m.body.searchHint}</p>;
   if (compact) return <ShoppingList {...needs} compact />;
 
   const { list } = needs;
@@ -132,10 +128,10 @@ function Body() {
         <ItemIcon item={target} />
         <div className="target-text">
           <ItemName item={target} itemId={list.target.itemId} />
-          {target && <span className="meta">{itemMeta(catalog.index, target)}</span>}
+          {target && <span className="meta">{itemMeta(catalog.index, target, m)}</span>}
         </div>
         <label className="target-qty">
-          Quantité
+          {m.body.quantity}
           <input
             type="number"
             min={1}
@@ -146,7 +142,7 @@ function Body() {
         </label>
       </div>
       <nav className="tabs" role="tablist">
-        {VIEWS.map(([view, label]) => (
+        {VIEWS.map((view) => (
           <button
             key={view}
             type="button"
@@ -155,7 +151,7 @@ function Body() {
             className={list.ui.view === view ? 'active' : undefined}
             onClick={() => updateList((l) => setView(l, view))}
           >
-            {label}
+            {m.views[view]}
           </button>
         ))}
       </nav>
@@ -168,35 +164,39 @@ function Body() {
   );
 }
 
-function waitingMessage(status: DataStatus | null): string {
-  if (status?.busy?.step === 'download') {
-    return `Téléchargement des données du jeu ${status.busy.version} depuis les serveurs d'Ankama : ${status.busy.percent} %`;
-  }
-  if (status?.busy?.step === 'build') return `Préparation des données du jeu ${status.busy.version}…`;
-  if (status?.error) return status.error.message;
-  return 'Chargement des données du jeu…';
+/** Erreur de données du jeu, suivie des données qui restent utilisées s'il y en a. */
+function dataErrorText(error: NonNullable<DataStatus['error']>, m: Messages): string {
+  const text = m.data.errors[error.code](error.version);
+  return error.kept ? `${text} ${m.data.kept(error.kept)}` : text;
+}
+
+function waitingMessage(status: DataStatus | null, m: Messages): string {
+  if (status?.busy?.step === 'download') return m.data.downloading(status.busy.version, status.busy.percent);
+  if (status?.busy?.step === 'build') return m.data.building(status.busy.version);
+  if (status?.error) return dataErrorText(status.error, m);
+  return m.data.loading;
 }
 
 function StatusBar() {
+  const m = useMessages();
   const status = usePanel((s) => s.status);
   if (!status) return null;
+  const t = m.data.footer;
   return (
     <footer className="status">
-      {status.version ? <span>Données {status.version}</span> : <span>Aucune donnée</span>}
-      {status.offline && <span className="badge">hors ligne</span>}
+      {status.version ? <span>{t.version(status.version)}</span> : <span>{t.none}</span>}
+      {status.offline && <span className="badge">{t.offline}</span>}
       {status.busy && (
-        <span className="busy">
-          {status.busy.step === 'download' ? `mise à jour : ${status.busy.percent} %` : 'mise à jour…'}
-        </span>
+        <span className="busy">{status.busy.step === 'download' ? t.updatingPercent(status.busy.percent) : t.updating}</span>
       )}
       {status.error && status.version && (
-        <span className="error" title={status.error.message}>
-          {status.error.code === 'format' ? 'mise à jour des données impossible' : 'téléchargement interrompu'}
+        <span className="error" title={dataErrorText(status.error, m)}>
+          {status.error.code === 'format' ? t.formatFailed : t.networkFailed}
         </span>
       )}
       {(status.error || status.offline) && !status.busy && (
         <button type="button" className="link" onClick={() => void window.api.checkData()}>
-          Réessayer
+          {m.common.retry}
         </button>
       )}
     </footer>

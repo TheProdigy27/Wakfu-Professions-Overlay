@@ -51,9 +51,9 @@ jobs:
           if [[ "$version" == *-* ]]; then prerelease=(--prerelease); fi
           gh release create "$GITHUB_REF_NAME" "${prerelease[@]}" \
             --title "Wakfu Professions Overlay $version" \
-            --notes "Téléchargez **Wakfu-Professions-Overlay-Setup-$version.exe** ci-dessous, puis lancez-le. L'installeur n'est pas signé : Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » ; cliquez sur « Informations complémentaires », puis « Exécuter quand même ». Voir le README.
+            --notes "Download **Wakfu-Professions-Overlay-Setup-$version.exe** below, then run it. The installer is not signed: Windows SmartScreen may show “Windows protected your PC”; click “More info”, then “Run anyway”. See the README.
 
-          Outil non officiel, non affilié à Ankama. Données et icônes du jeu © Ankama, téléchargées au premier lancement." \
+          Unofficial tool, not affiliated with Ankama. Game data and icons © Ankama, downloaded on first launch." \
             --generate-notes \
             "release/Wakfu-Professions-Overlay-Setup-$version.exe" \
             "release/Wakfu-Professions-Overlay-Setup-$version.exe.blockmap" \

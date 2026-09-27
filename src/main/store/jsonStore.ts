@@ -4,6 +4,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync } from 'n
 import path from 'node:path';
 import { MIGRATIONS, NewerStateError, parseState, stateVersion, type Migration } from '../../core/state/migrations';
 import { defaultState, STATE_SCHEMA_VERSION, type PersistedState } from '../../core/state/schema';
+import type { StoreProblem } from '../../preload/api';
 import { writeFileAtomicSync } from './atomicWrite';
 
 /** Délai maximal entre une modification et son écriture : c'est au plus ce qu'un arrêt forcé peut faire perdre. */
@@ -22,8 +23,8 @@ const errorText = (err: unknown) => (err instanceof Error ? err.message : String
 
 export class JsonStore {
   readonly file: string;
-  /** Message pour l'utilisateur quand state.json n'a pas pu être relu et a été mis de côté ; null sinon. */
-  readonly loadProblem: string | null;
+  /** state.json n'a pas pu être relu et a été mis de côté (signalé dans le panneau) ; null sinon. */
+  readonly loadProblem: StoreProblem | null;
   private state: PersistedState;
   private dirty = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -44,7 +45,7 @@ export class JsonStore {
     return this.state;
   }
 
-  /** Dernière erreur d'écriture, null si la dernière écriture a réussi. */
+  /** Détail de la dernière erreur d'écriture, null si la dernière écriture a réussi. */
   get saveError(): string | null {
     return this.error;
   }
@@ -76,7 +77,7 @@ export class JsonStore {
     } catch (err) {
       // On garde les modifications en mémoire : la prochaine modification ou la fermeture retentera.
       this.log(`state.json : écriture impossible (${errorText(err)})`);
-      this.setError(`Vos listes et réglages n'ont pas pu être enregistrés (${errorText(err)}).`);
+      this.setError(errorText(err));
     }
   }
 
@@ -86,7 +87,7 @@ export class JsonStore {
     for (const listener of this.errorListeners) listener(error);
   }
 
-  private read(): { state: PersistedState; problem: string | null } {
+  private read(): { state: PersistedState; problem: StoreProblem | null } {
     if (!existsSync(this.file)) return { state: defaultState(), problem: null };
     let json: unknown;
     try {
@@ -108,17 +109,14 @@ export class JsonStore {
         const backup = this.sibling(`state.v${err.version}.bak.json`);
         copyFileSync(this.file, backup);
         this.log(`${err.message} : copie dans ${path.basename(backup)}, état vierge`);
-        return {
-          state: defaultState(),
-          problem: `Vos listes ont été enregistrées par une version plus récente de l'application : elles sont gardées de côté (${path.basename(backup)}).`,
-        };
+        return { state: defaultState(), problem: { kind: 'newer', file: path.basename(backup) } };
       }
       return this.setAside(err);
     }
   }
 
   /** Fichier illisible ou invalide : renommé state.corrupt-{date}.json, et on repart d'un état vierge. */
-  private setAside(err: unknown): { state: PersistedState; problem: string } {
+  private setAside(err: unknown): { state: PersistedState; problem: StoreProblem } {
     const stamp = (this.options.now?.() ?? new Date()).toISOString().replace(/[:.]/g, '-');
     const aside = this.sibling(`state.corrupt-${stamp}.json`);
     try {
@@ -127,10 +125,7 @@ export class JsonStore {
       this.log(`state.json : mise de côté impossible (${errorText(renameErr)})`);
     }
     this.log(`state.json illisible (${errorText(err).split('\n')[0]}) : renommé ${path.basename(aside)}, état vierge`);
-    return {
-      state: defaultState(),
-      problem: `Vos listes et réglages n'ont pas pu être relus : le fichier a été mis de côté (${path.basename(aside)}) et l'application repart de zéro.`,
-    };
+    return { state: defaultState(), problem: { kind: 'corrupt', file: path.basename(aside) } };
   }
 
   private sibling(name: string): string {

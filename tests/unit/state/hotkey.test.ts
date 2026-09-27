@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { messages } from '../../../src/core/i18n';
 import {
   acceleratorLabel,
   captureHotkey,
@@ -26,7 +27,6 @@ describe('captureHotkey', () => {
       status: 'ok',
       combo: { ctrl: true, alt: false, shift: true, meta: false, key: 'W' },
       accelerator: DEFAULT_HOTKEY,
-      label: 'Ctrl+Maj+W',
     });
   });
 
@@ -55,16 +55,17 @@ describe('captureHotkey', () => {
   it('refuse les combinaisons qui gêneraient la saisie ailleurs', () => {
     const problem = (code: number, mods: Partial<Omit<KeyInput, 'keyCode'>>) => {
       const r = captureHotkey(key(code, mods));
-      return r.status === 'invalid' ? r.message : null;
+      return r.status === 'invalid' ? r.problem : null;
     };
-    expect(problem(W, {})).toMatch(/Ajoutez Ctrl ou Alt/);
-    expect(problem(W, { shiftKey: true })).toMatch(/Ajoutez Ctrl ou Alt/);
-    expect(problem(38, { shiftKey: true })).toMatch(/Ajoutez Ctrl ou Alt/);
-    expect(problem(67, { ctrlKey: true })).toMatch(/ajoutez Maj/);
-    expect(problem(W, { altKey: true })).toMatch(/ajoutez Maj/);
+    expect(problem(W, {})).toBe('no-modifier');
+    expect(problem(W, { shiftKey: true })).toBe('no-modifier');
+    expect(problem(38, { shiftKey: true })).toBe('no-modifier');
+    expect(problem(67, { ctrlKey: true })).toBe('single-modifier');
+    expect(problem(W, { altKey: true })).toBe('single-modifier');
     // Ctrl+Alt = AltGr : Ctrl+Alt+0 empêcherait de taper @ sur un clavier français.
-    expect(problem(48, { ctrlKey: true, altKey: true })).toMatch(/AltGr/);
-    expect(problem(69, { ctrlKey: true, altKey: true })).toMatch(/AltGr/);
+    expect(problem(48, { ctrlKey: true, altKey: true })).toBe('altgr');
+    expect(problem(69, { ctrlKey: true, altKey: true })).toBe('altgr');
+    expect(problem(186, { ctrlKey: true, altKey: true, shiftKey: true })).toBe('unsupported-key');
     // Acceptées : touche F seule, touche de navigation avec Ctrl, Windows + lettre, Ctrl+Alt+Maj + lettre.
     expect(problem(119, {})).toBeNull();
     expect(problem(38, { ctrlKey: true })).toBeNull();
@@ -95,11 +96,21 @@ describe('accélérateurs', () => {
   });
 
   it('libellés pour un clavier français', () => {
-    expect(acceleratorLabel(DEFAULT_HOTKEY)).toBe('Ctrl+Maj+W');
-    expect(acceleratorLabel('Alt+Shift+Super+F12')).toBe('Alt+Maj+Win+F12');
-    expect(hotkeyLabel(parseAccelerator('CommandOrControl+num7')!)).toBe('Ctrl+Pavé num. 7');
-    expect(hotkeyLabel(parseAccelerator('CommandOrControl+nummult')!)).toBe('Ctrl+Pavé num. *');
-    expect(hotkeyLabel(parseAccelerator('CommandOrControl+PageDown')!)).toBe('Ctrl+Page suiv.');
-    expect(acceleratorLabel('quelque chose')).toBe('quelque chose');
+    const fr = messages('fr');
+    expect(acceleratorLabel(DEFAULT_HOTKEY, fr)).toBe('Ctrl+Maj+W');
+    expect(acceleratorLabel('Alt+Shift+Super+F12', fr)).toBe('Alt+Maj+Win+F12');
+    expect(hotkeyLabel(parseAccelerator('CommandOrControl+num7')!, fr)).toBe('Ctrl+Pavé num. 7');
+    expect(hotkeyLabel(parseAccelerator('CommandOrControl+nummult')!, fr)).toBe('Ctrl+Pavé num. *');
+    expect(hotkeyLabel(parseAccelerator('CommandOrControl+PageDown')!, fr)).toBe('Ctrl+Page suiv.');
+    expect(acceleratorLabel('quelque chose', fr)).toBe('quelque chose');
+  });
+
+  it('libellés dans les autres langues', () => {
+    expect(acceleratorLabel(DEFAULT_HOTKEY, messages('en'))).toBe('Ctrl+Shift+W');
+    expect(acceleratorLabel('CommandOrControl+Shift+PageDown', messages('en'))).toBe('Ctrl+Shift+Page Down');
+    expect(acceleratorLabel('CommandOrControl+num7', messages('en'))).toBe('Ctrl+Num 7');
+    expect(acceleratorLabel(DEFAULT_HOTKEY, messages('es'))).toBe('Ctrl+Mayús+W');
+    expect(acceleratorLabel('CommandOrControl+Delete', messages('es'))).toBe('Ctrl+Supr');
+    expect(acceleratorLabel('Alt+Shift+Space', messages('pt'))).toBe('Alt+Shift+Espaço');
   });
 });

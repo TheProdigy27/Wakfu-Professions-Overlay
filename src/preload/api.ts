@@ -1,7 +1,9 @@
 // API exposée au panneau par le preload (window.api) et canaux IPC autorisés. Types seulement côté renderer.
 import type { DataStatus } from '../core/data/dataStatus';
 import type { GameIndexFile } from '../core/data/indexFile';
+import type { Locale } from '../core/i18n/locale';
 import type { CraftList, RecipePrefs } from '../core/state/craftList';
+import type { HotkeyProblem } from '../core/state/hotkey';
 
 export interface WindowState {
   compact: boolean;
@@ -9,12 +11,21 @@ export interface WindowState {
   opacity: number;
 }
 
+/**
+ * state.json n'a pas pu être relu et a été mis de côté, sous le nom `file` : illisible ou invalide (corrupt),
+ * ou écrit par une version plus récente de l'application (newer).
+ */
+export interface StoreProblem {
+  kind: 'corrupt' | 'newer';
+  file: string;
+}
+
 /** Réglages et état de l'application, tenus par le processus principal. */
 export interface AppState {
+  /** Langue de l'interface : celle choisie, ou à défaut celle de Windows. */
+  locale: Locale;
   hotkey: {
     accelerator: string;
-    /** « Ctrl+Maj+W » */
-    label: string;
     /** false : déjà pris par une autre application au démarrage. */
     registered: boolean;
   };
@@ -28,8 +39,8 @@ export interface AppState {
   packaged: boolean;
   version: string;
   /** state.json n'a pas pu être relu au démarrage (fichier mis de côté). */
-  storeProblem: string | null;
-  /** La dernière écriture de state.json a échoué. */
+  storeProblem: StoreProblem | null;
+  /** La dernière écriture de state.json a échoué : détail de l'erreur. */
   saveError: string | null;
 }
 
@@ -44,7 +55,9 @@ export type UpdateStatus =
   | { state: 'downloading'; version: string; percent: number }
   /** Téléchargée : installée à la fermeture de l'application (si les mises à jour automatiques sont actives), ou tout de suite à la demande. */
   | { state: 'ready'; version: string }
-  | { state: 'error'; message: string };
+  /** Traduite par le panneau : recherche impossible (réseau, GitHub), version en cours de publication, aucune version publiée. */
+  | { state: 'error'; reason: 'check' | 'publishing' | 'not-published' }
+  | { state: 'error'; reason: 'download'; version: string };
 
 export type BooleanOption = 'launchAtLogin' | 'autoUpdate' | 'hardwareAcceleration';
 export const BOOLEAN_OPTIONS: readonly BooleanOption[] = ['launchAtLogin', 'autoUpdate', 'hardwareAcceleration'];
@@ -55,7 +68,11 @@ export interface SavedLists {
   recipePrefs: RecipePrefs;
 }
 
-export type HotkeyChange = { ok: true } | { ok: false; message: string };
+/**
+ * Nouveau raccourci refusé : combinaison qui gênerait la saisie (HotkeyProblem), accélérateur illisible (invalid),
+ * déjà pris par une autre application (taken) ou refusé par Windows (not-global).
+ */
+export type HotkeyChange = { ok: true } | { ok: false; problem: HotkeyProblem | 'invalid' | 'taken' | 'not-global' };
 
 export interface PanelApi {
   /** Index compact courant, null tant qu'aucune donnée n'est disponible. */
@@ -84,6 +101,7 @@ export interface PanelApi {
   /** Pendant la saisie d'un nouveau raccourci, l'actuel est désactivé. */
   suspendHotkey(suspended: boolean): void;
   setOption(name: BooleanOption, value: boolean): void;
+  setLanguage(locale: Locale): void;
   completeOnboarding(): void;
   /** Redémarre l'application (accélération matérielle). */
   restart(): void;
@@ -121,6 +139,7 @@ export const IPC = {
   setHotkey: 'settings:set-hotkey',
   suspendHotkey: 'settings:suspend-hotkey',
   setOption: 'settings:set-option',
+  setLanguage: 'settings:set-language',
   completeOnboarding: 'settings:onboarding-done',
   restart: 'app:restart',
   getUpdate: 'update:get',

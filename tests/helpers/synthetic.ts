@@ -1,5 +1,5 @@
 // Petites données au format Ankama (avec des champs superflus, comme les vraies) et faux CDN, pour les tests hors réseau.
-import type { GameIndexFile } from '../../src/core/data/indexFile';
+import type { GameIndexFile, Names, RecipeTuple } from '../../src/core/data/indexFile';
 import { INDEX_SCHEMA } from '../../src/core/data/indexFile';
 import type { FetchLike } from '../../src/main/data/gamedataService';
 
@@ -11,6 +11,16 @@ export interface SyntheticOptions {
   /** Ajoute la Levure (id 5) au Pain : absente de jobsItems.json, présente dans items.json. */
   withYeast?: boolean;
 }
+
+/**
+ * Noms traduits. Farine : espagnol vide et portugais absent, remplacés par le français. Les autres noms sont les
+ * mêmes dans toutes les langues (« en » recopie le français, es et pt sont absents).
+ */
+const TRANSLATIONS: Readonly<Record<string, { en?: string; es?: string; pt?: string }>> = {
+  Boulanger: { en: 'Baker', es: 'Panadero', pt: 'Padeiro' },
+  Blé: { en: 'Wheat', es: 'Trigo', pt: 'Trigo' },
+  Farine: { en: 'Flour', es: '' },
+};
 
 /**
  * Objets : 1 Blé, 2 Farine, 3 Pain, 4 Eau (5 Levure dans items.json seulement).
@@ -29,11 +39,11 @@ export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unk
   });
   const job = (id: number, fr: string, flags: Partial<Record<'isArchive' | 'isHidden' | 'isNoCraft', boolean>> = {}) => ({
     definition: { id, isArchive: false, isNoCraft: false, isHidden: false, xpFactor: 1, isInnate: false, ...flags },
-    title: { fr, en: fr },
+    title: { fr, en: fr, ...TRANSLATIONS[fr] },
   });
   const jobItem = (id: number, fr: string, level: number, rarity: number) => ({
     definition: { id, level, rarity, itemTypeId: 1, graphicParameters: { gfxId: id * 100, femaleGfxId: id * 100 } },
-    title: { fr, en: fr },
+    title: { fr, en: fr, ...TRANSLATIONS[fr] },
   });
   return {
     recipes: [recipe(10, 40, 5), recipe(11, 40, 10), recipe(12, 99, 1), recipe(13, 40, 1), recipe(14, 40, 3, true)],
@@ -54,7 +64,10 @@ export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unk
     ],
     jobsItems: [jobItem(1, 'Blé', 1, 1), jobItem(2, 'Farine', 5, 1), jobItem(3, 'Pain', 10, 2), jobItem(4, "Seau d'eau", 1, 1)],
     itemTypes: [
-      { definition: { id: 1, isRecyclable: true }, title: { fr: 'Céréale{[~1]?s:}' } },
+      {
+        definition: { id: 1, isRecyclable: true },
+        title: { fr: 'Céréale{[~1]?s:}', en: 'Cereal{[~1]?s:}', es: 'Cereal{[~1]?es:}', pt: 'Cerea{[~1]?is:l}' },
+      },
       { definition: { id: 2, isRecyclable: false } },
     ],
     items: [
@@ -96,16 +109,26 @@ export function mockCdn(versions: Record<string, Record<string, unknown>>, curre
 
 export const CDN = 'https://cdn.test/gamedata';
 
+/** Même nom dans les quatre langues, ou un nom par langue (fr, en, es, pt). */
+export type SyntheticName = string | Names;
+export type SyntheticItem = [id: number, name: SyntheticName, level: number, rarity: number, typeId: number, gfxId: number];
+
+const names = (name: SyntheticName): Names => (typeof name === 'string' ? [name, name, name, name] : name);
+
 /** Petit index compact écrit à la main (cycles, ids inconnus…). */
-export function indexFile(partial: Partial<GameIndexFile>): GameIndexFile {
+export function indexFile(partial: {
+  jobs?: [number, SyntheticName][];
+  types?: [number, SyntheticName][];
+  items?: SyntheticItem[];
+  recipes?: RecipeTuple[];
+}): GameIndexFile {
   return {
     indexSchema: INDEX_SCHEMA,
     gameVersion: 'test',
     builtAt: 'test',
-    jobs: [[1, 'Test']],
-    types: [],
-    items: [],
-    recipes: [],
-    ...partial,
+    jobs: (partial.jobs ?? [[1, 'Test']]).map(([id, name]) => [id, names(name)]),
+    types: (partial.types ?? []).map(([id, name]) => [id, names(name)]),
+    items: (partial.items ?? []).map(([id, name, ...rest]) => [id, names(name), ...rest]),
+    recipes: partial.recipes ?? [],
   };
 }
