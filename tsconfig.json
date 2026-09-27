@@ -1,0 +1,19 @@
+{
+  // Côté Node : main, preload, core, tests, scripts. Le renderer a son propre tsconfig.web.json (DOM, JSX).
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src/core", "src/main", "src/preload", "tests", "scripts", "vitest.config.ts", "electron.vite.config.ts"]
+}

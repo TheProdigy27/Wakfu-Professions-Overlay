@@ -1,0 +1,46 @@
+# Installeur Windows : NSIS, installation pour l'utilisateur courant sans droits admin,
+# mises à jour par electron-updater depuis les Releases GitHub. Aucune donnée ni icône Ankama n'est embarquée :
+# elles sont téléchargées au premier lancement (scripts/check-package.ts le vérifie sur l'archive produite).
+appId: io.github.theprodigy27.wakfu-professions-overlay
+productName: Wakfu Professions Overlay
+copyright: © 2026 TheProdigy27. Outil non officiel, non affilié à Ankama.
+
+directories:
+  buildResources: resources
+  output: release
+
+# Le code est déjà assemblé par electron-vite dans out/ ; electron-builder ajoute les dépendances de production.
+files:
+  - out/**
+  - package.json
+# Aucun module natif à recompiler.
+npmRebuild: false
+# Traductions de Chromium (menus contextuels, boîtes de dialogue) : seulement le français et l'anglais.
+electronLanguages: [fr, en-US]
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  # Non signé : Windows SmartScreen avertit au premier lancement de l'installeur (README).
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Wakfu Professions Overlay
+  uninstallDisplayName: Wakfu Professions Overlay
+  # Sans espace : GitHub remplace les espaces des fichiers publiés, et latest.yml ne les retrouverait plus.
+  artifactName: Wakfu-Professions-Overlay-Setup-${version}.${ext}
+  installerLanguages: [fr_FR]
+  language: '1036'
+  # Page d'accueil (avertissement), installation forcée « pour moi seulement », données gardées ou supprimées à la désinstallation.
+  include: resources/installer.nsh
+
+publish:
+  provider: github
+  owner: TheProdigy27
+  repo: Wakfu-Professions-Overlay

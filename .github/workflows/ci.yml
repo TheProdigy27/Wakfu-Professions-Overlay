@@ -1,0 +1,35 @@
+# Intégration continue : lint, typecheck, tests unitaires, build, puis test de bout en bout de
+# l'application construite, hors réseau, sur l'index de fixture. Aucune donnée Ankama n'est téléchargée.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Les scripts d'installation des paquets ne sont pas toujours exécutés par npm : binaire d'Electron téléchargé ici.
+      - run: node node_modules/electron/install.js
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:e2e

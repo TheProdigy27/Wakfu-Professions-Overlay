@@ -1,0 +1,74 @@
+// Index en mémoire (Maps) construit à partir de l'index compact.
+import type { GameIndexFile } from './indexFile';
+
+export interface Item {
+  id: number;
+  name: string;
+  level: number;
+  rarity: number;
+  typeId: number;
+  gfxId: number;
+}
+
+export interface Ingredient {
+  itemId: number;
+  qty: number;
+}
+
+export interface Recipe {
+  id: number;
+  jobId: number;
+  jobLevel: number;
+  isUpgrade: boolean;
+  /** Objet produit. */
+  out: number;
+  /** Quantité produite par craft. */
+  yield: number;
+  ings: Ingredient[];
+}
+
+export interface GameIndex {
+  version: string;
+  items: Map<number, Item>;
+  recipes: Map<number, Recipe>;
+  /** Recettes par objet produit, triées par niveau de métier puis id : la première est la recette par défaut. */
+  recipesByItem: Map<number, Recipe[]>;
+  jobs: Map<number, string>;
+  types: Map<number, string>;
+}
+
+export function loadIndex(file: GameIndexFile): GameIndex {
+  const items = new Map<number, Item>();
+  for (const [id, name, level, rarity, typeId, gfxId] of file.items) {
+    items.set(id, { id, name, level, rarity, typeId, gfxId });
+  }
+  const recipes = new Map<number, Recipe>();
+  const recipesByItem = new Map<number, Recipe[]>();
+  for (const [id, jobId, jobLevel, isUpgrade, out, outQty, flat] of file.recipes) {
+    const ings: Ingredient[] = [];
+    for (let i = 0; i + 1 < flat.length; i += 2) ings.push({ itemId: flat[i]!, qty: flat[i + 1]! });
+    const recipe: Recipe = { id, jobId, jobLevel, isUpgrade: isUpgrade === 1, out, yield: outQty, ings };
+    recipes.set(id, recipe);
+    const list = recipesByItem.get(out);
+    if (list) list.push(recipe);
+    else recipesByItem.set(out, [recipe]);
+  }
+  for (const list of recipesByItem.values()) list.sort((a, b) => a.jobLevel - b.jobLevel || a.id - b.id);
+  return {
+    version: file.gameVersion,
+    items,
+    recipes,
+    recipesByItem,
+    jobs: new Map(file.jobs),
+    types: new Map(file.types),
+  };
+}
+
+export function isCraftable(index: GameIndex, itemId: number): boolean {
+  return index.recipesByItem.has(itemId);
+}
+
+/** Recette par défaut : niveau de métier minimal, puis id minimal. */
+export function defaultRecipe(index: GameIndex, itemId: number): Recipe | undefined {
+  return index.recipesByItem.get(itemId)?.[0];
+}

@@ -1,0 +1,65 @@
+# Publication : une étiquette v* construit l'installeur NSIS, le vérifie (contenu du paquet, test
+# de bout en bout sur l'exécutable empaqueté) et le publie dans une Release GitHub, avec les fichiers que lit
+# electron-updater. Une étiquette à suffixe (v0.2.0-beta.1) donne une pré-release, proposée seulement aux versions
+# de même suffixe ; sans suffixe, la mise à jour est proposée à tous.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: L'étiquette correspond à la version de package.json
+        shell: bash
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::étiquette $GITHUB_REF_NAME, mais package.json est en $version"
+            exit 1
+          fi
+      - run: npm ci
+      # Les scripts d'installation des paquets ne sont pas toujours exécutés par npm : binaire d'Electron téléchargé ici.
+      - run: node node_modules/electron/install.js
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # Build, installeur, puis scripts/check-package.ts : aucune donnée ni icône Ankama, installeur ≤ 120 Mo.
+      - run: npm run package
+      - name: Test de bout en bout sur l'exécutable empaqueté
+        run: npm run test:e2e
+        env:
+          WPO_E2E_EXE: release/win-unpacked/Wakfu Professions Overlay.exe
+      - name: Release GitHub
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          channel=latest
+          prerelease=()
+          if [[ "$version" == *-* ]]; then
+            channel="${version#*-}"
+            channel="${channel%%.*}"
+            prerelease=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" "${prerelease[@]}" \
+            --title "Wakfu Professions Overlay $version" \
+            --notes "Téléchargez **Wakfu-Professions-Overlay-Setup-$version.exe** ci-dessous, puis lancez-le. L'installeur n'est pas signé : Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » ; cliquez sur « Informations complémentaires », puis « Exécuter quand même ». Voir le README.
+
+          Outil non officiel, non affilié à Ankama. Données et icônes du jeu © Ankama, téléchargées au premier lancement." \
+            --generate-notes \
+            "release/Wakfu-Professions-Overlay-Setup-$version.exe" \
+            "release/Wakfu-Professions-Overlay-Setup-$version.exe.blockmap" \
+            "release/$channel.yml"

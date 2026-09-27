@@ -1,0 +1,59 @@
+{
+  "name": "wakfu-professions-overlay",
+  "productName": "Wakfu Professions Overlay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Overlay de préparation de craft pour Wakfu (outil non officiel, non affilié à Ankama).",
+  "author": "TheProdigy27",
+  "license": "MIT",
+  "homepage": "https://github.com/TheProdigy27/Wakfu-Professions-Overlay",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheProdigy27/Wakfu-Professions-Overlay.git"
+  },
+  "type": "module",
+  "main": "./out/main/index.js",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json",
+    "lint": "oxlint --deny-warnings",
+    "test": "vitest run --project unit --coverage",
+    "test:watch": "vitest --project unit",
+    "test:realdata": "vitest run --project realdata",
+    "test:e2e": "vitest run --project e2e",
+    "package": "electron-vite build && electron-builder --win --publish never && tsx scripts/check-package.ts",
+    "icon": "tsx scripts/make-icon.ts",
+    "fixture": "tsx scripts/extract-fixture.ts"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@electron/asar": "^3.4.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@vitest/coverage-v8": "^5.0.2",
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "fast-check": "^4.10.2",
+    "fuse.js": "^7.5.0",
+    "oxlint": "^1.85.0",
+    "playwright-core": "^1.63.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.6",
+    "vitest": "^5.0.2",
+    "zustand": "^5.0.15"
+  }
+}

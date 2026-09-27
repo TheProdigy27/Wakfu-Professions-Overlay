@@ -1,0 +1,17 @@
+# Dépendances et builds
+node_modules/
+dist/
+out/
+release/
+coverage/
+*.log
+
+# Données Ankama : jamais versionnées (téléchargées à l'exécution)
+# Seul l'extrait tests/fixtures/index-subset.json est versionné, pour les tests.
+data/raw/
+.cache/
+
+# Divers
+.DS_Store
+Thumbs.db
+.env
