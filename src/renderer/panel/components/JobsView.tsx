@@ -2,6 +2,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { jobCrafts, jobsByName, MAX_JOB_LEVEL, type JobCraft } from '../../../core/jobs/jobCrafts';
 import { openJobs, selectTarget, setJobLevel, updateJobsFilter, useMessages, usePanel, type Catalog } from '../store';
+import { Glyph } from './Glyph';
 import { ItemIcon, ItemName, itemMeta, planLabel } from './Item';
 
 /**
@@ -89,7 +90,7 @@ export function JobsView() {
             />
           </label>
           <button type="button" className="close" title={m.common.close} aria-label={m.common.close} onClick={() => openJobs(false)}>
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
         <div className="jobs-tools">

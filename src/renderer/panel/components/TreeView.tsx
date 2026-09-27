@@ -4,6 +4,7 @@ import type { Messages } from '../../../core/i18n';
 import type { NeedNode, NeedsResult } from '../../../core/needs/computeNeeds';
 import { hasAll, setMode, toggleCollapsed, toggleHave, type CraftList } from '../../../core/state/craftList';
 import { selectRecipe, updateList, useMessages, type Catalog } from '../store';
+import { Glyph } from './Glyph';
 import { HarvestSource, ItemIcon, ItemName, PlanNeeded } from './Item';
 
 interface TreeProps {
@@ -74,7 +75,7 @@ function TreeNode({ node, depth, catalog, list, result }: TreeProps & { node: Ne
           aria-label={collapsed ? t.expand : t.collapse}
           onClick={() => updateList((l) => toggleCollapsed(l, node.key))}
         >
-          {hasChildren ? (collapsed ? '▸' : '▾') : ''}
+          {hasChildren && <Glyph name={collapsed ? 'expand' : 'collapse'} />}
         </button>
         <input
           type="checkbox"

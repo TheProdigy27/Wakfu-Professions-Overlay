@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { describeChange } from '../../../core/data/diffIndex';
 import { acceleratorLabel } from '../../../core/state/hotkey';
 import { dismissNotices, openSettings, useMessages, usePanel } from '../store';
+import { Glyph } from './Glyph';
 
 export function Banners() {
   const m = useMessages();
@@ -25,7 +26,7 @@ export function Banners() {
             {m.common.restartNow}
           </button>
           <button type="button" className="close" aria-label={m.common.close} onClick={() => setUpdateSeen(update.version)}>
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
       )}
@@ -33,7 +34,7 @@ export function Banners() {
         <div className="banner warning" role="alert">
           <span>{t.storeProblem[app.storeProblem.kind](app.storeProblem.file)}</span>
           <button type="button" className="close" aria-label={m.common.close} onClick={() => setStoreProblemSeen(true)}>
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
       )}
@@ -64,7 +65,7 @@ export function Banners() {
             </ul>
           </div>
           <button type="button" className="close" aria-label={m.common.close} onClick={dismissNotices}>
-            ✕
+            <Glyph name="close" />
           </button>
         </div>
       )}

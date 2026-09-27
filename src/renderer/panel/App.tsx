@@ -5,6 +5,7 @@ import { MAX_QTY, setTargetQty, setView, type ListView } from '../../core/state/
 import { acceleratorLabel } from '../../core/state/hotkey';
 import { Banners } from './components/Banners';
 import { CraftOrder } from './components/CraftOrder';
+import { Glyph } from './components/Glyph';
 import { HistoryMenu } from './components/HistoryMenu';
 import { ItemIcon, ItemName, itemMeta } from './components/Item';
 import { JobsButton, JobsView } from './components/JobsView';
@@ -81,7 +82,7 @@ function Header() {
       {!compact && (
         <div className="header-actions">
           <button type="button" title={t.backTitle} aria-label={t.back} disabled={!canGoBack} onClick={goBack}>
-            ←
+            <Glyph name="back" />
           </button>
         </div>
       )}
@@ -104,7 +105,7 @@ function Header() {
             aria-pressed={settingsOpen}
             onClick={() => openSettings(!settingsOpen)}
           >
-            ⚙
+            <Glyph name="settings" />
           </button>
         )}
         <button
@@ -113,7 +114,7 @@ function Header() {
           aria-label={compact ? t.normalMode : t.compactMode}
           onClick={() => window.api.setCompact(!compact)}
         >
-          {compact ? '▢' : '▭'}
+          <Glyph name={compact ? 'normal' : 'compact'} />
         </button>
         <button
           type="button"
@@ -121,7 +122,7 @@ function Header() {
           aria-label={t.hide}
           onClick={() => window.api.hidePanel()}
         >
-          ✕
+          <Glyph name="close" />
         </button>
       </div>
     </header>

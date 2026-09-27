@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { LOCALE_TAGS } from '../../../core/i18n';
 import type { CraftList } from '../../../core/state/craftList';
 import { removeFromHistory, restoreList, useLocale, useMessages, usePanel } from '../store';
+import { Glyph } from './Glyph';
 import { ItemIcon, ItemName } from './Item';
 
 const DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
@@ -80,7 +81,7 @@ function HistoryEntry({ list, onDone }: { list: CraftList; onDone: () => void })
         aria-label={m.history.remove}
         onClick={() => removeFromHistory(list.id)}
       >
-        ✕
+        <Glyph name="close" />
       </button>
     </li>
   );

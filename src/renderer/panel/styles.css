@@ -108,7 +108,31 @@ input[type='checkbox'] {
   width: 24px;
   height: 22px;
   padding: 0;
-  line-height: 1;
+}
+
+/* Pictogrammes (Glyph) : centrés dans leur bouton. */
+.header-actions button,
+.close,
+.twisty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glyph {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.glyph .filled {
+  fill: currentColor;
+  stroke: none;
 }
 
 .header-actions button:disabled {
