@@ -1,7 +1,7 @@
 {
   "name": "wakfu-professions-overlay",
   "productName": "Wakfu Professions Overlay",
-  "version": "0.2.0-beta.1",
+  "version": "0.2.0-beta.2",
   "private": true,
   "description": "Overlay de préparation de craft pour Wakfu (outil non officiel, non affilié à Ankama).",
   "author": "TheProdigy27",
