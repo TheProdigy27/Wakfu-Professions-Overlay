@@ -13,6 +13,10 @@ directories:
 files:
   - out/**
   - package.json
+  - resources/icon.ico
+# L'icône de la zone de notification et de la fenêtre est lue par Windows directement sur le disque : hors de l'archive.
+asarUnpack:
+  - resources/icon.ico
 # Aucun module natif à recompiler.
 npmRebuild: false
 # Traductions de Chromium (menus contextuels, boîtes de dialogue) : seulement le français et l'anglais.

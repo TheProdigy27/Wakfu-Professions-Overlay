@@ -2,8 +2,8 @@
 // mises à jour de l'application.
 import { fileURLToPath } from 'node:url';
 import { app, Menu, session, shell, type BrowserWindow } from 'electron';
+import iconPath from '../../resources/icon.ico?asset&asarUnpack';
 import { IPC } from '../preload/api';
-import { createAppIcon } from './appIcon';
 import { GamedataService, type FetchLike } from './data/gamedataService';
 import { createIconLoader } from './data/iconCache';
 import { handleIconProtocol, registerIconScheme } from './data/iconProtocol';
@@ -51,6 +51,7 @@ async function start(store: JsonStore): Promise<void> {
   const panel = new PanelWindow({
     preload: fileURLToPath(new URL('../preload/index.cjs', import.meta.url)),
     load: loadPanel,
+    icon: iconPath,
     log,
     initial: { state: { compact: saved.compact, opacity: saved.opacity }, bounds },
     onSessionEnd: () => store.flush(),
@@ -86,7 +87,7 @@ async function start(store: JsonStore): Promise<void> {
 
   const registered = settings.start();
   const tray = createTray({
-    icon: createAppIcon(),
+    icon: iconPath,
     panel,
     data,
     settings,

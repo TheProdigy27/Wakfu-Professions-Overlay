@@ -1,12 +1,13 @@
 // Zone de notification : l'application n'a pas de fenêtre dans la barre des tâches.
-import { app, dialog, Menu, Tray, type NativeImage } from 'electron';
+import { app, dialog, Menu, Tray } from 'electron';
 import type { GamedataService } from './data/gamedataService';
 import type { SettingsController } from './settings';
 import type { Updater } from './updater';
 import type { PanelWindow } from './windows/panel';
 
 export interface TrayOptions {
-  icon: NativeImage;
+  /** Chemin de l'icône (.ico : Windows y choisit la taille adaptée à l'échelle d'affichage). */
+  icon: string;
   panel: PanelWindow;
   data: GamedataService;
   settings: SettingsController;

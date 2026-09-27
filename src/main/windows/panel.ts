@@ -15,6 +15,8 @@ const SIZES: Record<Mode, { width: number; height: number; minWidth: number; min
 
 export interface PanelOptions {
   preload: string;
+  /** Icône de la fenêtre (Alt+Tab). */
+  icon: string;
   /** Charge la page du panneau (serveur de développement ou fichier du build). */
   load: (win: BrowserWindow) => Promise<void>;
   log?: (message: string) => void;
@@ -76,6 +78,7 @@ export class PanelWindow {
       minWidth: size.minWidth,
       minHeight: size.minHeight,
       title: 'Wakfu Professions Overlay',
+      icon: this.options.icon,
       frame: false,
       transparent: false,
       resizable: true,

@@ -1,3 +1,5 @@
+<img src="resources/icon.png" alt="" width="96" align="right">
+
 # Wakfu Professions Overlay
 
 Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vous cherchez un objet, il vous montre tout ce qu'il faut réunir pour le fabriquer.
