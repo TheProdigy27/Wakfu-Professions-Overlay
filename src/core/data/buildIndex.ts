@@ -1,7 +1,7 @@
 // Construction de l'index compact à partir des fichiers bruts validés.
 import { LOCALES } from '../i18n/locale';
-import { INDEX_SCHEMA, type GameIndexFile, type ItemTuple, type Names, type RecipeTuple } from './indexFile';
-import type { RawGamedata, RawItem, RawTitle } from './rawSchemas';
+import { INDEX_SCHEMA, type GameIndexFile, type HarvestTuple, type ItemTuple, type Names, type RecipeTuple } from './indexFile';
+import type { RawGamedata, RawHarvest, RawItem, RawTitle } from './rawSchemas';
 
 export interface BuildReport {
   recipes: number;
@@ -13,6 +13,8 @@ export interface BuildReport {
   /** Ids trouvés seulement dans items.json. */
   itemsFromFallback: number;
   multiResultRecipes: number;
+  /** Objets de l'index dont on connaît la provenance (récolte). */
+  harvestedItems: number;
 }
 
 /** Nombres d'entrées en dessous desquels on considère que le format des données a changé. */
@@ -28,6 +30,8 @@ export interface BuildOptions {
   minCounts?: MinCounts;
   /** items.json, en repli quand jobsItems.json ne couvre pas tous les ids. */
   itemsFallback?: RawItem[];
+  /** Fichiers de récolte : sans eux, l'index n'indique pas la provenance des ressources. */
+  harvest?: RawHarvest;
   builtAt?: Date;
 }
 
@@ -56,6 +60,35 @@ function groupBy<T>(values: readonly T[], key: (v: T) => number): Map<number, T[
     const list = out.get(k);
     if (list) list.push(v);
     else out.set(k, [v]);
+  }
+  return out;
+}
+
+/**
+ * Provenance des ressources itemIds : [objet, métier, niveau requis], au niveau le plus bas par métier. La récolte
+ * directe prime ; à défaut, le butin de récolte (pierres précieuses du Mineur, par exemple). Seuls les métiers retenus
+ * comptent.
+ */
+function harvestSources(raw: RawHarvest, jobs: ReadonlyMap<number, Names>, itemIds: readonly number[]): HarvestTuple[] {
+  const lootByList = groupBy(raw.harvestLoots, (l) => l.listId);
+  /** Objet → métier → niveau requis minimal. */
+  const direct = new Map<number, Map<number, number>>();
+  const loot = new Map<number, Map<number, number>>();
+  const add = (sources: typeof direct, itemId: number, jobId: number, level: number) => {
+    const byJob = sources.get(itemId) ?? new Map<number, number>();
+    byJob.set(jobId, Math.min(level, byJob.get(jobId) ?? level));
+    sources.set(itemId, byJob);
+  };
+  for (const c of raw.collectibleResources) {
+    if (!jobs.has(c.skillId)) continue;
+    if (c.collectItemId) add(direct, c.collectItemId, c.skillId, c.skillLevelRequired);
+    for (const l of lootByList.get(c.collectLootListId) ?? []) add(loot, l.itemId, c.skillId, c.skillLevelRequired);
+  }
+  const out: HarvestTuple[] = [];
+  for (const itemId of itemIds) {
+    const byJob = direct.get(itemId) ?? loot.get(itemId);
+    if (!byJob) continue;
+    for (const [jobId, level] of [...byJob].sort((a, b) => a[1] - b[1] || a[0] - b[0])) out.push([itemId, jobId, level]);
   }
   return out;
 }
@@ -128,6 +161,11 @@ export function buildIndex(
   }
   types.sort((a, b) => a[0] - b[0]);
 
+  // Ressources seulement : une pierre polie, par exemple, tombe aussi à 1 % de la récolte, mais on la crafte.
+  const crafted = new Set(recipes.map((r) => r[4]));
+  const resources = items.map((i) => i[0]).filter((id) => !crafted.has(id));
+  const harvest = options.harvest ? harvestSources(options.harvest, jobs, resources) : [];
+
   const counts = { recipes: recipes.length, items: items.length, jobs: jobs.size };
   for (const key of ['recipes', 'items', 'jobs'] as const) {
     if (counts[key] < minCounts[key]) {
@@ -144,6 +182,7 @@ export function buildIndex(
       types,
       items,
       recipes,
+      harvest,
     },
     report: {
       recipes: recipes.length,
@@ -152,6 +191,7 @@ export function buildIndex(
       missingItemIds: missing,
       itemsFromFallback: fallbackCount,
       multiResultRecipes: multiResult,
+      harvestedItems: new Set(harvest.map((h) => h[0])).size,
     },
   };
 }

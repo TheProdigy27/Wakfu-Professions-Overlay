@@ -90,6 +90,7 @@ export const es: Messages = {
   item: {
     level: (level) => `Nv. ${level}`,
     tooltip: (rarity, level) => `${rarity}, nv. ${level}`,
+    harvestTitle: 'Oficio de recolección y nivel requerido',
   },
   // Rareté 0 : nom traduit d'après le français, non vérifié en jeu.
   rarities: ['Objeto antiguo', 'Común', 'Raro', 'Mítico', 'Legendario', 'Reliquia', 'Recuerdo', 'Épico'],

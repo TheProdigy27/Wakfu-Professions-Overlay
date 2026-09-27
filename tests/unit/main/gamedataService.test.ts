@@ -38,7 +38,7 @@ async function installV1(cdn = mockCdn({ [V1]: syntheticRaw() }, V1)) {
 }
 
 describe('GamedataService', () => {
-  it('premier lancement : télécharge les 6 fichiers, construit et écrit data/index.json', async () => {
+  it('premier lancement : télécharge les 8 fichiers, construit et écrit data/index.json', async () => {
     const cdn = mockCdn({ [V1]: syntheticRaw() }, V1);
     const svc = service(cdn);
     const statuses: DataStatus[] = [];
@@ -53,14 +53,18 @@ describe('GamedataService', () => {
     expect(svc.status).toMatchObject({ version: V1, offline: false, busy: null, error: null });
     expect(svc.indexFile?.items.map((i) => i[1][0])).toEqual(['Blé', 'Farine', 'Pain', "Seau d'eau"]);
     expect(svc.indexFile?.items[0]?.[1]).toEqual(['Blé', 'Wheat', 'Trigo', 'Trigo']);
+    expect(svc.indexFile?.harvest).toEqual([
+      [4, 40, 3],
+      [4, 64, 5],
+    ]);
     expect(indexes).toEqual([[V1, null]]);
-    expect(cdn.calls).toHaveLength(7); // config.json + 6 fichiers
+    expect(cdn.calls).toHaveLength(9); // config.json + 8 fichiers
     expect(JSON.parse(await readFile(dataPath('index.json'), 'utf8')).gameVersion).toBe(V1);
     expect(existsSync(dataPath('raw', V1, 'jobsItems.json'))).toBe(true);
     // Progression affichable pendant le téléchargement, puis construction.
     const busy = statuses.map((s) => s.busy).filter(Boolean);
-    expect(busy[0]).toEqual({ step: 'download', version: V1, done: 0, total: 6, percent: 0 });
-    expect(busy).toContainEqual({ step: 'download', version: V1, done: 6, total: 6, percent: 100 });
+    expect(busy[0]).toEqual({ step: 'download', version: V1, done: 0, total: 8, percent: 0 });
+    expect(busy).toContainEqual({ step: 'download', version: V1, done: 8, total: 8, percent: 100 });
     expect(busy.at(-1)).toEqual({ step: 'build', version: V1 });
   });
 
@@ -157,7 +161,57 @@ describe('GamedataService', () => {
     cdn.calls.length = 0;
     await svc.check();
     expect(svc.status).toMatchObject({ version: V1, error: null });
-    expect(cdn.calls).toEqual(['config.json', `${V1}/recipeCategories.json`, `${V1}/jobsItems.json`, `${V1}/itemTypes.json`]);
+    expect(cdn.calls).toEqual([
+      'config.json',
+      `${V1}/recipeCategories.json`,
+      `${V1}/jobsItems.json`,
+      `${V1}/itemTypes.json`,
+      `${V1}/collectibleResources.json`,
+      `${V1}/harvestLoots.json`,
+    ]);
+  });
+
+  it("données d'une version précédente de l'application (sans fichiers de récolte) : hors ligne sans provenance, puis complétées en ligne", async () => {
+    await installV1();
+    for (const name of ['collectibleResources', 'harvestLoots']) await rm(dataPath('raw', V1, `${name}.json`));
+    const stale = JSON.parse(await readFile(dataPath('index.json'), 'utf8'));
+    await writeFile(dataPath('index.json'), JSON.stringify({ ...stale, indexSchema: INDEX_SCHEMA - 1 }));
+
+    const cdn = mockCdn({ [V1]: syntheticRaw() }, V1);
+    cdn.state.online = false;
+    const logs: string[] = [];
+    const svc = service(cdn, { log: (m) => logs.push(m) });
+    const changes: [string, string | null][] = [];
+    svc.onIndex((file, previous) => changes.push([file.gameVersion, previous]));
+    await svc.loadCache();
+    expect(svc.indexFile).toMatchObject({ indexSchema: INDEX_SCHEMA, gameVersion: V1, harvest: [] });
+    expect(logs).toContainEqual(expect.stringContaining('fichiers de récolte absents'));
+
+    cdn.state.online = true;
+    await svc.check();
+    expect(cdn.calls).toEqual(['config.json', `${V1}/collectibleResources.json`, `${V1}/harvestLoots.json`]);
+    expect(svc.indexFile?.harvest).toHaveLength(2);
+    expect(svc.status).toMatchObject({ version: V1, busy: null, error: null });
+    expect(changes).toEqual([
+      [V1, null],
+      [V1, V1],
+    ]);
+
+    // Ensuite, plus rien à télécharger.
+    cdn.calls.length = 0;
+    await svc.check();
+    expect(cdn.calls).toEqual(['config.json']);
+  });
+
+  it('fichiers de récolte au format inattendu : index construit sans provenance, sans erreur', async () => {
+    const raw = syntheticRaw();
+    raw['collectibleResources'] = [{ skillId: 'Mineur' }];
+    const logs: string[] = [];
+    const svc = service(mockCdn({ [V1]: raw }, V1), { log: (m) => logs.push(m) });
+    await svc.check();
+    expect(svc.status).toMatchObject({ version: V1, error: null });
+    expect(svc.indexFile?.harvest).toEqual([]);
+    expect(logs).toContainEqual(expect.stringContaining('fichiers de récolte ignorés (collectibleResources.json : format inattendu'));
   });
 
   it("nouvelle version de l'application (format d'index changé) : reconstruction sans réseau", async () => {

@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 
 describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () => {
-  it('les 6 fichiers bruts passent la validation zod ; 100 % des ids sont résolus', () => {
+  it('les 8 fichiers bruts passent la validation zod ; 100 % des ids sont résolus', () => {
     expect(real.report).toEqual({
       recipes: 5428,
       excludedRecipes: 0,
@@ -23,9 +23,25 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
       missingItemIds: [],
       itemsFromFallback: 0,
       multiResultRecipes: 0,
+      harvestedItems: 347,
     });
     expect(real.file.jobs).toHaveLength(14);
     expect(real.index.recipesByItem.size).toBe(5159);
+  });
+
+  it('provenance : 339 ressources récoltées directement, 8 en butin de récolte, un seul métier chacune', () => {
+    const name = (id: number) => real.index.items.get(id)?.name;
+    const label = (id: number) => real.index.harvest.get(id)?.map((h) => `${real.index.jobs.get(h.jobId)} ${h.level}`);
+    const copper = [...real.index.items.values()].find((i) => i.name === 'Minerai de Cuivre')!;
+    expect(label(copper.id)).toEqual(['Mineur 15']);
+    // Seulement en butin : pierres précieuses (99 %) du Mineur, Cookillage (3 %) du Pêcheur.
+    const agate = [...real.index.items.values()].find((i) => i.name === "Pierre d'Agate")!;
+    expect(label(agate.id)).toEqual(['Mineur 30']);
+    // Les 5 métiers de récolte présents dans collectibleResources.json (pas le Trappeur).
+    expect(new Set(real.file.harvest.map((h) => h[1]))).toEqual(new Set([64, 71, 72, 73, 75]));
+    expect([...real.index.harvest.values()].filter((list) => list.length > 1).map((list) => list.length)).toEqual([]);
+    // Aucune ressource récoltée ne se crafte.
+    expect([...real.index.harvest.keys()].filter((id) => real.index.recipesByItem.has(id)).map(name)).toEqual([]);
   });
 
   it('toutes les raretés présentes ont un nom, dans chaque langue', () => {
@@ -72,6 +88,9 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
     const recipes = byId(real.file.recipes);
     for (const i of file.items) expect(items.get(i[0])).toEqual(i);
     for (const r of file.recipes) expect(recipes.get(r[0])).toEqual(r);
+    const harvest = new Set(real.file.harvest.map((h) => JSON.stringify(h)));
+    for (const h of file.harvest) expect(harvest.has(JSON.stringify(h))).toBe(true);
+    expect(file.harvest.length).toBe(real.file.harvest.filter((h) => items.has(h[0]) && file.items.some((i) => i[0] === h[0])).length);
     const jobs = new Map(real.file.jobs);
     for (const [id, names] of file.jobs) expect(jobs.get(id)).toEqual(names);
   });

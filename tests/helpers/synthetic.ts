@@ -1,5 +1,5 @@
 // Petites données au format Ankama (avec des champs superflus, comme les vraies) et faux CDN, pour les tests hors réseau.
-import type { GameIndexFile, Names, RecipeTuple } from '../../src/core/data/indexFile';
+import type { GameIndexFile, HarvestTuple, Names, RecipeTuple } from '../../src/core/data/indexFile';
 import { INDEX_SCHEMA } from '../../src/core/data/indexFile';
 import type { FetchLike } from '../../src/main/data/gamedataService';
 
@@ -18,6 +18,7 @@ export interface SyntheticOptions {
  */
 const TRANSLATIONS: Readonly<Record<string, { en?: string; es?: string; pt?: string }>> = {
   Boulanger: { en: 'Baker', es: 'Panadero', pt: 'Padeiro' },
+  Paysan: { en: 'Farmer', es: 'Campesino', pt: 'Fazendeiro' },
   Blé: { en: 'Wheat', es: 'Trigo', pt: 'Trigo' },
   Farine: { en: 'Flour', es: '' },
 };
@@ -26,6 +27,8 @@ const TRANSLATIONS: Readonly<Record<string, { en?: string; es?: string; pt?: str
  * Objets : 1 Blé, 2 Farine, 3 Pain, 4 Eau (5 Levure dans items.json seulement).
  * R10 Farine ← Blé ; R11 Pain ×4 ← Farine, Eau ; R12 métier archivé ; R13 sans ingrédient ;
  * R14 amélioration à deux résultats (Blé ×3 en productOrder 0).
+ * Récolte : Eau par le Paysan (niv. 10 et 5 → 5) et le Boulanger (niv. 3), aussi en butin (ignoré : récolte directe),
+ * et par un métier archivé (ignoré) ; Levure seulement en butin (Paysan niv. 20) ; Blé et Farine se craftent (ignorés).
  */
 export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unknown> {
   const recipe = (id: number, categoryId: number, level: number, isUpgrade = false) => ({
@@ -41,6 +44,10 @@ export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unk
     definition: { id, isArchive: false, isNoCraft: false, isHidden: false, xpFactor: 1, isInnate: false, ...flags },
     title: { fr, en: fr, ...TRANSLATIONS[fr] },
   });
+  const collectible = (id: number, skillId: number, skillLevelRequired: number, collectItemId: number, collectLootListId = 0) => ({
+    id, skillId, resourceId: id, resourceIndex: 1, collectItemId, skillLevelRequired, collectLootListId, displayInCraftDialog: true,
+  });
+  const loot = (id: number, listId: number, itemId: number) => ({ id, itemId, quantity: 1, dropRate: 0.5, listId, itemIsLootList: false });
   const jobItem = (id: number, fr: string, level: number, rarity: number) => ({
     definition: { id, level, rarity, itemTypeId: 1, graphicParameters: { gfxId: id * 100, femaleGfxId: id * 100 } },
     title: { fr, en: fr, ...TRANSLATIONS[fr] },
@@ -58,6 +65,7 @@ export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unk
     recipeResults: [result(10, 2, 1), result(11, 3, 4), result(12, 1, 1), result(13, 1, 1), result(14, 4, 1, 1), result(14, 1, 3, 0)],
     recipeCategories: [
       job(40, 'Boulanger'),
+      job(64, 'Paysan'),
       job(99, 'Ancien', { isArchive: true }),
       job(97, 'Caché', { isHidden: true }),
       job(96, 'Sans craft', { isNoCraft: true }),
@@ -70,6 +78,15 @@ export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unk
       },
       { definition: { id: 2, isRecyclable: false } },
     ],
+    collectibleResources: [
+      collectible(1, 64, 10, 4),
+      collectible(2, 64, 5, 4, 8),
+      collectible(3, 40, 3, 4),
+      collectible(4, 64, 20, 0, 9),
+      collectible(5, 99, 1, 4),
+      collectible(6, 64, 1, 1),
+    ],
+    harvestLoots: [loot(1, 8, 4), loot(2, 9, 5), loot(3, 9, 2)],
     items: [
       {
         definition: {
@@ -121,6 +138,7 @@ export function indexFile(partial: {
   types?: [number, SyntheticName][];
   items?: SyntheticItem[];
   recipes?: RecipeTuple[];
+  harvest?: HarvestTuple[];
 }): GameIndexFile {
   return {
     indexSchema: INDEX_SCHEMA,
@@ -130,5 +148,6 @@ export function indexFile(partial: {
     types: (partial.types ?? []).map(([id, name]) => [id, names(name)]),
     items: (partial.items ?? []).map(([id, name, ...rest]) => [id, names(name), ...rest]),
     recipes: partial.recipes ?? [],
+    harvest: partial.harvest ?? [],
   };
 }

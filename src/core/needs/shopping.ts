@@ -40,6 +40,14 @@ export function shoppingList(
   return { resources: resources.sort(byName), bought: bought.sort(byName) };
 }
 
+/** « Mineur niv. 15 » : métier de récolte et niveau requis d'une ressource ; undefined si elle ne se récolte pas. */
+export function harvestLabel(index: GameIndex, itemId: number, m: Messages): string | undefined {
+  return index.harvest
+    .get(itemId)
+    ?.map((h) => m.tree.recipe(index.jobs.get(h.jobId) ?? m.tree.unknownJob(h.jobId), h.level))
+    .join(', ');
+}
+
 /**
  * Liste de courses en texte, pour le presse-papiers : seulement ce qui reste à obtenir.
  * `title` décrit l'objet cible, par exemple « Coiffe Lardante (Légendaire) ×1 ».
@@ -47,9 +55,13 @@ export function shoppingList(
 export function shoppingText(index: GameIndex, title: string, list: ShoppingList, m: Messages): string {
   const t = m.shopping;
   const name = (id: number) => index.items.get(id)?.name ?? m.common.unknownItem(id);
+  const line = (l: ShoppingLine) => {
+    const source = harvestLabel(index, l.itemId, m);
+    return `- ${name(l.itemId)} ×${l.missing}${source ? ` (${source})` : ''}`;
+  };
   const section = (heading: string, lines: ShoppingLine[]) => {
     const missing = lines.filter((l) => l.missing > 0);
-    return missing.length ? [heading, ...missing.map((l) => `- ${name(l.itemId)} ×${l.missing}`)] : [];
+    return missing.length ? [heading, ...missing.map(line)] : [];
   };
   const sections = [section(t.resources, list.resources), section(t.bought, list.bought)].filter((s) => s.length);
   const body = sections.length ? sections.flatMap((s, i) => (i ? ['', ...s] : s)) : [t.textNothing];

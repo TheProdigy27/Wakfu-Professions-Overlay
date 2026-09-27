@@ -328,6 +328,13 @@ progress.download::-webkit-progress-value {
   font-size: 12px;
 }
 
+/* Provenance d'une ressource récoltée : « Mineur niv. 15 » */
+.source {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .qty {
   color: var(--text);
   margin-left: 4px;
@@ -536,6 +543,15 @@ td.name-col {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Nom et provenance : la provenance passe sous le nom quand la place manque. */
+.name-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  min-width: 0;
 }
 
 .shop-table tbody tr:hover {

@@ -10,7 +10,7 @@ const { index } = loadFixture();
 const input = { targets: [{ itemId: IDS.COIFFE_L, qty: 1 }], owned: { [IDS.POUDRE]: 21 }, mode: { [IDS.FIL]: 'buy' as const } };
 
 describe('shoppingText', () => {
-  it('liste ce qui reste à obtenir, par section', () => {
+  it('liste ce qui reste à obtenir, par section, avec la provenance des ressources récoltées', () => {
     const list = shoppingList(index, computeNeeds(index, input), input, { missingOnly: true });
     expect(shoppingText(index, 'Coiffe Lardante (Légendaire) ×1', list, fr)).toBe(
       [
@@ -18,12 +18,12 @@ describe('shoppingText', () => {
         '',
         'Ressources',
         '- Eclat de Taroudium ×5',
-        '- Fayot ×45',
+        '- Fayot ×45 (Paysan niv. 70)',
         '- Krak-Ertz ×35',
         '- Sang du Dragon-Cochon ×5',
         '- Sioupère-Glou Durable ×40',
-        '- Truffe Aromatisée ×5',
-        '- Truffe du Désert ×45',
+        '- Truffe Aromatisée ×5 (Paysan niv. 75)',
+        '- Truffe du Désert ×45 (Paysan niv. 75)',
         '',
         'Intermédiaires achetés',
         '- Fil Durable ×14',

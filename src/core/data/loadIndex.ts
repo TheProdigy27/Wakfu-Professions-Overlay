@@ -29,6 +29,12 @@ export interface Recipe {
   ings: Ingredient[];
 }
 
+/** Récolte d'une ressource : métier et niveau requis. */
+export interface Harvest {
+  jobId: number;
+  level: number;
+}
+
 export interface GameIndex {
   version: string;
   /** Langue des noms d'objets, de métiers et de types. */
@@ -37,6 +43,8 @@ export interface GameIndex {
   recipes: Map<number, Recipe>;
   /** Recettes par objet produit, triées par niveau de métier puis id : la première est la recette par défaut. */
   recipesByItem: Map<number, Recipe[]>;
+  /** Provenance des ressources récoltées, par objet (un métier le plus souvent). */
+  harvest: Map<number, Harvest[]>;
   jobs: Map<number, string>;
   types: Map<number, string>;
 }
@@ -59,12 +67,19 @@ export function loadIndex(file: GameIndexFile, locale: Locale): GameIndex {
     else recipesByItem.set(out, [recipe]);
   }
   for (const list of recipesByItem.values()) list.sort((a, b) => a.jobLevel - b.jobLevel || a.id - b.id);
+  const harvest = new Map<number, Harvest[]>();
+  for (const [itemId, jobId, level] of file.harvest) {
+    const list = harvest.get(itemId);
+    if (list) list.push({ jobId, level });
+    else harvest.set(itemId, [{ jobId, level }]);
+  }
   return {
     version: file.gameVersion,
     locale,
     items,
     recipes,
     recipesByItem,
+    harvest,
     jobs: new Map(file.jobs.map(([id, names]) => [id, names[lang]!])),
     types: new Map(file.types.map(([id, names]) => [id, names[lang]!])),
   };

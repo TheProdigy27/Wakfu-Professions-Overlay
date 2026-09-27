@@ -86,6 +86,34 @@ export type RawFileName = keyof typeof RAW_FILE_SCHEMAS;
 export const RAW_FILE_NAMES = Object.keys(RAW_FILE_SCHEMAS) as RawFileName[];
 
 export type RawGamedata = { [K in RawFileName]: z.infer<(typeof RAW_FILE_SCHEMAS)[K]> };
+
+/** Récolte d'une ressource : skillId est l'id du métier de récolte (73 Mineur…), comme dans recipeCategories.json. */
+export const RawCollectibleSchema = z.object({
+  skillId: id,
+  skillLevelRequired: int,
+  /** 0 : rien de récolté directement, seulement le butin. */
+  collectItemId: id,
+  collectLootListId: id,
+});
+
+export const RawHarvestLootSchema = z.object({ itemId: id, listId: id });
+
+/**
+ * Provenance des ressources (≈ 430 Ko) : facultative. Absents (données téléchargées par une version précédente
+ * de l'application) ou d'un format inattendu, l'index est construit sans.
+ */
+export const HARVEST_FILE_SCHEMAS = {
+  collectibleResources: z.array(RawCollectibleSchema),
+  harvestLoots: z.array(RawHarvestLootSchema),
+} as const;
+
+export type HarvestFileName = keyof typeof HARVEST_FILE_SCHEMAS;
+export const HARVEST_FILE_NAMES = Object.keys(HARVEST_FILE_SCHEMAS) as HarvestFileName[];
+
+export type RawHarvest = { [K in HarvestFileName]: z.infer<(typeof HARVEST_FILE_SCHEMAS)[K]> };
+
+/** Fichiers téléchargés pour chaque version du jeu (items.json en plus, en repli). */
+export const DOWNLOADED_FILE_NAMES: readonly string[] = [...RAW_FILE_NAMES, ...HARVEST_FILE_NAMES];
 export type RawItem = z.infer<typeof RawItemSchema>;
 export type RawTitle = z.infer<typeof title>;
 
@@ -112,6 +140,12 @@ export function parseRawFile<K extends RawFileName>(name: K, json: unknown): Raw
   const result = RAW_FILE_SCHEMAS[name].safeParse(json);
   if (!result.success) throw new DataFormatError(`${name}.json`, describeIssue(result.error));
   return result.data as RawGamedata[K];
+}
+
+export function parseHarvestFile<K extends HarvestFileName>(name: K, json: unknown): RawHarvest[K] {
+  const result = HARVEST_FILE_SCHEMAS[name].safeParse(json);
+  if (!result.success) throw new DataFormatError(`${name}.json`, describeIssue(result.error));
+  return result.data as RawHarvest[K];
 }
 
 export function parseItemsFallback(json: unknown): RawItem[] {

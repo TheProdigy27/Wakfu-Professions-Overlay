@@ -1,13 +1,15 @@
 {
   "_note": "Extrait de gamedata 1.93.1.62 (données © Ankama), généré par scripts/extract-fixture.ts : ne pas modifier à la main.",
-  "indexSchema": 2,
+  "indexSchema": 3,
   "gameVersion": "1.93.1.62",
   "builtAt": "fixture",
   "jobs": [
     [40,["Boulanger","Baker","Panadero","Padeiro"]],
     [64,["Paysan","Farmer","Campesino","Fazendeiro"]],
+    [71,["Forestier","Lumberjack","Leñador","Lenhador"]],
     [72,["Herboriste","Herbalist","Herbolario","Herborista"]],
     [73,["Mineur","Miner","Minero","Mineiro"]],
+    [75,["Pêcheur","Fisherman","Pescador","Pescador"]],
     [77,["Armurier","Armorer","Armero","Armeiro"]],
     [78,["Bijoutier","Jeweler","Joyero","Joalheiro"]],
     [79,["Tailleur","Tailor","Sastre","Alfaiate"]],
@@ -157,5 +159,27 @@
     [8704,77,150,1,29236,1,[27093,574,28759,11,29380,11,29235,1,29381,9,29379,104,29041,95,29031,45]],
     [8741,78,150,1,29238,1,[27093,574,28763,110,29380,11,29237,1,29381,9,29379,104,29041,95,29037,45]],
     [9010,81,130,0,27193,1,[24029,500,9783,60,31592,5,29851,1]]
+  ],
+  "harvest": [
+    [1718,71,15],
+    [1783,72,70],
+    [1851,73,15],
+    [1889,64,5],
+    [1902,64,25],
+    [4278,64,0],
+    [6948,64,20],
+    [9805,64,70],
+    [11440,71,10],
+    [11469,64,45],
+    [11479,73,10],
+    [13185,73,70],
+    [18115,64,75],
+    [18121,72,75],
+    [22070,72,120],
+    [23166,64,75],
+    [23167,73,75],
+    [23168,72,75],
+    [28759,73,145],
+    [28763,75,145]
   ]
 }

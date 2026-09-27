@@ -44,7 +44,8 @@ for (const id of [...NAME_ONLY_IDS, ...byName.map((i) => i.id)]) shallow(id);
 
 const keptRecipes = file.recipes.filter((r) => recipes.has(r[0]));
 const keptItems = file.items.filter((i) => items.has(i[0]));
-const jobIds = new Set(keptRecipes.map((r) => r[1]));
+const keptHarvest = file.harvest.filter((h) => items.has(h[0]));
+const jobIds = new Set([...keptRecipes.map((r) => r[1]), ...keptHarvest.map((h) => h[1])]);
 const typeIds = new Set(keptItems.map((i) => i[4]));
 
 const subset: GameIndexFile = {
@@ -55,6 +56,7 @@ const subset: GameIndexFile = {
   types: file.types.filter((t) => typeIds.has(t[0])),
   items: keptItems,
   recipes: keptRecipes,
+  harvest: keptHarvest,
 };
 
 // Fausse version suivante : Krak-Ertz 7 → 8 dans la recette par défaut de l'Orbe Durable (R6446),
@@ -65,6 +67,7 @@ const r6446 = v2.recipes.find((r) => r[0] === 6446)!;
 r6446[6][r6446[6].indexOf(krak) + 1] = 8;
 v2.recipes = v2.recipes.filter((r) => r[0] !== 7362 && r[4] !== IDS.BAGUETTE);
 v2.items = v2.items.filter((i) => i[0] !== IDS.BAGUETTE);
+v2.harvest = v2.harvest.filter((h) => h[0] !== IDS.BAGUETTE);
 
 const rows = (values: unknown[]) => values.map((v) => `    ${JSON.stringify(v)}`).join(',\n');
 const render = (f: GameIndexFile, note: string) => `{
@@ -83,6 +86,9 @@ ${rows(f.items)}
   ],
   "recipes": [
 ${rows(f.recipes)}
+  ],
+  "harvest": [
+${rows(f.harvest)}
   ]
 }
 `;
@@ -94,5 +100,5 @@ await writeFile(
   render(v2, `${source} Fausse version ${V2} : Krak-Ertz 7 → 8 dans R6446, R7362 et Baguette Deuh Pain retirées.`),
   'utf8',
 );
-console.log(`${FIXTURE_PATH} : ${keptItems.length} objets, ${keptRecipes.length} recettes, ${jobIds.size} métiers, ${typeIds.size} types`);
+console.log(`${FIXTURE_PATH} : ${keptItems.length} objets, ${keptRecipes.length} recettes, ${keptHarvest.length} récoltes, ${jobIds.size} métiers, ${typeIds.size} types`);
 console.log(`${FIXTURE_V2_PATH} : version ${V2}, ${v2.items.length} objets, ${v2.recipes.length} recettes`);

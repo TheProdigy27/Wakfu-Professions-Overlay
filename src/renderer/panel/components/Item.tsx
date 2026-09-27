@@ -1,8 +1,9 @@
-// Icône et nom d'un objet, en couleur de rareté.
+// Icône et nom d'un objet, en couleur de rareté ; provenance des ressources récoltées.
 import { useState } from 'react';
 import type { GameIndex, Item } from '../../../core/data/loadIndex';
 import { rarityColor, rarityName } from '../../../core/data/rarity';
 import type { Messages } from '../../../core/i18n';
+import { harvestLabel } from '../../../core/needs/shopping';
 import { useMessages } from '../store';
 
 export function ItemIcon({ item }: { item: Item | undefined }) {
@@ -26,6 +27,18 @@ export function ItemName({ item, itemId }: { item: Item | undefined; itemId: num
   return (
     <span className="item-name" style={{ color: rarityColor(item.rarity) }} title={m.item.tooltip(rarityName(item.rarity, m), item.level)}>
       {item.name}
+    </span>
+  );
+}
+
+/** Provenance d'une ressource récoltée (« Mineur niv. 15 »), en gris ; rien pour les autres objets. */
+export function HarvestSource({ index, itemId }: { index: GameIndex; itemId: number }) {
+  const m = useMessages();
+  const label = harvestLabel(index, itemId, m);
+  if (!label) return null;
+  return (
+    <span className="source" title={m.item.harvestTitle}>
+      {label}
     </span>
   );
 }

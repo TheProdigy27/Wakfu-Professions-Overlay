@@ -13,6 +13,7 @@ A craft preparation panel for **Wakfu**, shown on top of the game: search for an
 - **Search** for an item by name (typo-tolerant) or by ID (`#29236`), with one line per rarity.
 - Full craft **tree**, as many levels deep as needed (intermediates included).
 - Combined **shopping list**: what you need, what you already have, what is missing. Copy it to the clipboard.
+- **Where resources come from**: the gathering profession and required level, for example "Miner lvl. 15" next to Copper Ore. The game data does not say which monsters drop the other resources.
 - **Craft order**: intermediates first, with the profession and level required.
 - **"I have it"** checkbox and owned quantities, **craft / buy** choice for each intermediate, choice of recipe **variant** when there are several.
 - **Compact** mode, adjustable **opacity**, global **shortcut** (`Ctrl+Shift+W` by default) to show or hide the panel without leaving the game.

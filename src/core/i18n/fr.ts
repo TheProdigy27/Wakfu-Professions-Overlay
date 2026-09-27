@@ -99,6 +99,7 @@ export const fr = {
   item: {
     level: (level: number) => `Niv. ${level}`,
     tooltip: (rarity: string, level: number) => `${rarity}, niv. ${level}`,
+    harvestTitle: 'Métier de récolte et niveau requis',
   },
   /** Par numéro de rareté (rarity.ts). */
   rarities: ['Ancien Objet', 'Commun', 'Rare', 'Mythique', 'Légendaire', 'Relique', 'Souvenir', 'Épique'] as readonly string[],

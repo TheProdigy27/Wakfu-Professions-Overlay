@@ -5,7 +5,7 @@ import type { NeedsResult } from '../../../core/needs/computeNeeds';
 import { shoppingList, shoppingText, type ShoppingLine } from '../../../core/needs/shopping';
 import { hasAll, needsInput, setMissingOnly, setOwned, toggleHave, type CraftList } from '../../../core/state/craftList';
 import { updateList, useMessages, type Catalog } from '../store';
-import { ItemIcon, ItemName } from './Item';
+import { HarvestSource, ItemIcon, ItemName } from './Item';
 
 interface ShoppingProps {
   catalog: Catalog;
@@ -99,7 +99,10 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
                 </td>
                 <td className="name-col">
                   <ItemIcon item={item} />
-                  <ItemName item={item} itemId={line.itemId} />
+                  <span className="name-source">
+                    <ItemName item={item} itemId={line.itemId} />
+                    <HarvestSource index={catalog.index} itemId={line.itemId} />
+                  </span>
                 </td>
                 {!compact && <td className="num">{line.required}</td>}
                 {!compact && (

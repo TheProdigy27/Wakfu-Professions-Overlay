@@ -4,7 +4,7 @@ import type { Messages } from '../../../core/i18n';
 import type { NeedNode, NeedsResult } from '../../../core/needs/computeNeeds';
 import { hasAll, setMode, toggleCollapsed, toggleHave, type CraftList } from '../../../core/state/craftList';
 import { selectRecipe, updateList, useMessages, type Catalog } from '../store';
-import { ItemIcon, ItemName } from './Item';
+import { HarvestSource, ItemIcon, ItemName } from './Item';
 
 interface TreeProps {
   catalog: Catalog;
@@ -91,6 +91,7 @@ function TreeNode({ node, depth, catalog, list, result }: TreeProps & { node: Ne
           </div>
           <div className="row-detail">
             <span>{detail(index, node, m)}</span>
+            {node.kind === 'base' && <HarvestSource index={index} itemId={node.itemId} />}
             {showControls && (
               <span className="row-controls">
                 {depth > 0 && (

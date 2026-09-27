@@ -89,6 +89,7 @@ export const en: Messages = {
   item: {
     level: (level) => `Lvl. ${level}`,
     tooltip: (rarity, level) => `${rarity}, lvl. ${level}`,
+    harvestTitle: 'Gathering profession and required level',
   },
   rarities: ['Old Item', 'Common', 'Rare', 'Mythical', 'Legendary', 'Relic', 'Souvenir', 'Epic'],
   unknownRarity: (rarity) => `Rarity ${rarity}`,

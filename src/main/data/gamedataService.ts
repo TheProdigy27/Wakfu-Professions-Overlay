@@ -8,11 +8,15 @@ import type { DataError, DataErrorCode, DataStatus } from '../../core/data/dataS
 import { parseIndexFile, readIndexHeader, type GameIndexFile } from '../../core/data/indexFile';
 import {
   DataFormatError,
+  DOWNLOADED_FILE_NAMES,
+  HARVEST_FILE_NAMES,
   parseConfig,
+  parseHarvestFile,
   parseItemsFallback,
   parseRawFile,
   RAW_FILE_NAMES,
   type RawGamedata,
+  type RawHarvest,
   type RawItem,
 } from '../../core/data/rawSchemas';
 import { writeFileAtomic } from '../store/atomicWrite';
@@ -51,6 +55,8 @@ export const RAW_FILE_BYTES: Readonly<Record<string, number>> = {
   recipeCategories: 2_581,
   jobsItems: 6_054_058,
   itemTypes: 21_146,
+  collectibleResources: 207_413,
+  harvestLoots: 220_644,
 };
 
 export interface DownloadOptions {
@@ -123,6 +129,17 @@ export async function readRawGamedata(rawDir: string): Promise<RawGamedata> {
     Object.assign(out, { [name]: parseRawFile(name, json) });
   }
   return out as RawGamedata;
+}
+
+/** Lit et valide les fichiers de récolte ; undefined s'il en manque un (données d'une version précédente de l'application). */
+export async function readHarvest(rawDir: string): Promise<RawHarvest | undefined> {
+  const out: Partial<RawHarvest> = {};
+  for (const name of HARVEST_FILE_NAMES) {
+    const file = path.join(rawDir, `${name}.json`);
+    if (!existsSync(file)) return undefined;
+    Object.assign(out, { [name]: parseHarvestFile(name, await readJson(file)) });
+  }
+  return out as RawHarvest;
 }
 
 export async function readItemsFallback(rawDir: string): Promise<RawItem[]> {
@@ -261,15 +278,20 @@ export class GamedataService {
     }
 
     if (this.file?.gameVersion === version) {
-      this.update({ offline: false, error: null, lastCheckAt: this.now() });
-      return;
+      // Fichiers ajoutés par une nouvelle version de l'application (provenance des ressources) : téléchargés, puis index reconstruit.
+      const missing = DOWNLOADED_FILE_NAMES.filter((name) => !existsSync(path.join(this.rawDir(version), `${name}.json`)));
+      if (!missing.length) {
+        this.update({ offline: false, error: null, lastCheckAt: this.now() });
+        return;
+      }
+      this.log(`données ${version} : fichiers absents (${missing.join(', ')}), téléchargement`);
     }
 
     try {
-      const total = RAW_FILE_NAMES.length;
+      const total = DOWNLOADED_FILE_NAMES.length;
       let shown = { done: 0, percent: 0 };
       this.update({ offline: false, busy: { step: 'download', version, total, ...shown } });
-      await downloadRawFiles(this.rawDir(version), version, RAW_FILE_NAMES, {
+      await downloadRawFiles(this.rawDir(version), version, DOWNLOADED_FILE_NAMES, {
         fetch: this.fetch,
         cdn: this.cdn,
         timeoutMs: this.options.fileTimeoutMs ?? 120_000,
@@ -308,7 +330,15 @@ export class GamedataService {
     const raw = await readRawGamedata(rawDir);
     const minCounts = this.options.minCounts;
     let itemsFallback = existsSync(path.join(rawDir, 'items.json')) ? await readItemsFallback(rawDir) : undefined;
-    let built = buildIndex(version, raw, { minCounts, itemsFallback });
+    // Facultatif : sans ces fichiers, l'index est construit sans la provenance des ressources.
+    let harvest: RawHarvest | undefined;
+    try {
+      harvest = await readHarvest(rawDir);
+      if (!harvest) this.log(`données ${version} : fichiers de récolte absents, provenance des ressources non affichée`);
+    } catch (err) {
+      this.log(`données ${version} : fichiers de récolte ignorés (${errorText(err)})`);
+    }
+    let built = buildIndex(version, raw, { minCounts, itemsFallback, harvest });
     if (built.report.missingItemIds.length && !itemsFallback && options.network) {
       this.log(`${built.report.missingItemIds.length} id(s) absents de jobsItems.json : téléchargement de items.json`);
       await downloadRawFiles(rawDir, version, ['items'], {
@@ -317,7 +347,7 @@ export class GamedataService {
         timeoutMs: this.options.fileTimeoutMs ?? 120_000,
       });
       itemsFallback = await readItemsFallback(rawDir);
-      built = buildIndex(version, raw, { minCounts, itemsFallback });
+      built = buildIndex(version, raw, { minCounts, itemsFallback, harvest });
     }
     if (built.report.missingItemIds.length) {
       this.log(`${built.report.missingItemIds.length} id(s) non résolu(s), affichés comme « Objet inconnu »`);
