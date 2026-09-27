@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { app, Menu, session, shell, type BrowserWindow } from 'electron';
 import iconPath from '../../resources/icon.ico?asset&asarUnpack';
 import { IPC } from '../preload/api';
+import { APP_USER_MODEL_ID } from './appId';
 import { GamedataService, type FetchLike } from './data/gamedataService';
 import { createIconLoader } from './data/iconCache';
 import { handleIconProtocol, registerIconScheme } from './data/iconProtocol';
@@ -39,6 +40,9 @@ async function openPath(target: string): Promise<void> {
 }
 
 async function start(store: JsonStore): Promise<void> {
+  // Notifications au nom de l'application, avec son icône : sans cette identité, Windows ne les relie pas au raccourci
+  // du menu Démarrer. Non empaquetée (electron.exe, sans raccourci), l'application reste « Electron ».
+  if (app.isPackaged) app.setAppUserModelId(APP_USER_MODEL_ID);
   await app.whenReady();
   Menu.setApplicationMenu(null);
   // Aucune permission (caméra, notifications…) n'est accordée au contenu.
