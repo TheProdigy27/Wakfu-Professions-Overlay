@@ -4,6 +4,12 @@ import { jobCrafts, jobsByName, MAX_JOB_LEVEL, type JobCraft } from '../../../co
 import { openJobs, selectTarget, setJobLevel, updateJobsFilter, useMessages, usePanel, type Catalog } from '../store';
 import { ItemIcon, ItemName, itemMeta, planLabel } from './Item';
 
+/**
+ * Défilement de la liste quand on l'a quittée (objet choisi, bouton Retour…), avec la liste affichée alors : on y revient
+ * si c'est la même, le temps de la session.
+ */
+let savedScroll: { key: string; top: number } | null = null;
+
 /** Bouton de la barre de recherche : ouvre ou ferme les crafts par métier. */
 export function JobsButton() {
   const m = useMessages();
@@ -39,11 +45,18 @@ export function JobsView() {
         : null,
     [catalog, jobId, level, filter.query, filter.upgrades],
   );
-  // Autre métier ou autre filtre : la liste repart du haut, sinon les premiers résultats resteraient cachés.
+  // En revenant aux crafts par métier : là où on avait laissé la liste, si c'est la même. Autre métier, autre filtre
+  // ou autres données : la liste repart du haut, sinon les premiers résultats resteraient cachés.
+  const listKey = [catalog?.index.version, catalog?.index.locale, jobId, level, filter.query, filter.upgrades].join('|');
   const scroller = useRef<HTMLDivElement>(null);
+  const shownKey = useRef<string | null>(null);
   useLayoutEffect(() => {
-    if (scroller.current) scroller.current.scrollTop = 0;
-  }, [jobId, level, filter.query, filter.upgrades]);
+    const el = scroller.current;
+    if (!el) return;
+    const opening = shownKey.current === null;
+    el.scrollTop = opening && savedScroll?.key === listKey ? savedScroll.top : 0;
+    shownKey.current = listKey;
+  }, [listKey]);
   if (!catalog || jobId === undefined || !list) return null;
   const t = m.jobs;
   const jobName = catalog.index.jobs.get(jobId) ?? m.tree.unknownJob(jobId);
@@ -90,7 +103,13 @@ export function JobsView() {
         </div>
         <p className="jobs-count">{t.count(list.shown, list.total)}</p>
       </div>
-      <div className="view jobs-list" ref={scroller}>
+      <div
+        className="view jobs-list"
+        ref={scroller}
+        onScroll={(e) => {
+          savedScroll = { key: listKey, top: e.currentTarget.scrollTop };
+        }}
+      >
         {list.groups.length === 0 && <p className="empty">{t.none}</p>}
         {list.groups.map((group) => (
           <section key={group.level}>

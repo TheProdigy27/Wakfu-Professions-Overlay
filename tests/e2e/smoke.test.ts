@@ -231,13 +231,24 @@ describe('application construite, hors réseau', () => {
     expect(await target()).toBe('Kokoncord');
     await page.getByRole('button', { name: 'Professions' }).click();
     await page.getByLabel('Profession').selectOption({ label: 'Tailor' });
-    await page.locator('.job-craft', { hasText: 'Durable Fiber' }).click();
+    // Fenêtre basse pour que la liste défile : défilée jusqu'en bas, puis clic sans la faire défiler.
+    await app!.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.setSize(420, 300));
+    const jobsList = page.locator('.jobs-list');
+    await expect.poll(() => jobsList.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    const scrolled = await jobsList.evaluate((el) => {
+      el.scrollTop = el.scrollHeight;
+      return el.scrollTop;
+    });
+    expect(scrolled).toBeGreaterThan(0);
+    await page.locator('.job-craft', { hasText: 'Durable Fiber' }).evaluate((el) => (el as unknown as { click(): void }).click());
     expect(await target()).toBe('Durable Fiber');
 
-    // Alt+← : comme le bouton Retour. Les métiers reviennent tels qu'on les a laissés.
+    // Alt+← : comme le bouton Retour. Les métiers reviennent tels qu'on les a laissés, défilement compris.
     await page.keyboard.press('Alt+ArrowLeft');
     await page.waitForSelector('.jobs');
     expect(await page.getByLabel('Profession').inputValue()).toBe('79');
+    expect(await jobsList.evaluate((el) => el.scrollTop)).toBe(scrolled);
+    await app!.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.setSize(420, 640));
     await page.getByRole('button', { name: 'Back' }).click();
     expect(await page.locator('.jobs').count()).toBe(0);
     expect(await target()).toBe('Kokoncord');
