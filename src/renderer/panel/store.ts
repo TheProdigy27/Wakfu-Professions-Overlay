@@ -181,8 +181,9 @@ export function setJobLevel(jobId: number, level: number | null): void {
   usePanel.setState((s) => ({ jobLevels: withJobLevel(s.jobLevels, jobId, level) }));
 }
 
+/** Par-dessus l'écran affiché : depuis les réglages, on y revient en fermant l'accueil. */
 export function showOnboarding(show: boolean): void {
-  usePanel.setState({ onboarding: show, settingsOpen: false });
+  usePanel.setState({ onboarding: show });
   if (!show) window.api.completeOnboarding();
 }
 
