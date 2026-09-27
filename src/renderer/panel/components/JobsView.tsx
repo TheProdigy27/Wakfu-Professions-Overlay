@@ -56,6 +56,11 @@ export function JobsView() {
     const opening = shownKey.current === null;
     el.scrollTop = opening && savedScroll?.key === listKey ? savedScroll.top : 0;
     shownKey.current = listKey;
+    // Position lue en quittant la liste (objet choisi, Retour, autre filtre…), avant qu'elle soit retirée de la page :
+    // les événements de défilement ne sont pas envoyés quand la fenêtre n'est pas dessinée à l'écran.
+    return () => {
+      savedScroll = { key: listKey, top: el.scrollTop };
+    };
   }, [listKey]);
   if (!catalog || jobId === undefined || !list) return null;
   const t = m.jobs;
@@ -103,13 +108,7 @@ export function JobsView() {
         </div>
         <p className="jobs-count">{t.count(list.shown, list.total)}</p>
       </div>
-      <div
-        className="view jobs-list"
-        ref={scroller}
-        onScroll={(e) => {
-          savedScroll = { key: listKey, top: e.currentTarget.scrollTop };
-        }}
-      >
+      <div className="view jobs-list" ref={scroller}>
         {list.groups.length === 0 && <p className="empty">{t.none}</p>}
         {list.groups.map((group) => (
           <section key={group.level}>

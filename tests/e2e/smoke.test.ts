@@ -231,16 +231,19 @@ describe('application construite, hors réseau', () => {
     expect(await target()).toBe('Kokoncord');
     await page.getByRole('button', { name: 'Professions' }).click();
     await page.getByLabel('Profession').selectOption({ label: 'Tailor' });
-    // Fenêtre basse pour que la liste défile : défilée jusqu'en bas, puis clic sans la faire défiler.
+    // Fenêtre basse pour que la liste défile : défilée jusqu'en bas, puis clic aussitôt, sans laisser la fenêtre se
+    // redessiner entre les deux (comme sur une machine où elle n'est pas affichée à l'écran).
     await app!.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.setSize(420, 300));
     const jobsList = page.locator('.jobs-list');
     await expect.poll(() => jobsList.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
     const scrolled = await jobsList.evaluate((el) => {
       el.scrollTop = el.scrollHeight;
-      return el.scrollTop;
+      const top = el.scrollTop;
+      const fiber = [...el.querySelectorAll('.job-craft')].find((b) => b.textContent?.includes('Durable Fiber'));
+      (fiber as unknown as { click(): void }).click();
+      return top;
     });
     expect(scrolled).toBeGreaterThan(0);
-    await page.locator('.job-craft', { hasText: 'Durable Fiber' }).evaluate((el) => (el as unknown as { click(): void }).click());
     expect(await target()).toBe('Durable Fiber');
 
     // Alt+← : comme le bouton Retour. Les métiers reviennent tels qu'on les a laissés, défilement compris.
