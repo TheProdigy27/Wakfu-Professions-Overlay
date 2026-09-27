@@ -64,8 +64,9 @@ try {
 } catch {
   problems.push(`installeur absent : release/${installer}`);
 }
-// Canal de mise à jour déduit de la version, comme electron-builder : 0.2.0-beta.1 → beta.yml, 1.0.0 → latest.yml.
-const channelFile = `${/^\d+\.\d+\.\d+-([^.]+)/.exec(pkg.version)?.[1] ?? 'latest'}.yml`;
+// Avec les Releases GitHub, electron-builder écrit toujours latest.yml, y compris pour une bêta : l'application
+// cherche d'abord beta.yml puis se rabat sur latest.yml ; c'est le statut « pré-release » qui distingue les bêtas.
+const channelFile = 'latest.yml';
 try {
   const info = readFileSync(path.join(RELEASE, channelFile), 'utf8');
   if (!info.includes(`version: ${pkg.version}`) || !info.includes(`path: ${installer}`)) {

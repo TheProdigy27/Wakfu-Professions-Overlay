@@ -1,7 +1,7 @@
 # Publication : une étiquette v* construit l'installeur NSIS, le vérifie (contenu du paquet, test
 # de bout en bout sur l'exécutable empaqueté) et le publie dans une Release GitHub, avec les fichiers que lit
 # electron-updater. Une étiquette à suffixe (v0.2.0-beta.1) donne une pré-release, proposée seulement aux versions
-# de même suffixe ; sans suffixe, la mise à jour est proposée à tous.
+# déjà en bêta ; sans suffixe, la mise à jour est proposée à tous.
 name: Release
 
 on:
@@ -47,13 +47,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="${GITHUB_REF_NAME#v}"
-          channel=latest
           prerelease=()
-          if [[ "$version" == *-* ]]; then
-            channel="${version#*-}"
-            channel="${channel%%.*}"
-            prerelease=(--prerelease)
-          fi
+          if [[ "$version" == *-* ]]; then prerelease=(--prerelease); fi
           gh release create "$GITHUB_REF_NAME" "${prerelease[@]}" \
             --title "Wakfu Professions Overlay $version" \
             --notes "Téléchargez **Wakfu-Professions-Overlay-Setup-$version.exe** ci-dessous, puis lancez-le. L'installeur n'est pas signé : Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » ; cliquez sur « Informations complémentaires », puis « Exécuter quand même ». Voir le README.
@@ -62,4 +57,4 @@ jobs:
             --generate-notes \
             "release/Wakfu-Professions-Overlay-Setup-$version.exe" \
             "release/Wakfu-Professions-Overlay-Setup-$version.exe.blockmap" \
-            "release/$channel.yml"
+            release/latest.yml
