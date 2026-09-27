@@ -16,6 +16,7 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 - **Liste de courses** agrégée : ce qu'il faut, ce que vous avez déjà, ce qui manque. Copie dans le presse-papiers.
 - **Provenance des ressources** récoltées : le métier et le niveau requis, par exemple « Mineur niv. 15 » à côté du Minerai de Cuivre. Les données du jeu ne disent pas quels monstres font tomber les autres ressources.
 - **Ordre de craft** : les intermédiaires d'abord, avec le métier et le niveau requis.
+- **Plans** : un craft qu'il faut d'abord apprendre l'indique, avec le nom du plan à utiliser, par exemple « Nécessite : Plan "Kokordon" ».
 - Case **« je l'ai »** et quantités possédées, choix **crafter / acheter** pour chaque intermédiaire, choix de la **variante** de recette quand il y en a plusieurs.
 - Mode **compact**, **opacité** réglable, **raccourci** global (`Ctrl+Maj+W` par défaut) pour afficher ou masquer le panneau sans quitter le jeu.
 - Interface en **français, anglais, espagnol et portugais**. Les noms des objets suivent la langue choisie : ils viennent directement des données du jeu.

@@ -7,14 +7,17 @@ import { buildIndex, DataBuildError, type MinCounts } from '../../core/data/buil
 import type { DataError, DataErrorCode, DataStatus } from '../../core/data/dataStatus';
 import { parseIndexFile, readIndexHeader, type GameIndexFile } from '../../core/data/indexFile';
 import {
+  BLUEPRINTS_FILE_NAME,
   DataFormatError,
   DOWNLOADED_FILE_NAMES,
   HARVEST_FILE_NAMES,
+  parseBlueprints,
   parseConfig,
   parseHarvestFile,
   parseItemsFallback,
   parseRawFile,
   RAW_FILE_NAMES,
+  type RawBlueprint,
   type RawGamedata,
   type RawHarvest,
   type RawItem,
@@ -57,6 +60,7 @@ export const RAW_FILE_BYTES: Readonly<Record<string, number>> = {
   itemTypes: 21_146,
   collectibleResources: 207_413,
   harvestLoots: 220_644,
+  blueprints: 4_942,
 };
 
 export interface DownloadOptions {
@@ -140,6 +144,12 @@ export async function readHarvest(rawDir: string): Promise<RawHarvest | undefine
     Object.assign(out, { [name]: parseHarvestFile(name, await readJson(file)) });
   }
   return out as RawHarvest;
+}
+
+/** Lit et valide le fichier des plans ; undefined s'il manque (données d'une version précédente de l'application). */
+export async function readBlueprints(rawDir: string): Promise<RawBlueprint[] | undefined> {
+  const file = path.join(rawDir, `${BLUEPRINTS_FILE_NAME}.json`);
+  return existsSync(file) ? parseBlueprints(await readJson(file)) : undefined;
 }
 
 export async function readItemsFallback(rawDir: string): Promise<RawItem[]> {
@@ -278,7 +288,8 @@ export class GamedataService {
     }
 
     if (this.file?.gameVersion === version) {
-      // Fichiers ajoutés par une nouvelle version de l'application (provenance des ressources) : téléchargés, puis index reconstruit.
+      // Fichiers ajoutés par une nouvelle version de l'application (provenance des ressources, plans) : téléchargés,
+      // puis index reconstruit.
       const missing = DOWNLOADED_FILE_NAMES.filter((name) => !existsSync(path.join(this.rawDir(version), `${name}.json`)));
       if (!missing.length) {
         this.update({ offline: false, error: null, lastCheckAt: this.now() });
@@ -338,7 +349,15 @@ export class GamedataService {
     } catch (err) {
       this.log(`données ${version} : fichiers de récolte ignorés (${errorText(err)})`);
     }
-    let built = buildIndex(version, raw, { minCounts, itemsFallback, harvest });
+    // Facultatif aussi : sans ce fichier, les recettes à apprendre avec un plan ne sont pas signalées.
+    let blueprints: RawBlueprint[] | undefined;
+    try {
+      blueprints = await readBlueprints(rawDir);
+      if (!blueprints) this.log(`données ${version} : fichier des plans absent, plans requis non affichés`);
+    } catch (err) {
+      this.log(`données ${version} : fichier des plans ignoré (${errorText(err)})`);
+    }
+    let built = buildIndex(version, raw, { minCounts, itemsFallback, harvest, blueprints });
     if (built.report.missingItemIds.length && !itemsFallback && options.network) {
       this.log(`${built.report.missingItemIds.length} id(s) absents de jobsItems.json : téléchargement de items.json`);
       await downloadRawFiles(rawDir, version, ['items'], {
@@ -347,7 +366,7 @@ export class GamedataService {
         timeoutMs: this.options.fileTimeoutMs ?? 120_000,
       });
       itemsFallback = await readItemsFallback(rawDir);
-      built = buildIndex(version, raw, { minCounts, itemsFallback, harvest });
+      built = buildIndex(version, raw, { minCounts, itemsFallback, harvest, blueprints });
     }
     if (built.report.missingItemIds.length) {
       this.log(`${built.report.missingItemIds.length} id(s) non résolu(s), affichés comme « Objet inconnu »`);

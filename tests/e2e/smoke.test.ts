@@ -210,6 +210,22 @@ describe('application construite, hors réseau', () => {
     expect(await page.locator('.target .meta').innerText()).toBe('Lvl. 122 · Mythical · Helmet');
   });
 
+  it('plan requis : badge dans les crafts par métier, puis « Requires » dans l\'arbre et l\'ordre', async () => {
+    await page.getByRole('button', { name: 'Professions' }).click();
+    await page.getByLabel('Profession').selectOption({ label: 'Leather Dealer' });
+    const rows = page.locator('.job-craft', { hasText: 'Kokoncord' });
+    expect(await rows.count()).toBe(3);
+    for (const row of await rows.all()) expect(await row.locator('.badge').allInnerTexts()).toContain('blueprint');
+    const badge = rows.first().locator('.badge', { hasText: 'blueprint' });
+    expect(await badge.getAttribute('title')).toBe('Requires: "Kokoncord" Blueprint');
+    // Niveau 116 : la Rare, recette sans amélioration.
+    await rows.first().click();
+    expect(await page.locator('.target .meta').innerText()).toContain('Rare');
+    expect(await texts('.row .plan')).toEqual(['Requires: "Kokoncord" Blueprint']);
+    await page.getByRole('tab', { name: 'Order' }).click();
+    expect(await texts('.order-row .plan')).toEqual(['Requires: "Kokoncord" Blueprint']);
+  });
+
   it('aucune erreur dans la console du panneau', () => {
     expect(consoleErrors).toEqual([]);
   });

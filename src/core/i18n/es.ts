@@ -9,6 +9,7 @@ export const es: Messages = {
     openLog: 'Abrir el registro',
     disclaimer: 'Herramienta no oficial, no afiliada a Ankama. Datos e iconos del juego © Ankama.',
     upgrade: 'mejora',
+    plan: 'documento',
     unknownItem: (id) => `Objeto desconocido #${id}`,
     percent: (n) => `${n} %`,
   },
@@ -91,6 +92,8 @@ export const es: Messages = {
     level: (level) => `Nv. ${level}`,
     tooltip: (rarity, level) => `${rarity}, nv. ${level}`,
     harvestTitle: 'Oficio de recolección y nivel requerido',
+    needsPlan: (plan) => `Requiere: ${plan}`,
+    planTitle: 'Objeto que se usa una vez para aprender esta receta',
   },
   // Rareté 0 : nom traduit d'après le français, non vérifié en jeu.
   rarities: ['Objeto antiguo', 'Común', 'Raro', 'Mítico', 'Legendario', 'Reliquia', 'Recuerdo', 'Épico'],

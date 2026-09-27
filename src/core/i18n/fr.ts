@@ -11,6 +11,8 @@ export const fr = {
     disclaimer: 'Outil non officiel, non affilié à Ankama. Données et icônes © Ankama.',
     /** Badge des recettes d'amélioration (rareté supérieure). */
     upgrade: 'amélioration',
+    /** Badge des recettes à apprendre avec un plan. */
+    plan: 'plan',
     unknownItem: (id: number) => `Objet inconnu #${id}`,
     percent: (n: number) => `${n} %`,
   },
@@ -100,6 +102,9 @@ export const fr = {
     level: (level: number) => `Niv. ${level}`,
     tooltip: (rarity: string, level: number) => `${rarity}, niv. ${level}`,
     harvestTitle: 'Métier de récolte et niveau requis',
+    /** plan : nom de l'objet, par exemple « Plan "Kokordon" ». */
+    needsPlan: (plan: string) => `Nécessite : ${plan}`,
+    planTitle: 'Objet à utiliser une fois pour apprendre cette recette',
   },
   /** Par numéro de rareté (rarity.ts). */
   rarities: ['Ancien Objet', 'Commun', 'Rare', 'Mythique', 'Légendaire', 'Relique', 'Souvenir', 'Épique'] as readonly string[],

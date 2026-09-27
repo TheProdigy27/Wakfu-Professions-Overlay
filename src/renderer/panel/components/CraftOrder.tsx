@@ -2,7 +2,7 @@
 import type { NeedsResult } from '../../../core/needs/computeNeeds';
 import { craftOrder, type CraftStep } from '../../../core/needs/craftOrder';
 import { useMessages, type Catalog } from '../store';
-import { ItemIcon, ItemName } from './Item';
+import { ItemIcon, ItemName, PlanNeeded } from './Item';
 import { recipeLabel } from './TreeView';
 
 export function CraftOrder({ catalog, result }: { catalog: Catalog; result: NeedsResult }) {
@@ -28,6 +28,7 @@ export function CraftOrder({ catalog, result }: { catalog: Catalog; result: Need
                   <span className="qty">×{step.crafts}</span>
                   <span className="meta">{recipeLabel(catalog.index, step.recipe, m)}</span>
                   {step.recipe.isUpgrade && <span className="badge">{m.common.upgrade}</span>}
+                  <PlanNeeded index={catalog.index} recipe={step.recipe} />
                 </li>
               );
             })}

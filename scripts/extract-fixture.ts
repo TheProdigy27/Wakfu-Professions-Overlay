@@ -1,6 +1,8 @@
 // Extrait tests/fixtures/index-subset.json de l'index réel (version figée des tests) :
 // - chaînes de craft complètes (toutes variantes, récursivement) des cas de test de référence (tests/helpers/needsCases.ts) ;
-// - quelques objets gardés avec leurs recettes et leurs ingrédients directs seulement, pour les tests de recherche.
+// - quelques objets gardés avec leurs recettes et leurs ingrédients directs seulement, pour les tests de recherche
+//   et des plans requis (Kokordon) ;
+// - les plans des recettes gardées, et l'objet « plan » lui-même.
 // En dérive tests/fixtures/index-v2-modified.json, une fausse version suivante du jeu pour les tests de rapprochement.
 // Données © Ankama : extrait factuel limité (ids, noms, niveaux, quantités).
 // Usage : npm run fixture
@@ -15,7 +17,13 @@ const { file, index } = await buildRealIndex();
 
 const FULL_TREES = [IDS.COIFFE_L, IDS.BAGUETTE, IDS.PAIN_FARLE];
 const NAME_ONLY_IDS = [IDS.PONCTUATION_1, IDS.PONCTUATION_2, 27193 /* Wé */];
-const NAME_ONLY_NAMES = ["Bottes de N'Oeuf lieues", "Bottes de N'Oeuf Lieues", 'Bottes Lardantes', 'Epaulettes Lardantes'];
+const NAME_ONLY_NAMES = [
+  "Bottes de N'Oeuf lieues",
+  "Bottes de N'Oeuf Lieues",
+  'Bottes Lardantes',
+  'Epaulettes Lardantes',
+  'Kokordon',
+];
 
 const items = new Set<number>();
 const recipes = new Set<number>();
@@ -43,6 +51,8 @@ const byName = [...index.items.values()].filter((i) => NAME_ONLY_NAMES.includes(
 for (const id of [...NAME_ONLY_IDS, ...byName.map((i) => i.id)]) shallow(id);
 
 const keptRecipes = file.recipes.filter((r) => recipes.has(r[0]));
+const keptPlans = file.plans.filter((p) => recipes.has(p[0]));
+for (const [, plan] of keptPlans) items.add(plan);
 const keptItems = file.items.filter((i) => items.has(i[0]));
 const keptHarvest = file.harvest.filter((h) => items.has(h[0]));
 const jobIds = new Set([...keptRecipes.map((r) => r[1]), ...keptHarvest.map((h) => h[1])]);
@@ -57,6 +67,7 @@ const subset: GameIndexFile = {
   items: keptItems,
   recipes: keptRecipes,
   harvest: keptHarvest,
+  plans: keptPlans,
 };
 
 // Fausse version suivante : Krak-Ertz 7 → 8 dans la recette par défaut de l'Orbe Durable (R6446),
@@ -89,6 +100,9 @@ ${rows(f.recipes)}
   ],
   "harvest": [
 ${rows(f.harvest)}
+  ],
+  "plans": [
+${rows(f.plans)}
   ]
 }
 `;
@@ -100,5 +114,8 @@ await writeFile(
   render(v2, `${source} Fausse version ${V2} : Krak-Ertz 7 → 8 dans R6446, R7362 et Baguette Deuh Pain retirées.`),
   'utf8',
 );
-console.log(`${FIXTURE_PATH} : ${keptItems.length} objets, ${keptRecipes.length} recettes, ${keptHarvest.length} récoltes, ${jobIds.size} métiers, ${typeIds.size} types`);
+console.log(
+  `${FIXTURE_PATH} : ${keptItems.length} objets, ${keptRecipes.length} recettes, ${keptHarvest.length} récoltes, ` +
+    `${keptPlans.length} plans, ${jobIds.size} métiers, ${typeIds.size} types`,
+);
 console.log(`${FIXTURE_V2_PATH} : version ${V2}, ${v2.items.length} objets, ${v2.recipes.length} recettes`);

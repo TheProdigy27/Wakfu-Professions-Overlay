@@ -342,6 +342,12 @@ progress.download::-webkit-progress-value {
   white-space: nowrap;
 }
 
+/* Plan à apprendre avant le craft : « Nécessite : Plan "Kokordon" », plus visible que le reste du détail. */
+.plan {
+  color: var(--text);
+  font-size: 12px;
+}
+
 .qty {
   color: var(--text);
   margin-left: 4px;
@@ -595,13 +601,20 @@ td.name-col {
 
 .order-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 0 6px;
   padding: 2px 8px;
 }
 
 .order-row .meta {
   margin-left: auto;
+}
+
+/* Sous le nom, aligné sur lui (icône de 24 px + espacement). */
+.order-row .plan {
+  flex-basis: 100%;
+  padding-left: 30px;
 }
 
 /* Crafts par métier */

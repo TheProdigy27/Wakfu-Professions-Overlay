@@ -1,5 +1,5 @@
 // Petites données au format Ankama (avec des champs superflus, comme les vraies) et faux CDN, pour les tests hors réseau.
-import type { GameIndexFile, HarvestTuple, Names, RecipeTuple } from '../../src/core/data/indexFile';
+import type { GameIndexFile, HarvestTuple, Names, PlanTuple, RecipeTuple } from '../../src/core/data/indexFile';
 import { INDEX_SCHEMA } from '../../src/core/data/indexFile';
 import type { FetchLike } from '../../src/main/data/gamedataService';
 
@@ -24,11 +24,13 @@ const TRANSLATIONS: Readonly<Record<string, { en?: string; es?: string; pt?: str
 };
 
 /**
- * Objets : 1 Blé, 2 Farine, 3 Pain, 4 Eau (5 Levure dans items.json seulement).
+ * Objets : 1 Blé, 2 Farine, 3 Pain, 4 Eau, 6 Plan du Pain (5 Levure dans items.json seulement).
  * R10 Farine ← Blé ; R11 Pain ×4 ← Farine, Eau ; R12 métier archivé ; R13 sans ingrédient ;
  * R14 amélioration à deux résultats (Blé ×3 en productOrder 0).
  * Récolte : Eau par le Paysan (niv. 10 et 5 → 5) et le Boulanger (niv. 3), aussi en butin (ignoré : récolte directe),
  * et par un métier archivé (ignoré) ; Levure seulement en butin (Paysan niv. 20) ; Blé et Farine se craftent (ignorés).
+ * Plans : 6 apprend R11 (et R99, inexistante) ; 7 apprend R12 (métier archivé, ignoré) ; 8 apprend aussi R11 (ignoré :
+ * le premier plan cité l'emporte).
  */
 export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unknown> {
   const recipe = (id: number, categoryId: number, level: number, isUpgrade = false) => ({
@@ -70,7 +72,13 @@ export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unk
       job(97, 'Caché', { isHidden: true }),
       job(96, 'Sans craft', { isNoCraft: true }),
     ],
-    jobsItems: [jobItem(1, 'Blé', 1, 1), jobItem(2, 'Farine', 5, 1), jobItem(3, 'Pain', 10, 2), jobItem(4, "Seau d'eau", 1, 1)],
+    jobsItems: [
+      jobItem(1, 'Blé', 1, 1),
+      jobItem(2, 'Farine', 5, 1),
+      jobItem(3, 'Pain', 10, 2),
+      jobItem(4, "Seau d'eau", 1, 1),
+      jobItem(6, 'Plan du Pain', 10, 4),
+    ],
     itemTypes: [
       {
         definition: { id: 1, isRecyclable: true },
@@ -87,6 +95,11 @@ export function syntheticRaw(options: SyntheticOptions = {}): Record<string, unk
       collectible(6, 64, 1, 1),
     ],
     harvestLoots: [loot(1, 8, 4), loot(2, 9, 5), loot(3, 9, 2)],
+    blueprints: [
+      { blueprintId: 6, recipeId: [11, 99] },
+      { blueprintId: 7, recipeId: [12] },
+      { blueprintId: 8, recipeId: [11] },
+    ],
     items: [
       {
         definition: {
@@ -139,6 +152,7 @@ export function indexFile(partial: {
   items?: SyntheticItem[];
   recipes?: RecipeTuple[];
   harvest?: HarvestTuple[];
+  plans?: PlanTuple[];
 }): GameIndexFile {
   return {
     indexSchema: INDEX_SCHEMA,
@@ -149,5 +163,6 @@ export function indexFile(partial: {
     items: (partial.items ?? []).map(([id, name, ...rest]) => [id, names(name), ...rest]),
     recipes: partial.recipes ?? [],
     harvest: partial.harvest ?? [],
+    plans: partial.plans ?? [],
   };
 }

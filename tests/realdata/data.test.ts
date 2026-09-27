@@ -16,15 +16,17 @@ beforeAll(async () => {
 });
 
 describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () => {
-  it('les 8 fichiers bruts passent la validation zod ; 100 % des ids sont résolus', () => {
+  it('les 9 fichiers bruts passent la validation zod ; 100 % des ids sont résolus', () => {
     expect(real.report).toEqual({
       recipes: 5428,
       excludedRecipes: 0,
-      items: 8204,
+      // 8 204 objets cités par une recette, 108 plans.
+      items: 8312,
       missingItemIds: [],
       itemsFromFallback: 0,
       multiResultRecipes: 0,
       harvestedItems: 347,
+      planRecipes: 221,
     });
     expect(real.file.jobs).toHaveLength(14);
     expect(real.index.recipesByItem.size).toBe(5159);
@@ -43,6 +45,24 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
     expect([...real.index.harvest.values()].filter((list) => list.length > 1).map((list) => list.length)).toEqual([]);
     // Aucune ressource récoltée ne se crafte.
     expect([...real.index.harvest.keys()].filter((id) => real.index.recipesByItem.has(id)).map(name)).toEqual([]);
+  });
+
+  it('plans : 221 recettes à apprendre (4 recettes citées absentes du jeu), sans autre recette pour le même objet', () => {
+    const plans = new Set(real.file.plans.map((p) => p[1]));
+    expect(plans.size).toBe(108);
+    // Tous des objets « Recette », nommés dans l'index.
+    const types = new Set([...plans].map((id) => real.index.types.get(real.index.items.get(id)!.typeId)));
+    expect(types).toEqual(new Set(['Recette']));
+    // Un objet qui demande un plan n'a pas d'autre recette : l'affichage « Nécessite : … » est sans ambiguïté.
+    const withPlan = real.file.plans.map(([recipeId]) => real.index.recipes.get(recipeId)!);
+    const mixed = withPlan.filter((r) => real.index.recipesByItem.get(r.out)!.some((o) => o.plan === undefined));
+    expect(mixed).toEqual([]);
+    const kokordon = [...real.index.items.values()].filter((i) => i.name === 'Kokordon');
+    expect(kokordon.map((i) => real.index.items.get(real.index.recipesByItem.get(i.id)![0]!.plan!)?.name)).toEqual([
+      'Plan "Kokordon"',
+      'Plan "Kokordon"',
+      'Plan "Kokordon"',
+    ]);
   });
 
   it('crafts par métier : chaque objet craftable apparaît dans un seul métier ; liste calculée en moins de 20 ms', () => {
@@ -107,6 +127,9 @@ describe(`données réelles ${REAL_DATA_VERSION} : construction de l'index`, () 
     const harvest = new Set(real.file.harvest.map((h) => JSON.stringify(h)));
     for (const h of file.harvest) expect(harvest.has(JSON.stringify(h))).toBe(true);
     expect(file.harvest.length).toBe(real.file.harvest.filter((h) => items.has(h[0]) && file.items.some((i) => i[0] === h[0])).length);
+    const plans = new Map(real.file.plans);
+    for (const [recipeId, plan] of file.plans) expect(plans.get(recipeId)).toBe(plan);
+    expect(file.plans.length).toBe(real.file.plans.filter((p) => recipes.has(p[0]) && file.recipes.some((r) => r[0] === p[0])).length);
     const jobs = new Map(real.file.jobs);
     for (const [id, names] of file.jobs) expect(jobs.get(id)).toEqual(names);
   });

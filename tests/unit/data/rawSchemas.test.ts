@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DataFormatError, parseConfig, parseItemsFallback, parseRawFile } from '../../../src/core/data/rawSchemas';
+import { DataFormatError, parseBlueprints, parseConfig, parseItemsFallback, parseRawFile } from '../../../src/core/data/rawSchemas';
 import { syntheticRaw } from '../../helpers/synthetic';
 
 describe('schémas des fichiers bruts', () => {
@@ -20,6 +20,11 @@ describe('schémas des fichiers bruts', () => {
     expect(() => parseRawFile('recipeIngredients', [{ recipeId: 1, itemId: 2, quantity: 0, ingredientOrder: 0 }])).toThrow(
       /0\.quantity/,
     );
+  });
+
+  it('valide blueprints.json', () => {
+    expect(parseBlueprints(syntheticRaw().blueprints)[0]).toEqual({ blueprintId: 6, recipeId: [11, 99] });
+    expect(() => parseBlueprints([{ blueprintId: 6, recipeId: 11 }])).toThrow(/^blueprints\.json : format inattendu \(0\.recipeId : /);
   });
 
   it('valide config.json et items.json', () => {

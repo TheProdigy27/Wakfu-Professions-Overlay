@@ -5,7 +5,7 @@ import { buildIndex, type BuildReport } from '../../src/core/data/buildIndex';
 import type { GameIndexFile } from '../../src/core/data/indexFile';
 import { loadIndex, type GameIndex } from '../../src/core/data/loadIndex';
 import { DOWNLOADED_FILE_NAMES } from '../../src/core/data/rawSchemas';
-import { DEFAULT_CDN, downloadRawFiles, readHarvest, readRawGamedata } from '../../src/main/data/gamedataService';
+import { DEFAULT_CDN, downloadRawFiles, readBlueprints, readHarvest, readRawGamedata } from '../../src/main/data/gamedataService';
 
 export const REAL_DATA_VERSION = '1.93.1.62';
 
@@ -43,8 +43,9 @@ export function buildRealIndex(): Promise<RealIndex> {
     const t0 = performance.now();
     const raw = await readRawGamedata(dir);
     const harvest = await readHarvest(dir);
+    const blueprints = await readBlueprints(dir);
     const t1 = performance.now();
-    const { file, report } = buildIndex(REAL_DATA_VERSION, raw, { harvest });
+    const { file, report } = buildIndex(REAL_DATA_VERSION, raw, { harvest, blueprints });
     const t2 = performance.now();
     return { file, index: loadIndex(file, 'fr'), report, readMs: t1 - t0, buildMs: t2 - t1 };
   })();

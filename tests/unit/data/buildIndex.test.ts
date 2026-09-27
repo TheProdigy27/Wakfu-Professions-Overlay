@@ -3,28 +3,35 @@ import { buildIndex, DataBuildError, singularTitle, titleNames } from '../../../
 import { INDEX_SCHEMA } from '../../../src/core/data/indexFile';
 import {
   HARVEST_FILE_NAMES,
+  parseBlueprints,
   parseHarvestFile,
   parseItemsFallback,
   parseRawFile,
   RAW_FILE_NAMES,
+  type RawBlueprint,
   type RawGamedata,
   type RawHarvest,
 } from '../../../src/core/data/rawSchemas';
 import { SMALL_COUNTS, syntheticRaw, type SyntheticOptions } from '../../helpers/synthetic';
 
-function parsed(options?: SyntheticOptions): { raw: RawGamedata; harvest: RawHarvest; json: Record<string, unknown> } {
+function parsed(options?: SyntheticOptions): {
+  raw: RawGamedata;
+  harvest: RawHarvest;
+  blueprints: RawBlueprint[];
+  json: Record<string, unknown>;
+} {
   const json = syntheticRaw(options);
   const raw = Object.fromEntries(RAW_FILE_NAMES.map((n) => [n, parseRawFile(n, json[n])])) as RawGamedata;
   const harvest = Object.fromEntries(HARVEST_FILE_NAMES.map((n) => [n, parseHarvestFile(n, json[n])])) as RawHarvest;
-  return { raw, harvest, json };
+  return { raw, harvest, blueprints: parseBlueprints(json['blueprints']), json };
 }
 
 const builtAt = new Date('2026-09-26T12:00:00Z');
 
 describe('buildIndex', () => {
   it('construit un index compact trié et déterministe', () => {
-    const { raw, harvest } = parsed();
-    const { file, report } = buildIndex('1.0', raw, { minCounts: SMALL_COUNTS, builtAt, harvest });
+    const { raw, harvest, blueprints } = parsed();
+    const { file, report } = buildIndex('1.0', raw, { minCounts: SMALL_COUNTS, builtAt, harvest, blueprints });
     expect(file).toEqual({
       indexSchema: INDEX_SCHEMA,
       gameVersion: '1.0',
@@ -41,6 +48,8 @@ describe('buildIndex', () => {
         [2, ['Farine', 'Flour', 'Farine', 'Farine'], 5, 1, 1, 200],
         [3, ['Pain', 'Pain', 'Pain', 'Pain'], 10, 2, 1, 300],
         [4, ["Seau d'eau", "Seau d'eau", "Seau d'eau", "Seau d'eau"], 1, 1, 1, 400],
+        // Cité par un plan seulement : dans l'index pour son nom et son icône.
+        [6, ['Plan du Pain', 'Plan du Pain', 'Plan du Pain', 'Plan du Pain'], 10, 4, 1, 600],
       ],
       recipes: [
         [10, 40, 5, 0, 2, 1, [1, 2]],
@@ -55,22 +64,27 @@ describe('buildIndex', () => {
         [4, 40, 3],
         [4, 64, 5],
       ],
+      // Plan 6 pour R11 ; R99 n'existe pas, R12 n'est pas retenue, le plan 8 cite R11 après le plan 6.
+      plans: [[11, 6]],
     });
     expect(report).toEqual({
       recipes: 3,
       excludedRecipes: 2, // R12 (métier archivé), R13 (sans ingrédient)
-      items: 4,
+      items: 5,
       missingItemIds: [],
       itemsFromFallback: 0,
       multiResultRecipes: 1,
       harvestedItems: 1,
+      planRecipes: 1,
     });
   });
 
-  it('sans les fichiers de récolte : index sans provenance', () => {
+  it('sans les fichiers facultatifs : index sans provenance ni plans', () => {
     const { file, report } = buildIndex('1.0', parsed().raw, { minCounts: SMALL_COUNTS });
     expect(file.harvest).toEqual([]);
-    expect(report.harvestedItems).toBe(0);
+    expect(file.plans).toEqual([]);
+    expect(file.items.map((i) => i[0])).toEqual([1, 2, 3, 4]);
+    expect(report).toMatchObject({ harvestedItems: 0, planRecipes: 0 });
   });
 
   it('signale les ids absents de jobsItems.json, puis les résout avec items.json', () => {

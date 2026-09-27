@@ -118,6 +118,7 @@ function syntheticIndex(items: [number, string, number][]): GameIndex {
     items: items.map(([id, name, rarity]) => [id, names(name), 1, rarity, 1, id]),
     recipes: items.map(([id]) => [100 + id, 1, 10, 0, id, 1, [99, 1]]),
     harvest: [],
+    plans: [],
   };
   return loadIndex(file, 'fr');
 }

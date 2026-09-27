@@ -112,8 +112,19 @@ export const HARVEST_FILE_NAMES = Object.keys(HARVEST_FILE_SCHEMAS) as HarvestFi
 
 export type RawHarvest = { [K in HarvestFileName]: z.infer<(typeof HARVEST_FILE_SCHEMAS)[K]> };
 
+/** Plan : objet à utiliser une fois pour apprendre des recettes (souvent une même recette en plusieurs raretés). */
+export const RawBlueprintSchema = z.object({ blueprintId: id, recipeId: z.array(id) });
+
+/**
+ * Plans requis (≈ 5 Ko) : facultatif, comme les fichiers de récolte. Absent ou d'un format inattendu, l'index est
+ * construit sans.
+ */
+export const BLUEPRINTS_FILE_NAME = 'blueprints';
+export const BLUEPRINTS_SCHEMA = z.array(RawBlueprintSchema);
+export type RawBlueprint = z.infer<typeof RawBlueprintSchema>;
+
 /** Fichiers téléchargés pour chaque version du jeu (items.json en plus, en repli). */
-export const DOWNLOADED_FILE_NAMES: readonly string[] = [...RAW_FILE_NAMES, ...HARVEST_FILE_NAMES];
+export const DOWNLOADED_FILE_NAMES: readonly string[] = [...RAW_FILE_NAMES, ...HARVEST_FILE_NAMES, BLUEPRINTS_FILE_NAME];
 export type RawItem = z.infer<typeof RawItemSchema>;
 export type RawTitle = z.infer<typeof title>;
 
@@ -146,6 +157,12 @@ export function parseHarvestFile<K extends HarvestFileName>(name: K, json: unkno
   const result = HARVEST_FILE_SCHEMAS[name].safeParse(json);
   if (!result.success) throw new DataFormatError(`${name}.json`, describeIssue(result.error));
   return result.data as RawHarvest[K];
+}
+
+export function parseBlueprints(json: unknown): RawBlueprint[] {
+  const result = BLUEPRINTS_SCHEMA.safeParse(json);
+  if (!result.success) throw new DataFormatError(`${BLUEPRINTS_FILE_NAME}.json`, describeIssue(result.error));
+  return result.data;
 }
 
 export function parseItemsFallback(json: unknown): RawItem[] {

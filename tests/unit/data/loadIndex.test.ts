@@ -40,6 +40,17 @@ describe('loadIndex', () => {
     expect(defaultRecipe(index, IDS.POUDRE)).toBeUndefined();
   });
 
+  it('plan requis : sur chaque recette qu\'il apprend, objet « plan » dans l\'index', () => {
+    const kokordon = [...index.items.values()].filter((i) => i.name === 'Kokordon');
+    expect(kokordon).toHaveLength(3);
+    for (const item of kokordon) expect(index.recipesByItem.get(item.id)![0]!.plan).toBe(19804);
+    expect(index.items.get(19804)?.name).toBe('Plan "Kokordon"');
+    expect(index.recipes.get(6446)!.plan).toBeUndefined();
+    // Plan d'une recette absente : ignoré.
+    const idx = loadIndex(indexFile({ items: [[1, 'A', 1, 1, 0, 0]], recipes: [[10, 1, 5, 0, 1, 1, [1, 1]]], plans: [[99, 7]] }), 'fr');
+    expect(idx.recipes.get(10)!.plan).toBeUndefined();
+  });
+
   it('départage deux recettes de même niveau par id', () => {
     const idx = loadIndex(
       indexFile({

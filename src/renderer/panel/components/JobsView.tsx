@@ -2,7 +2,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { jobCrafts, jobsByName, MAX_JOB_LEVEL, type JobCraft } from '../../../core/jobs/jobCrafts';
 import { openJobs, selectTarget, setJobLevel, updateJobsFilter, useMessages, usePanel, type Catalog } from '../store';
-import { ItemIcon, ItemName, itemMeta } from './Item';
+import { ItemIcon, ItemName, itemMeta, planLabel } from './Item';
 
 /** Bouton de la barre de recherche : ouvre ou ferme les crafts par métier. */
 export function JobsButton() {
@@ -119,6 +119,11 @@ function JobCraftRow({ craft, catalog }: { craft: JobCraft; catalog: Catalog }) 
           <span className="meta">{itemMeta(catalog.index, item, m)}</span>
         </span>
         {recipe.isUpgrade && <span className="badge">{m.common.upgrade}</span>}
+        {recipe.plan !== undefined && (
+          <span className="badge" title={planLabel(catalog.index, recipe.plan, m)}>
+            {m.common.plan}
+          </span>
+        )}
       </button>
     </li>
   );

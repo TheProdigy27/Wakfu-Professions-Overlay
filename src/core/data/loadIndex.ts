@@ -27,6 +27,8 @@ export interface Recipe {
   /** Quantité produite par craft. */
   yield: number;
   ings: Ingredient[];
+  /** Objet « plan » à utiliser une fois pour apprendre la recette ; absent si elle est connue d'emblée. */
+  plan?: number;
 }
 
 /** Récolte d'une ressource : métier et niveau requis. */
@@ -67,6 +69,10 @@ export function loadIndex(file: GameIndexFile, locale: Locale): GameIndex {
     else recipesByItem.set(out, [recipe]);
   }
   for (const list of recipesByItem.values()) list.sort((a, b) => a.jobLevel - b.jobLevel || a.id - b.id);
+  for (const [recipeId, plan] of file.plans) {
+    const recipe = recipes.get(recipeId);
+    if (recipe) recipe.plan = plan;
+  }
   const harvest = new Map<number, Harvest[]>();
   for (const [itemId, jobId, level] of file.harvest) {
     const list = harvest.get(itemId);

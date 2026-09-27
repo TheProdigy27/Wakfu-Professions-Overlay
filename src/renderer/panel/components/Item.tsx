@@ -1,6 +1,6 @@
-// Icône et nom d'un objet, en couleur de rareté ; provenance des ressources récoltées.
+// Icône et nom d'un objet, en couleur de rareté ; provenance des ressources récoltées ; plan requis par une recette.
 import { useState } from 'react';
-import type { GameIndex, Item } from '../../../core/data/loadIndex';
+import type { GameIndex, Item, Recipe } from '../../../core/data/loadIndex';
 import { rarityColor, rarityName } from '../../../core/data/rarity';
 import type { Messages } from '../../../core/i18n';
 import { harvestLabel } from '../../../core/needs/shopping';
@@ -41,6 +41,22 @@ export function HarvestSource({ index, itemId }: { index: GameIndex; itemId: num
   return (
     <span className="source" title={m.item.harvestTitle}>
       {label}
+    </span>
+  );
+}
+
+/** « Nécessite : Plan "Kokordon" » */
+export function planLabel(index: GameIndex, planId: number, m: Messages): string {
+  return m.item.needsPlan(index.items.get(planId)?.name ?? m.common.unknownItem(planId));
+}
+
+/** Plan à apprendre avant de crafter cette recette ; rien si la recette est connue d'emblée. */
+export function PlanNeeded({ index, recipe }: { index: GameIndex; recipe: Recipe }) {
+  const m = useMessages();
+  if (recipe.plan === undefined) return null;
+  return (
+    <span className="plan" title={m.item.planTitle}>
+      {planLabel(index, recipe.plan, m)}
     </span>
   );
 }

@@ -5,8 +5,9 @@ import { z } from 'zod';
  * Version du format d'index (côté code). La changer force la reconstruction depuis data/raw/{v}/.
  * 2 : noms dans les quatre langues de l'interface.
  * 3 : provenance des ressources récoltées (harvest).
+ * 4 : plans requis (plans).
  */
-export const INDEX_SCHEMA = 3;
+export const INDEX_SCHEMA = 4;
 
 const int = z.number().int();
 /** Nom en fr, en, es et pt, dans l'ordre de LOCALES. */
@@ -20,18 +21,21 @@ export const GameIndexFileSchema = z.object({
   jobs: z.array(z.tuple([int, names])),
   /** [id, libellés au singulier] des types d'objet. */
   types: z.array(z.tuple([int, names])),
-  /** [id, noms, niveau, rareté, typeId, gfxId] des objets cités par une recette. */
+  /** [id, noms, niveau, rareté, typeId, gfxId] des objets cités par une recette ou un plan. */
   items: z.array(z.tuple([int, names, int, int, int, int])),
   /** [id, métier, niveau de métier, amélioration 0|1, objet produit, quantité produite, ingrédients à plat]. */
   recipes: z.array(z.tuple([int, int, int, z.union([z.literal(0), z.literal(1)]), int, int, z.array(int)])),
   /** [objet, métier de récolte, niveau requis] des ressources récoltées ; vide sans les fichiers de récolte. */
   harvest: z.array(z.tuple([int, int, int])),
+  /** [recette, objet « plan »] des recettes qu'il faut d'abord apprendre ; vide sans le fichier des plans. */
+  plans: z.array(z.tuple([int, int])),
 });
 
 export type GameIndexFile = z.infer<typeof GameIndexFileSchema>;
 export type ItemTuple = GameIndexFile['items'][number];
 export type RecipeTuple = GameIndexFile['recipes'][number];
 export type HarvestTuple = GameIndexFile['harvest'][number];
+export type PlanTuple = GameIndexFile['plans'][number];
 export type Names = z.infer<typeof names>;
 
 export function parseIndexFile(json: unknown): GameIndexFile {

@@ -1,7 +1,15 @@
 // Construction de l'index compact à partir des fichiers bruts validés.
 import { LOCALES } from '../i18n/locale';
-import { INDEX_SCHEMA, type GameIndexFile, type HarvestTuple, type ItemTuple, type Names, type RecipeTuple } from './indexFile';
-import type { RawGamedata, RawHarvest, RawItem, RawTitle } from './rawSchemas';
+import {
+  INDEX_SCHEMA,
+  type GameIndexFile,
+  type HarvestTuple,
+  type ItemTuple,
+  type Names,
+  type PlanTuple,
+  type RecipeTuple,
+} from './indexFile';
+import type { RawBlueprint, RawGamedata, RawHarvest, RawItem, RawTitle } from './rawSchemas';
 
 export interface BuildReport {
   recipes: number;
@@ -15,6 +23,8 @@ export interface BuildReport {
   multiResultRecipes: number;
   /** Objets de l'index dont on connaît la provenance (récolte). */
   harvestedItems: number;
+  /** Recettes à apprendre avec un plan. */
+  planRecipes: number;
 }
 
 /** Nombres d'entrées en dessous desquels on considère que le format des données a changé. */
@@ -32,6 +42,8 @@ export interface BuildOptions {
   itemsFallback?: RawItem[];
   /** Fichiers de récolte : sans eux, l'index n'indique pas la provenance des ressources. */
   harvest?: RawHarvest;
+  /** Plans : sans eux, l'index n'indique pas les recettes à apprendre. */
+  blueprints?: RawBlueprint[];
   builtAt?: Date;
 }
 
@@ -132,6 +144,18 @@ export function buildIndex(
   }
   recipes.sort((a, b) => a[0] - b[0]);
 
+  // Plans des recettes retenues : l'objet « plan » entre dans l'index pour son nom et son icône.
+  const kept = new Set(recipes.map((r) => r[0]));
+  const planOf = new Map<number, number>();
+  for (const b of options.blueprints ?? []) {
+    for (const recipeId of b.recipeId) {
+      if (!kept.has(recipeId) || planOf.has(recipeId)) continue;
+      planOf.set(recipeId, b.blueprintId);
+      referenced.add(b.blueprintId);
+    }
+  }
+  const plans: PlanTuple[] = [...planOf].sort((a, b) => a[0] - b[0]);
+
   const fromJobs = new Map(raw.jobsItems.map((x) => [x.definition.id, x]));
   const fromItems = new Map((options.itemsFallback ?? []).map((x) => [x.definition.item.id, x]));
   const items: ItemTuple[] = [];
@@ -183,6 +207,7 @@ export function buildIndex(
       items,
       recipes,
       harvest,
+      plans,
     },
     report: {
       recipes: recipes.length,
@@ -192,6 +217,7 @@ export function buildIndex(
       itemsFromFallback: fallbackCount,
       multiResultRecipes: multiResult,
       harvestedItems: new Set(harvest.map((h) => h[0])).size,
+      planRecipes: plans.length,
     },
   };
 }
