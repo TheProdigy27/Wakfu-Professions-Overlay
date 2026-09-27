@@ -1,5 +1,5 @@
 // Processus principal : instance unique, état sauvegardé, données du jeu, panneau, zone de notification, raccourci global,
-// mises à jour de l'application.
+// affichage avec Wakfu, mises à jour de l'application.
 import { fileURLToPath } from 'node:url';
 import { app, Menu, session, shell, type BrowserWindow } from 'electron';
 import iconPath from '../../resources/icon.ico?asset&asarUnpack';
@@ -14,6 +14,7 @@ import { ToggleHotkey } from './shortcuts';
 import { JsonStore } from './store/jsonStore';
 import { createTray } from './tray';
 import { Updater } from './updater';
+import { WakfuWatcher } from './wakfu';
 import { PanelWindow } from './windows/panel';
 
 const dir = app.getPath('userData');
@@ -67,6 +68,17 @@ async function start(store: JsonStore): Promise<void> {
 
   const hotkey = new ToggleHotkey(() => panel.toggle());
   const settings = new SettingsController(store, hotkey, log);
+  const wakfu = new WakfuWatcher({
+    log,
+    onStart: () => {
+      log('Wakfu lancé : panneau affiché');
+      panel.show();
+    },
+    onStop: () => {
+      log('Wakfu fermé : panneau masqué');
+      panel.hide();
+    },
+  });
   settings.onChange((state) => updater.setEnabled(state.autoUpdate));
   const openLog = () => void openPath(logFile(dir));
   registerIpc({
@@ -117,6 +129,9 @@ async function start(store: JsonStore): Promise<void> {
   await data.loadCache();
   // Lancement avec Windows : l'application attend dans la zone de notification.
   if (!process.argv.includes(HIDDEN_ARG)) panel.show();
+  // Après le cache : afficher le panneau lance la vérification des données, qui doit connaître la version en cache.
+  wakfu.setEnabled(settings.settings.showWithWakfu);
+  settings.onChange((state) => wakfu.setEnabled(state.showWithWakfu));
   updater.start();
   await data.check();
 }

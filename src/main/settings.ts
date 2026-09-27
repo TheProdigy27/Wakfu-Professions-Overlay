@@ -1,4 +1,4 @@
-// Réglages : langue, raccourci, lancement avec Windows, mises à jour, accélération matérielle, accueil.
+// Réglages : langue, raccourci, lancement avec Windows, affichage avec Wakfu, mises à jour, accélération matérielle, accueil.
 import { app } from 'electron';
 import { isLocale, matchLocale, messages, type Locale, type Messages } from '../core/i18n';
 import { acceleratorLabel, comboProblem, DEFAULT_HOTKEY, parseAccelerator, type HotkeyProblem } from '../core/state/hotkey';
@@ -54,6 +54,7 @@ export class SettingsController {
       locale: this.locale,
       hotkey: { accelerator: s.hotkeys.toggle, registered: this.hotkey.registered },
       launchAtLogin: s.launchAtLogin,
+      showWithWakfu: s.showWithWakfu,
       autoUpdate: s.autoUpdate,
       hardwareAcceleration: s.hardwareAcceleration,
       hardwareAccelerationActive: this.hardwareAccelerationActive,
@@ -110,8 +111,11 @@ export class SettingsController {
 
   setOption(name: unknown, value: unknown): void {
     if (!BOOLEAN_OPTIONS.includes(name as BooleanOption) || typeof value !== 'boolean') return;
-    this.patch({ [name as BooleanOption]: value });
-    if (name === 'launchAtLogin') this.applyLoginItem();
+    const patch: Partial<Settings> = { [name as BooleanOption]: value };
+    // Pour attendre Wakfu, l'application doit tourner : elle démarre alors avec Windows, panneau masqué.
+    if (name === 'showWithWakfu' && value && app.isPackaged) patch.launchAtLogin = true;
+    this.patch(patch);
+    if ('launchAtLogin' in patch) this.applyLoginItem();
   }
 
   setLanguage(locale: unknown): void {

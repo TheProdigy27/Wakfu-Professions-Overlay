@@ -5,7 +5,7 @@ import { LOCALES, type Locale } from '../i18n/locale';
 import { MAX_HISTORY, MAX_QTY, type CraftList, type RecipePrefs } from './craftList';
 import { DEFAULT_HOTKEY } from './hotkey';
 
-export const STATE_SCHEMA_VERSION = 2;
+export const STATE_SCHEMA_VERSION = 3;
 export const MIN_OPACITY = 0.3;
 
 export interface Rect {
@@ -26,6 +26,8 @@ export interface Settings {
   hardwareAcceleration: boolean;
   autoUpdate: boolean;
   launchAtLogin: boolean;
+  /** Panneau affiché au lancement de Wakfu, masqué à sa fermeture. */
+  showWithWakfu: boolean;
   onboardingDone: boolean;
 }
 
@@ -74,6 +76,7 @@ export const SettingsSchema: z.ZodType<Settings> = z.object({
   hardwareAcceleration: z.boolean(),
   autoUpdate: z.boolean(),
   launchAtLogin: z.boolean(),
+  showWithWakfu: z.boolean(),
   onboardingDone: z.boolean(),
 });
 
@@ -94,6 +97,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   hardwareAcceleration: true,
   autoUpdate: true,
   launchAtLogin: false,
+  showWithWakfu: false,
   onboardingDone: false,
 };
 

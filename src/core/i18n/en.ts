@@ -121,6 +121,8 @@ export const en: Messages = {
     opacity: 'Opacity',
     startup: 'Startup and updates',
     launchAtLogin: 'Launch with Windows (panel hidden, in the notification area)',
+    showWithWakfu: 'Show the panel when Wakfu starts, hide it when Wakfu closes',
+    showWithWakfuHint: 'Works while the app is running: also tick "Launch with Windows" so that it waits for the game.',
     autoUpdate: 'Install app updates automatically',
     packagedOnly: 'Available in the installed version of the app.',
     performance: 'Performance',

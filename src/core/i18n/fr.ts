@@ -133,6 +133,8 @@ export const fr = {
     opacity: 'Opacité',
     startup: 'Démarrage et mises à jour',
     launchAtLogin: 'Lancer avec Windows (panneau masqué, dans la zone de notification)',
+    showWithWakfu: 'Afficher le panneau au lancement de Wakfu, le masquer à sa fermeture',
+    showWithWakfuHint: "Fonctionne quand l'application est lancée : cochez aussi « Lancer avec Windows » pour qu'elle attende le jeu.",
     autoUpdate: "Installer automatiquement les mises à jour de l'application",
     packagedOnly: "Disponible dans la version installée de l'application.",
     performance: 'Performances',

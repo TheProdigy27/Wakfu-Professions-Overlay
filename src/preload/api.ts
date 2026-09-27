@@ -30,6 +30,8 @@ export interface AppState {
     registered: boolean;
   };
   launchAtLogin: boolean;
+  /** Panneau affiché au lancement de Wakfu, masqué à sa fermeture. */
+  showWithWakfu: boolean;
   autoUpdate: boolean;
   hardwareAcceleration: boolean;
   /** Valeur au démarrage : un changement ne prend effet qu'au prochain lancement. */
@@ -59,8 +61,8 @@ export type UpdateStatus =
   | { state: 'error'; reason: 'check' | 'publishing' | 'not-published' }
   | { state: 'error'; reason: 'download'; version: string };
 
-export type BooleanOption = 'launchAtLogin' | 'autoUpdate' | 'hardwareAcceleration';
-export const BOOLEAN_OPTIONS: readonly BooleanOption[] = ['launchAtLogin', 'autoUpdate', 'hardwareAcceleration'];
+export type BooleanOption = 'launchAtLogin' | 'showWithWakfu' | 'autoUpdate' | 'hardwareAcceleration';
+export const BOOLEAN_OPTIONS: readonly BooleanOption[] = ['launchAtLogin', 'showWithWakfu', 'autoUpdate', 'hardwareAcceleration'];
 
 export interface SavedLists {
   current: CraftList | null;

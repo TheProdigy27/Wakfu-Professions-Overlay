@@ -6,6 +6,8 @@ export type Migration = (state: Record<string, unknown>) => Record<string, unkno
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   /** Réglage de la langue : celle de Windows tant qu'on n'en a pas choisi une. */
   1: (state) => ({ ...state, settings: { ...(state['settings'] as object), language: null } }),
+  /** Réglage « Afficher le panneau au lancement de Wakfu », désactivé. */
+  2: (state) => ({ ...state, settings: { ...(state['settings'] as object), showWithWakfu: false } }),
 };
 
 /** Fichier écrit par une version plus récente de l'application : on ne sait pas le relire, il ne doit pas être écrasé. */

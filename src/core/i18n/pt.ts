@@ -123,6 +123,8 @@ export const pt: Messages = {
     opacity: 'Opacidade',
     startup: 'Inicialização e atualizações',
     launchAtLogin: 'Iniciar com o Windows (painel oculto, na área de notificação)',
+    showWithWakfu: 'Mostrar o painel ao iniciar o Wakfu e ocultá-lo ao fechá-lo',
+    showWithWakfuHint: 'Funciona enquanto o aplicativo estiver aberto: marque também "Iniciar com o Windows" para que ele espere o jogo.',
     autoUpdate: 'Instalar automaticamente as atualizações do aplicativo',
     packagedOnly: 'Disponível na versão instalada do aplicativo.',
     performance: 'Desempenho',

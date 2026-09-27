@@ -1,4 +1,5 @@
-// Réglages : langue, raccourci, opacité, lancement avec Windows, mises à jour, accélération matérielle, aide.
+// Réglages : langue, raccourci, opacité, lancement avec Windows, affichage avec Wakfu, mises à jour, accélération matérielle,
+// aide.
 import { useRef, useState, type KeyboardEvent } from 'react';
 import type { Messages } from '../../../core/i18n';
 import { acceleratorLabel, captureHotkey } from '../../../core/state/hotkey';
@@ -60,6 +61,15 @@ export function SettingsView() {
           />
           {t.launchAtLogin}
         </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={app.showWithWakfu}
+            onChange={(e) => api.setOption('showWithWakfu', e.target.checked)}
+          />
+          {t.showWithWakfu}
+        </label>
+        {app.showWithWakfu && app.packaged && !app.launchAtLogin && <p className="hint">{t.showWithWakfuHint}</p>}
         <label className="check">
           <input
             type="checkbox"

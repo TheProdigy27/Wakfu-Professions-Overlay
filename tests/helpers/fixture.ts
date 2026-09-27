@@ -10,6 +10,7 @@ export const FIXTURE_PATH = path.join(FIXTURES, 'index-subset.json');
 export const FIXTURE_V2_PATH = path.join(FIXTURES, 'index-v2-modified.json');
 export const STATE_V1_PATH = path.join(FIXTURES, 'state-v1.json');
 export const STATE_V2_PATH = path.join(FIXTURES, 'state-v2.json');
+export const STATE_V3_PATH = path.join(FIXTURES, 'state-v3.json');
 /** Fausse version suivante du jeu, dans index-v2-modified.json. */
 export const V2 = '1.93.2.0';
 
@@ -33,7 +34,12 @@ export function readStateV1(): unknown {
   return JSON.parse(readFileSync(STATE_V1_PATH, 'utf8'));
 }
 
-/** state.json au format courant (2) : celui de state-v1.json, avec la langue choisie. */
+/** state.json au format 2 : celui de state-v1.json, avec la langue choisie. */
 export function readStateV2(): unknown {
   return JSON.parse(readFileSync(STATE_V2_PATH, 'utf8'));
+}
+
+/** state.json au format courant (3) : celui de state-v2.json, affiché avec Wakfu et lancé avec Windows. */
+export function readStateV3(): unknown {
+  return JSON.parse(readFileSync(STATE_V3_PATH, 'utf8'));
 }
