@@ -10,11 +10,22 @@ import { HistoryMenu } from './components/HistoryMenu';
 import { ItemIcon, ItemName, itemMeta } from './components/Item';
 import { JobsButton, JobsView } from './components/JobsView';
 import { Onboarding } from './components/Onboarding';
+import { TotalCost } from './components/Price';
 import { SearchBar } from './components/SearchBar';
 import { SettingsView } from './components/Settings';
 import { ShoppingList } from './components/ShoppingList';
 import { TreeView } from './components/TreeView';
-import { goBack, openSettings, updateList, useCanGoBack, useMessages, useNeeds, useObsolete, usePanel } from './store';
+import {
+  goBack,
+  openSettings,
+  updateList,
+  useCanGoBack,
+  useListCost,
+  useMessages,
+  useNeeds,
+  useObsolete,
+  usePanel,
+} from './store';
 
 const VIEWS: ListView[] = ['tree', 'shopping', 'order'];
 
@@ -136,6 +147,8 @@ function Body() {
   const status = usePanel((s) => s.status);
   const obsolete = useObsolete();
   const needs = useNeeds();
+  // Pas de prix en mode compact.
+  const cost = useListCost(compact || obsolete ? null : needs);
 
   if (!catalog) {
     const busy = status?.busy;
@@ -166,6 +179,7 @@ function Body() {
         <div className="target-text">
           <ItemName item={target} itemId={list.target.itemId} />
           {target && <span className="meta">{itemMeta(catalog.index, target, m)}</span>}
+          {cost && <TotalCost index={catalog.index} cost={cost.total} />}
         </div>
         <label className="target-qty">
           {m.body.quantity}
@@ -187,7 +201,7 @@ function Body() {
         ))}
       </nav>
       <div className="view">
-        {list.ui.view === 'tree' && <TreeView {...needs} />}
+        {list.ui.view === 'tree' && cost && <TreeView {...needs} cost={cost} />}
         {list.ui.view === 'shopping' && <ShoppingList {...needs} />}
         {list.ui.view === 'order' && <CraftOrder {...needs} />}
       </div>

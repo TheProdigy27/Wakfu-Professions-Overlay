@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { migrate, NewerStateError, parseState, stateVersion, type Migration } from '../../../src/core/state/migrations';
 import { defaultState, PersistedStateSchema, STATE_SCHEMA_VERSION } from '../../../src/core/state/schema';
-import { readStateV1, readStateV2, readStateV3, readStateV4, readStateV5 } from '../../helpers/fixture';
+import { readStateV1, readStateV2, readStateV3, readStateV4, readStateV5, readStateV6 } from '../../helpers/fixture';
 import { IDS } from '../../helpers/needsCases';
 
 describe('state.json', () => {
@@ -23,6 +23,8 @@ describe('state.json', () => {
     expect(state.jobLevels).toEqual({});
     // Format 5 : quantités pas mises à jour avec le chat de Wakfu.
     expect(state.settings.ownedFromChat).toBe(false);
+    // Format 6 : aucun prix de l'HDV saisi.
+    expect(state.prices).toEqual({});
   });
 
   it('la fixture v2 migrée garde la langue choisie', () => {
@@ -45,11 +47,21 @@ describe('state.json', () => {
     expect(state).toEqual({ ...parseState(readStateV3()), jobLevels: state.jobLevels });
   });
 
-  it('la fixture v5 est au format courant, quantités mises à jour avec le chat', () => {
+  it('la fixture v5 migrée garde la mise à jour avec le chat', () => {
     const state = parseState(readStateV5());
-    expect(state).toEqual(readStateV5());
     expect(state.settings.ownedFromChat).toBe(true);
+    expect(state.prices).toEqual({});
     expect(state).toEqual({ ...parseState(readStateV4()), settings: { ...state.settings } });
+  });
+
+  it('la fixture v6 est au format courant, avec des prix de l\'HDV', () => {
+    const state = parseState(readStateV6());
+    expect(state).toEqual(readStateV6());
+    expect(state.prices).toEqual({
+      [IDS.POUDRE]: { kamas: 1200, at: '2026-09-27T18:00:00.000Z' },
+      [IDS.FIL]: { kamas: 0, at: '2026-09-28T09:15:00.000Z' },
+    });
+    expect(state).toEqual({ ...parseState(readStateV5()), prices: state.prices });
   });
 
   it("l'état par défaut est valide", () => {
@@ -63,9 +75,18 @@ describe('state.json', () => {
       return () => parseState(s);
     };
     expect(bad((s) => (s.settings.opacity = 0.1))).toThrow();
-    expect(() => parseState({ ...(readStateV5() as object), settings: { ...defaultState().settings, language: 'de' } })).toThrow();
-    expect(() => parseState({ ...(readStateV5() as object), jobLevels: { 79: -1 } })).toThrow();
-    expect(() => parseState({ ...(readStateV5() as object), jobLevels: { tailleur: 125 } })).toThrow();
+    expect(() => parseState({ ...(readStateV6() as object), settings: { ...defaultState().settings, language: 'de' } })).toThrow();
+    expect(() => parseState({ ...(readStateV6() as object), jobLevels: { 79: -1 } })).toThrow();
+    expect(() => parseState({ ...(readStateV6() as object), jobLevels: { tailleur: 125 } })).toThrow();
+    const price = (kamas: unknown, at: unknown = '2026-09-28T09:15:00.000Z') => ({
+      ...(readStateV6() as object),
+      prices: { 1: { kamas, at } },
+    });
+    expect(() => parseState(price(-1))).toThrow();
+    expect(() => parseState(price(1.5))).toThrow();
+    expect(() => parseState(price(1e10))).toThrow();
+    expect(() => parseState(price(10, 42))).toThrow();
+    expect(() => parseState({ ...(readStateV6() as object), prices: { poudre: { kamas: 1, at: '' } } })).toThrow();
     expect(bad((s) => (s.current!.target.qty = 0))).toThrow();
     expect(bad((s) => ((s.current!.mode as Record<string, string>)['1'] = 'craft'))).toThrow();
     expect(bad((s) => ((s.current!.owned as Record<string, number>)['abc'] = 1))).toThrow();

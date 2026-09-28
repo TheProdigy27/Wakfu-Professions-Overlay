@@ -13,6 +13,7 @@ export const STATE_V2_PATH = path.join(FIXTURES, 'state-v2.json');
 export const STATE_V3_PATH = path.join(FIXTURES, 'state-v3.json');
 export const STATE_V4_PATH = path.join(FIXTURES, 'state-v4.json');
 export const STATE_V5_PATH = path.join(FIXTURES, 'state-v5.json');
+export const STATE_V6_PATH = path.join(FIXTURES, 'state-v6.json');
 /** Fausse version suivante du jeu, dans index-v2-modified.json. */
 export const V2 = '1.93.2.0';
 
@@ -51,7 +52,12 @@ export function readStateV4(): unknown {
   return JSON.parse(readFileSync(STATE_V4_PATH, 'utf8'));
 }
 
-/** state.json au format courant (5) : celui de state-v4.json, quantités mises à jour avec le chat de Wakfu. */
+/** state.json au format 5 : celui de state-v4.json, quantités mises à jour avec le chat de Wakfu. */
 export function readStateV5(): unknown {
   return JSON.parse(readFileSync(STATE_V5_PATH, 'utf8'));
+}
+
+/** state.json au format courant (6) : celui de state-v5.json, avec deux prix de l'HDV (Poudre 1 200, Fil 0). */
+export function readStateV6(): unknown {
+  return JSON.parse(readFileSync(STATE_V6_PATH, 'utf8'));
 }

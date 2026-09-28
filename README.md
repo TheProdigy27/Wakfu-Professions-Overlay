@@ -18,6 +18,7 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 - **Ordre de craft** : les intermédiaires d'abord, avec le métier et le niveau requis.
 - **Plans** : un craft qu'il faut d'abord apprendre l'indique, avec le nom du plan à utiliser, par exemple « Nécessite : Plan "Kokordon" ».
 - Case **« je l'ai »** et quantités possédées, choix **crafter / acheter** pour chaque intermédiaire, choix de la **variante** de recette quand il y en a plusieurs.
+- **Prix de l'Hôtel de vente**, saisis à la main (colonne « Prix » des courses, ou dans l'arbre) et gardés pour toutes les listes : coût de revient de la liste, et pour chaque objet à crafter « Crafter : … · Acheter : … », le moins cher en vert. Ce que vous possédez déjà ne coûte rien ; mettez 0 pour ce que vous récoltez vous-même. Un prix saisi il y a plus d'une semaine s'affiche en gris.
 - **Quantités mises à jour en jeu** (option des réglages) : les objets de la liste que vous ramassez, craftez, achetez ou vendez s'ajoutent ou se retirent tout seuls, d'après le chat de Wakfu, et la case « je l'ai » se coche dès que vous avez le compte. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.
 - Mode **compact**, **opacité** réglable, **raccourci** global (`Ctrl+Maj+W` par défaut) pour afficher ou masquer le panneau sans quitter le jeu.
 - Interface en **français, anglais, espagnol et portugais**. Les noms des objets suivent la langue choisie : ils viennent directement des données du jeu.

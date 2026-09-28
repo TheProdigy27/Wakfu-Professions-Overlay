@@ -7,6 +7,7 @@
   --muted: #9aa0aa;
   --accent: #e27a00;
   --error: #ff7b72;
+  --ok: #7ee787;
   color-scheme: dark;
 }
 
@@ -625,6 +626,49 @@ td.name-col {
 .owned {
   width: 56px;
   text-align: right;
+}
+
+/* Prix de l'HDV : prix unitaire (sans flèches, inutiles pour des kamas), coût de revient, crafter / acheter. */
+.price {
+  width: 76px;
+  text-align: right;
+}
+
+.price::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* Saisi il y a plus d'une semaine : à vérifier. */
+.price.stale {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.row > .price {
+  flex: none;
+  font-size: 12px;
+}
+
+.row-cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cheaper {
+  color: var(--ok);
+}
+
+.target .cost {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cost .nowrap {
+  white-space: nowrap;
 }
 
 /* Ordre de craft */

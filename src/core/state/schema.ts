@@ -3,10 +3,11 @@
 import { z } from 'zod';
 import { LOCALES, type Locale } from '../i18n/locale';
 import { MAX_JOB_LEVEL, type JobLevels } from '../jobs/jobCrafts';
+import { MAX_PRICE, type Prices } from '../needs/cost';
 import { MAX_HISTORY, MAX_QTY, type CraftList, type RecipePrefs } from './craftList';
 import { DEFAULT_HOTKEY } from './hotkey';
 
-export const STATE_SCHEMA_VERSION = 5;
+export const STATE_SCHEMA_VERSION = 6;
 export const MIN_OPACITY = 0.3;
 
 export interface Rect {
@@ -42,6 +43,8 @@ export interface PersistedState {
   recipePrefs: RecipePrefs;
   /** Niveau du joueur par métier : filtre des crafts par métier. */
   jobLevels: JobLevels;
+  /** Prix unitaires de l'HDV saisis à la main, communs à toutes les listes. */
+  prices: Prices;
   current: CraftList | null;
   /** Listes quittées, la plus récente en tête (MAX_HISTORY au plus). */
   history: CraftList[];
@@ -73,6 +76,10 @@ export const CraftListSchema: z.ZodType<CraftList> = z.object({
 export const HistorySchema = z.array(CraftListSchema).max(MAX_HISTORY);
 export const RecipePrefsSchema: z.ZodType<RecipePrefs> = z.record(idKey, int);
 export const JobLevelsSchema: z.ZodType<JobLevels> = z.record(idKey, int.min(0).max(MAX_JOB_LEVEL));
+export const PricesSchema: z.ZodType<Prices> = z.record(
+  idKey,
+  z.object({ kamas: int.min(0).max(MAX_PRICE), at: z.string().max(40) }),
+);
 
 export const SettingsSchema: z.ZodType<Settings> = z.object({
   language: z.enum(LOCALES).nullable(),
@@ -93,6 +100,7 @@ export const PersistedStateSchema: z.ZodType<PersistedState> = z.object({
   window: z.object({ normal: RectSchema.optional(), compact: RectSchema.optional() }),
   recipePrefs: RecipePrefsSchema,
   jobLevels: JobLevelsSchema,
+  prices: PricesSchema,
   current: CraftListSchema.nullable(),
   history: HistorySchema,
 });
@@ -117,6 +125,7 @@ export function defaultState(): PersistedState {
     window: {},
     recipePrefs: {},
     jobLevels: {},
+    prices: {},
     current: null,
     history: [],
   };

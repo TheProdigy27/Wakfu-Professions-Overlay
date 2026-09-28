@@ -4,6 +4,7 @@ import type { DataStatus } from '../core/data/dataStatus';
 import type { GameIndexFile } from '../core/data/indexFile';
 import type { Locale } from '../core/i18n/locale';
 import type { JobLevels } from '../core/jobs/jobCrafts';
+import type { Prices } from '../core/needs/cost';
 import type { CraftList, RecipePrefs } from '../core/state/craftList';
 import type { HotkeyProblem } from '../core/state/hotkey';
 
@@ -79,6 +80,7 @@ export interface SavedLists {
   history: CraftList[];
   recipePrefs: RecipePrefs;
   jobLevels: JobLevels;
+  prices: Prices;
 }
 
 /**
@@ -104,13 +106,14 @@ export interface PanelApi {
   onApp(listener: (state: AppState) => void): () => void;
   /** Demande de la zone de notification : ouvrir les réglages. */
   onOpenSettings(listener: () => void): () => void;
-  /** Listes et niveaux de métier sauvegardés au dernier lancement. */
+  /** Listes, niveaux de métier et prix sauvegardés au dernier lancement. */
   getLists(): Promise<SavedLists>;
   /** Enregistrement : state.json est écrit au plus 300 ms plus tard. */
   saveCurrent(list: CraftList | null): void;
   saveHistory(history: CraftList[]): void;
   saveRecipePrefs(prefs: RecipePrefs): void;
   saveJobLevels(levels: JobLevels): void;
+  savePrices(prices: Prices): void;
   /** Objets ramassés ou perdus en jeu, lus dans le chat de Wakfu (réglage ownedFromChat). */
   onChatChanges(listener: (changes: ChatItemChange[]) => void): () => void;
   setHotkey(accelerator: string): Promise<HotkeyChange>;
@@ -153,6 +156,7 @@ export const IPC = {
   saveHistory: 'lists:save-history',
   saveRecipePrefs: 'lists:save-prefs',
   saveJobLevels: 'jobs:save-levels',
+  savePrices: 'prices:save',
   chatChanges: 'chat:changes',
   setHotkey: 'settings:set-hotkey',
   suspendHotkey: 'settings:suspend-hotkey',

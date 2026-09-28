@@ -12,6 +12,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   3: (state) => ({ ...state, jobLevels: {} }),
   /** Réglage « Mettre à jour les quantités avec le chat de Wakfu », désactivé. */
   4: (state) => ({ ...state, settings: { ...(state['settings'] as object), ownedFromChat: false } }),
+  /** Prix de l'HDV : aucun saisi. */
+  5: (state) => ({ ...state, prices: {} }),
 };
 
 /** Fichier écrit par une version plus récente de l'application : on ne sait pas le relire, il ne doit pas être écrasé. */

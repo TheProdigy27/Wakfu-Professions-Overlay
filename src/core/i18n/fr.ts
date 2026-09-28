@@ -1,6 +1,10 @@
 // Textes de l'interface en français. C'est la langue de référence : les autres traductions ont la même forme (Messages).
 import type { DataErrorCode } from '../data/dataStatus';
 import type { HotkeyProblem } from '../state/hotkey';
+import { LOCALE_TAGS } from './locale';
+
+/** Montants en kamas : « 12 400 ». */
+const KAMAS = new Intl.NumberFormat(LOCALE_TAGS.fr);
 
 export const fr = {
   common: {
@@ -257,6 +261,28 @@ export const fr = {
     variantTitle: 'Variante de recette (le choix est mémorisé pour cet objet)',
     variant: (n: number, isDefault: boolean, ingredients: string) =>
       `Variante ${n}${isDefault ? ' (par défaut)' : ''} : ${ingredients}`,
+  },
+  /** Prix de l'HDV saisis à la main, coût de revient et comparaison crafter / acheter. */
+  cost: {
+    kamas: (n: number) => `${KAMAS.format(n)}\u00a0kamas`,
+    /** Des objets n'ont pas encore de prix : le montant n'est qu'un minimum. */
+    atLeast: (amount: string) => `≥\u00a0${amount}`,
+    /** Aucun des objets concernés n'a de prix. */
+    unknown: '?',
+    total: (amount: string) => `Coût de revient : ${amount}`,
+    unpriced: (n: number) => `${n} sans prix`,
+    unpricedTitle: (names: string) => `Sans prix : ${names}`,
+    craft: (amount: string) => `Crafter : ${amount}`,
+    buy: (amount: string) => `Acheter : ${amount}`,
+    /** Objet présent à plusieurs endroits de l'arbre : la comparaison porte sur toute la liste. */
+    inList: (qty: number) => `×${qty} dans la liste`,
+    compareTitle: (qty: number) =>
+      `Pour ×${qty} dans toute la liste. Crafter : les ingrédients qui restent à obtenir, ce que vous possédez ne coûte rien. Le moins cher est en vert.`,
+    column: 'Prix',
+    columnTitle: "Prix unitaire à l'Hôtel de vente, en kamas",
+    price: "Prix unitaire à l'Hôtel de vente, en kamas (0 pour ce que vous récoltez vous-même)",
+    age: (days: number) => (days === 0 ? "Saisi aujourd'hui" : days === 1 ? 'Saisi hier' : `Saisi il y a ${days} jours`),
+    line: (qty: number, amount: string) => `${qty} à obtenir : ${amount}`,
   },
   tray: {
     tooltip: 'Wakfu Professions Overlay',

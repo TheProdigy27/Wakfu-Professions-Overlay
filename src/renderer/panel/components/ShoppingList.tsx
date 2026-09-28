@@ -1,4 +1,4 @@
-// Liste de courses : ressources et intermédiaires achetés, avec requis, possédé et reste.
+// Liste de courses : ressources et intermédiaires achetés, avec requis, possédé, reste et prix de l'HDV.
 import { useEffect, useState } from 'react';
 import { rarityName } from '../../../core/data/rarity';
 import type { NeedsResult } from '../../../core/needs/computeNeeds';
@@ -6,6 +6,7 @@ import { shoppingList, shoppingText, type ShoppingLine } from '../../../core/nee
 import { hasAll, needsInput, setMissingOnly, setOwned, toggleHave, type CraftList } from '../../../core/state/craftList';
 import { updateList, useMessages, type Catalog } from '../store';
 import { HarvestSource, ItemIcon, ItemName } from './Item';
+import { PriceInput } from './Price';
 
 interface ShoppingProps {
   catalog: Catalog;
@@ -81,6 +82,7 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
               <th>{t.columns.required}</th>
               <th>{t.columns.owned}</th>
               <th>{t.columns.missing}</th>
+              <th title={m.cost.columnTitle}>{m.cost.column}</th>
             </tr>
           </thead>
         )}
@@ -122,6 +124,11 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
                 <td className="num missing" title={compact ? t.missingTitle(line.required) : undefined}>
                   {compact ? `×${line.missing}` : line.missing}
                 </td>
+                {!compact && (
+                  <td className="num">
+                    <PriceInput itemId={line.itemId} toObtain={line.missing} />
+                  </td>
+                )}
               </tr>
             );
           })}

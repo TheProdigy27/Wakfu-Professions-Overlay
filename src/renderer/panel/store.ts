@@ -1,5 +1,5 @@
 // État du panneau (Zustand) : données du jeu, liste en cours et historique (enregistrés par main), crafts par métier,
-// réglages, fenêtre, objets ramassés ou perdus en jeu.
+// prix de l'HDV, réglages, fenêtre, objets ramassés ou perdus en jeu.
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { applyChatChanges } from '../../core/chat/applyChat';
@@ -13,6 +13,7 @@ import { withJobLevel, type JobLevels } from '../../core/jobs/jobCrafts';
 import { NameVocabulary } from '../../core/match/vocabulary';
 import { createSearchIndex, type SearchIndex } from '../../core/match/searchIndex';
 import { computeNeeds, type NeedsResult } from '../../core/needs/computeNeeds';
+import { listCost, withPrice, type ListCost, type Prices } from '../../core/needs/cost';
 import { chooseRecipe, needsInput, newList, pushHistory, type CraftList, type RecipePrefs } from '../../core/state/craftList';
 import { listsAfterBack, pushScreen, type Screen } from '../../core/state/navigation';
 import { isObsolete, reconcile, withSnapshot } from '../../core/state/reconcile';
@@ -55,6 +56,8 @@ interface PanelState {
   jobsFilter: JobsFilter;
   /** Niveau du joueur par métier, enregistré. */
   jobLevels: JobLevels;
+  /** Prix unitaires de l'HDV, communs à toutes les listes, enregistrés. */
+  prices: Prices;
   /** Écrans quittés, le plus récent en dernier : bouton « Retour », le temps de la session. */
   back: Screen[];
 }
@@ -75,6 +78,7 @@ export const usePanel = create<PanelState>()(() => ({
   jobsOpen: false,
   jobsFilter: { jobId: null, query: '', upgrades: true },
   jobLevels: {},
+  prices: {},
   back: [],
 }));
 
@@ -183,6 +187,11 @@ export function setJobLevel(jobId: number, level: number | null): void {
   usePanel.setState((s) => ({ jobLevels: withJobLevel(s.jobLevels, jobId, level) }));
 }
 
+/** null : prix oublié (champ vidé). */
+export function setPrice(itemId: number, kamas: number | null): void {
+  usePanel.setState((s) => ({ prices: withPrice(s.prices, itemId, kamas) }));
+}
+
 /** Par-dessus l'écran affiché : depuis les réglages, on y revient en fermant l'accueil. */
 export function showOnboarding(show: boolean): void {
   usePanel.setState({ onboarding: show });
@@ -226,6 +235,16 @@ export function useNeeds(): { catalog: Catalog; list: CraftList; result: NeedsRe
     [catalog, list?.target, list?.owned, list?.mode, list?.recipeChoice],
   );
   return catalog && list && result ? { catalog, list, result } : null;
+}
+
+/** Coût de revient et comparaisons crafter / acheter, refaits quand le calcul des besoins ou les prix changent. */
+export function useListCost(needs: { catalog: Catalog; list: CraftList; result: NeedsResult } | null): ListCost | null {
+  const prices = usePanel((s) => s.prices);
+  return useMemo(
+    () => (needs ? listCost(needs.catalog.index, needsInput(needs.list), needs.result, prices) : null),
+    // Le résultat change avec chaque entrée du calcul (quantités, choix crafter / acheter, variantes).
+    [needs?.catalog, needs?.result, prices],
+  );
 }
 
 /** Index compact courant : chaque langue en tire son catalogue. */
@@ -280,6 +299,7 @@ function persistChanges(): void {
     if (s.history !== prev.history) api.saveHistory(s.history);
     if (s.prefs !== prev.prefs) api.saveRecipePrefs(s.prefs);
     if (s.jobLevels !== prev.jobLevels) api.saveJobLevels(s.jobLevels);
+    if (s.prices !== prev.prices) api.savePrices(s.prices);
   });
 }
 
@@ -316,6 +336,7 @@ export async function initStore(): Promise<void> {
     history: saved.history,
     prefs: saved.recipePrefs,
     jobLevels: saved.jobLevels,
+    prices: saved.prices,
     loaded: true,
   });
   applyLocale(app.locale);

@@ -1,5 +1,9 @@
 // Textes de l'interface en anglais.
 import type { Messages } from './fr';
+import { LOCALE_TAGS } from './locale';
+
+/** Montants en kamas : « 12,400 ». */
+const KAMAS = new Intl.NumberFormat(LOCALE_TAGS.en);
 
 export const en: Messages = {
   common: {
@@ -235,6 +239,24 @@ export const en: Messages = {
     buy: 'I buy it',
     variantTitle: 'Recipe variant (the choice is remembered for this item)',
     variant: (n, isDefault, ingredients) => `Variant ${n}${isDefault ? ' (default)' : ''}: ${ingredients}`,
+  },
+  cost: {
+    kamas: (n) => `${KAMAS.format(n)}\u00a0kamas`,
+    atLeast: (amount) => `≥\u00a0${amount}`,
+    unknown: '?',
+    total: (amount) => `Total cost: ${amount}`,
+    unpriced: (n) => `${n} without a price`,
+    unpricedTitle: (names) => `No price: ${names}`,
+    craft: (amount) => `Craft: ${amount}`,
+    buy: (amount) => `Buy: ${amount}`,
+    inList: (qty) => `×${qty} in the list`,
+    compareTitle: (qty) =>
+      `For ×${qty} across the whole list. Craft: the ingredients still to get; what you own costs nothing. The cheaper option is in green.`,
+    column: 'Price',
+    columnTitle: 'Unit price at the Marketplace, in kamas',
+    price: 'Unit price at the Marketplace, in kamas (0 for what you harvest yourself)',
+    age: (days) => (days === 0 ? 'Entered today' : days === 1 ? 'Entered yesterday' : `Entered ${days} days ago`),
+    line: (qty, amount) => `${qty} to get: ${amount}`,
   },
   tray: {
     tooltip: 'Wakfu Professions Overlay',

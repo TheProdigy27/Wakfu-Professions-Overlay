@@ -1,16 +1,19 @@
-// Arbre de craft : chaque nœud avec sa case « je l'ai », crafter / acheter et le choix de variante.
+// Arbre de craft : chaque nœud avec sa case « je l'ai », crafter / acheter, le choix de variante et le prix de l'HDV.
 import type { GameIndex, Recipe } from '../../../core/data/loadIndex';
 import type { Messages } from '../../../core/i18n';
 import type { NeedNode, NeedsResult } from '../../../core/needs/computeNeeds';
+import type { ListCost } from '../../../core/needs/cost';
 import { hasAll, setMode, toggleCollapsed, toggleHave, type CraftList } from '../../../core/state/craftList';
 import { selectRecipe, updateList, useMessages, type Catalog } from '../store';
 import { Glyph } from './Glyph';
 import { HarvestSource, ItemIcon, ItemName, PlanNeeded } from './Item';
+import { CraftOrBuyLine, PriceInput } from './Price';
 
 interface TreeProps {
   catalog: Catalog;
   list: CraftList;
   result: NeedsResult;
+  cost: ListCost;
 }
 
 export function TreeView(props: TreeProps) {
@@ -53,7 +56,7 @@ function detail(index: GameIndex, node: NeedNode, m: Messages): string {
   }
 }
 
-function TreeNode({ node, depth, catalog, list, result }: TreeProps & { node: NeedNode; depth: number }) {
+function TreeNode({ node, depth, catalog, list, result, cost }: TreeProps & { node: NeedNode; depth: number }) {
   const m = useMessages();
   const t = m.tree;
   const { index } = catalog;
@@ -64,6 +67,7 @@ function TreeNode({ node, depth, catalog, list, result }: TreeProps & { node: Ne
   const buying = list.mode[node.itemId] === 'buy';
   const hasChildren = node.children.length > 0;
   const showControls = recipes.length > 0 && node.kind !== 'stock';
+  const choice = node.kind === 'craft' || node.kind === 'buy' ? cost.choices.get(node.itemId) : undefined;
 
   return (
     <li>
@@ -122,12 +126,22 @@ function TreeNode({ node, depth, catalog, list, result }: TreeProps & { node: Ne
               </span>
             )}
           </div>
+          {choice && <CraftOrBuyLine index={index} choice={choice} rowQty={node.qty - node.fromStock} />}
         </div>
+        {node.kind !== 'stock' && <PriceInput itemId={node.itemId} toObtain={node.toObtain} placeholder={m.cost.column} />}
       </div>
       {hasChildren && !collapsed && (
         <ul>
           {node.children.map((child) => (
-            <TreeNode key={child.key} node={child} depth={depth + 1} catalog={catalog} list={list} result={result} />
+            <TreeNode
+              key={child.key}
+              node={child}
+              depth={depth + 1}
+              catalog={catalog}
+              list={list}
+              result={result}
+              cost={cost}
+            />
           ))}
         </ul>
       )}

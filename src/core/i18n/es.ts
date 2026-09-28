@@ -1,5 +1,9 @@
 // Textes de l'interface en espagnol.
 import type { Messages } from './fr';
+import { LOCALE_TAGS } from './locale';
+
+/** Montants en kamas : « 12.400 ». */
+const KAMAS = new Intl.NumberFormat(LOCALE_TAGS.es);
 
 export const es: Messages = {
   common: {
@@ -239,6 +243,24 @@ export const es: Messages = {
     buy: 'Lo compro',
     variantTitle: 'Variante de receta (la elección se recuerda para este objeto)',
     variant: (n, isDefault, ingredients) => `Variante ${n}${isDefault ? ' (por defecto)' : ''}: ${ingredients}`,
+  },
+  cost: {
+    kamas: (n) => `${KAMAS.format(n)}\u00a0kamas`,
+    atLeast: (amount) => `≥\u00a0${amount}`,
+    unknown: '?',
+    total: (amount) => `Coste total: ${amount}`,
+    unpriced: (n) => `${n} sin precio`,
+    unpricedTitle: (names) => `Sin precio: ${names}`,
+    craft: (amount) => `Fabricar: ${amount}`,
+    buy: (amount) => `Comprar: ${amount}`,
+    inList: (qty) => `×${qty} en la lista`,
+    compareTitle: (qty) =>
+      `Para ×${qty} en toda la lista. Fabricar: los ingredientes que faltan por conseguir; lo que ya tienes no cuesta nada. La opción más barata aparece en verde.`,
+    column: 'Precio',
+    columnTitle: 'Precio por unidad en el mercadillo, en kamas',
+    price: 'Precio por unidad en el mercadillo, en kamas (0 para lo que recolectas tú mismo)',
+    age: (days) => (days === 0 ? 'Introducido hoy' : days === 1 ? 'Introducido ayer' : `Introducido hace ${days} días`),
+    line: (qty, amount) => `${qty} por conseguir: ${amount}`,
   },
   tray: {
     tooltip: 'Wakfu Professions Overlay',

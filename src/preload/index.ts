@@ -30,6 +30,7 @@ const api: PanelApi = {
   saveHistory: (history) => ipcRenderer.send(IPC.saveHistory, history),
   saveRecipePrefs: (prefs) => ipcRenderer.send(IPC.saveRecipePrefs, prefs),
   saveJobLevels: (levels) => ipcRenderer.send(IPC.saveJobLevels, levels),
+  savePrices: (prices) => ipcRenderer.send(IPC.savePrices, prices),
   onChatChanges: (listener) => subscribe(IPC.chatChanges, listener),
   setHotkey: (accelerator) => ipcRenderer.invoke(IPC.setHotkey, accelerator),
   suspendHotkey: (suspended) => ipcRenderer.send(IPC.suspendHotkey, suspended),
