@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { FetchLike } from '../../../src/main/data/gamedataService';
-import { createIconLoader } from '../../../src/main/data/iconCache';
+import { createIconLoader, isUpsideDown } from '../../../src/main/data/iconCache';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 const CDN = 'https://icons.test';
@@ -93,5 +93,35 @@ describe('createIconLoader', () => {
     const results = await Promise.all(pending);
     expect(results.every((r) => r.status === 200)).toBe(true);
     expect(cdn.calls).toEqual(['5']);
+  });
+});
+
+/** PNG réduit à la suite de ses blocs (contenu et CRC factices : seuls les types comptent). */
+function pngWithChunks(...types: string[]): Uint8Array {
+  const parts = [PNG.subarray(0, 8)];
+  for (const type of types) {
+    const chunk = new Uint8Array(12 + 4);
+    new DataView(chunk.buffer).setUint32(0, 4);
+    chunk.set([...type].map((c) => c.charCodeAt(0)), 4);
+    parts.push(chunk);
+  }
+  return Uint8Array.from(parts.flatMap((p) => [...p]));
+}
+
+describe('isUpsideDown', () => {
+  it('conversion de mars 2026 (gAMA, sans orNT) : retournée', () => {
+    expect(isUpsideDown(pngWithChunks('IHDR', 'gAMA', 'cHRM', 'bKGD', 'tIME', 'IDAT', 'tEXt', 'IEND'))).toBe(true);
+  });
+
+  it('conversion actuelle (bloc orNT) ou sans gAMA : à l\'endroit', () => {
+    expect(isUpsideDown(pngWithChunks('IHDR', 'cHRM', 'bKGD', 'tIME', 'orNT', 'IDAT', 'tEXt', 'IEND'))).toBe(false);
+    expect(isUpsideDown(pngWithChunks('IHDR', 'gAMA', 'orNT', 'IDAT', 'IEND'))).toBe(false);
+    expect(isUpsideDown(pngWithChunks('IHDR', 'IDAT', 'IEND'))).toBe(false);
+  });
+
+  it('fichier tronqué : lu sans erreur', () => {
+    const png = pngWithChunks('IHDR', 'gAMA', 'IDAT');
+    expect(isUpsideDown(png.subarray(0, 8))).toBe(false);
+    expect(isUpsideDown(png.subarray(0, png.length - 5))).toBe(true);
   });
 });
