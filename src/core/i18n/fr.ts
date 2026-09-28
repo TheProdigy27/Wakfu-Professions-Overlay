@@ -259,7 +259,7 @@ export const fr = {
       `Variante ${n}${isDefault ? ' (par défaut)' : ''} : ${ingredients}`,
   },
   tray: {
-    tooltip: 'Wakfu Professions Overlay (outil non officiel, non affilié à Ankama)',
+    tooltip: 'Wakfu Professions Overlay',
     installUpdate: (version: string) => `Installer la version ${version} et redémarrer`,
     toggle: 'Afficher / masquer le panneau',
     toggleWithHotkey: (hotkey: string) => `Afficher / masquer le panneau (${hotkey})`,

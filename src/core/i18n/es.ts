@@ -241,7 +241,7 @@ export const es: Messages = {
     variant: (n, isDefault, ingredients) => `Variante ${n}${isDefault ? ' (por defecto)' : ''}: ${ingredients}`,
   },
   tray: {
-    tooltip: 'Wakfu Professions Overlay (herramienta no oficial, no afiliada a Ankama)',
+    tooltip: 'Wakfu Professions Overlay',
     installUpdate: (version) => `Instalar la versión ${version} y reiniciar`,
     toggle: 'Mostrar / ocultar el panel',
     toggleWithHotkey: (hotkey) => `Mostrar / ocultar el panel (${hotkey})`,
