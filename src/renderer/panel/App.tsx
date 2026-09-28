@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { DataStatus } from '../../core/data/dataStatus';
 import type { Messages } from '../../core/i18n';
 import { MAX_QTY, setTargetQty, setView, type ListView } from '../../core/state/craftList';
@@ -169,13 +169,7 @@ function Body() {
         </div>
         <label className="target-qty">
           {m.body.quantity}
-          <input
-            type="number"
-            min={1}
-            max={MAX_QTY}
-            value={list.target.qty}
-            onChange={(e) => updateList((l) => setTargetQty(l, Number(e.target.value)))}
-          />
+          <TargetQty qty={list.target.qty} />
         </label>
       </div>
       <nav className="tabs" role="tablist">
@@ -198,6 +192,24 @@ function Body() {
         {list.ui.view === 'order' && <CraftOrder {...needs} />}
       </div>
     </>
+  );
+}
+
+/** Quantité visée : le champ peut rester vide le temps de taper un autre nombre, la quantité revient à la sortie du champ. */
+function TargetQty({ qty }: { qty: number }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <input
+      type="number"
+      min={1}
+      max={MAX_QTY}
+      value={draft ?? qty}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        if (e.target.value !== '') updateList((l) => setTargetQty(l, e.target.valueAsNumber));
+      }}
+      onBlur={() => setDraft(null)}
+    />
   );
 }
 
