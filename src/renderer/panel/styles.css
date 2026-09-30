@@ -923,6 +923,13 @@ button.primary {
   color: var(--ok);
 }
 
+/* Masquer : rouge au survol, comme le bouton de fermeture des fenêtres de Windows. */
+.header-actions button.hide-panel:hover {
+  background: #c42b1c;
+  border-color: #c42b1c;
+  color: #fff;
+}
+
 .hint {
   margin: 4px 0 0;
   color: var(--muted);

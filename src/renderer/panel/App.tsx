@@ -144,6 +144,7 @@ function Header() {
         </button>
         <button
           type="button"
+          className="hide-panel"
           title={hotkey?.registered ? t.hideWithHotkey(acceleratorLabel(hotkey.accelerator, m)) : t.hide}
           aria-label={t.hide}
           onClick={() => window.api.hidePanel()}
