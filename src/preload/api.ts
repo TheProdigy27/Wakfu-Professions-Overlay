@@ -1,5 +1,5 @@
 // API exposée au panneau par le preload (window.api) et canaux IPC autorisés. Types seulement côté renderer.
-import type { ChatItemChange } from '../core/chat/chatLine';
+import type { ChatEvent } from '../core/chat/chatLine';
 import type { DataStatus } from '../core/data/dataStatus';
 import type { GameIndexFile } from '../core/data/indexFile';
 import type { Locale } from '../core/i18n/locale';
@@ -114,8 +114,8 @@ export interface PanelApi {
   saveRecipePrefs(prefs: RecipePrefs): void;
   saveJobLevels(levels: JobLevels): void;
   savePrices(prices: Prices): void;
-  /** Objets ramassés ou perdus en jeu, lus dans le chat de Wakfu (réglage ownedFromChat). */
-  onChatChanges(listener: (changes: ChatItemChange[]) => void): () => void;
+  /** Objets ramassés ou perdus et crafts réussis en jeu, lus dans le chat de Wakfu (réglage ownedFromChat). */
+  onChatEvents(listener: (events: ChatEvent[]) => void): () => void;
   setHotkey(accelerator: string): Promise<HotkeyChange>;
   /** Pendant la saisie d'un nouveau raccourci, l'actuel est désactivé. */
   suspendHotkey(suspended: boolean): void;
@@ -157,7 +157,7 @@ export const IPC = {
   saveRecipePrefs: 'lists:save-prefs',
   saveJobLevels: 'jobs:save-levels',
   savePrices: 'prices:save',
-  chatChanges: 'chat:changes',
+  chatEvents: 'chat:events',
   setHotkey: 'settings:set-hotkey',
   suspendHotkey: 'settings:suspend-hotkey',
   setOption: 'settings:set-option',

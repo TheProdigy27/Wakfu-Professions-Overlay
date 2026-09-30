@@ -20,7 +20,7 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 - Case **« je l'ai »** et quantités possédées, choix **crafter / acheter** pour chaque intermédiaire, choix de la **variante** de recette quand il y en a plusieurs.
 - **Prix de l'Hôtel de vente**, saisis à la main (cochez « Prix », à droite des onglets, pour afficher les champs dans l'arbre et les courses) et gardés pour toutes les listes : coût de revient de la liste, et pour chaque objet à crafter « Crafter : … · Acheter : … », le moins cher en vert. Ce que vous possédez déjà ne coûte rien ; mettez 0 pour ce que vous récoltez vous-même. Un prix saisi il y a plus d'une semaine s'affiche en gris.
 - **Copie du nom** d'un objet, par l'icône à côté du nom de l'objet visé, ou en bout de ligne au survol dans l'arbre, les courses et l'ordre de craft : à coller dans une recherche du jeu, par exemple à l'Hôtel de vente.
-- **Quantités mises à jour en jeu** (option des réglages) : les objets de la liste que vous ramassez, craftez, achetez ou vendez s'ajoutent ou se retirent tout seuls, d'après le chat de Wakfu, et la case « je l'ai » se coche dès que vous avez le compte. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.
+- **Quantités mises à jour en jeu** (option des réglages) : les objets de la liste que vous ramassez, craftez, achetez ou vendez s'ajoutent ou se retirent tout seuls, d'après le chat de Wakfu, et la case « je l'ai » se coche dès que vous avez le compte. Une fois l'objet visé crafté dans la quantité voulue, sa liste disparaît de l'écran et de « Récents » : n'y restent que les crafts à faire. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.
 - Mode **compact**, **opacité** réglable, **raccourci** global (`Ctrl+Maj+W` par défaut) pour afficher ou masquer le panneau sans quitter le jeu.
 - Interface en **français, anglais, espagnol et portugais**. Les noms des objets suivent la langue choisie : ils viennent directement des données du jeu.
 - Listes enregistrées au fil de l'eau ; les 10 dernières restent dans « Récents ».
@@ -70,7 +70,7 @@ Aucune télémétrie, aucun compte. L'application ne contacte que :
 
 Tout le reste (listes, réglages, journal) reste sur votre PC, dans `%APPDATA%\Wakfu Professions Overlay`.
 
-Avec l'option « quantités mises à jour avec le chat de Wakfu », l'application lit aussi le chat que Wakfu écrit sur votre PC (`%APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log`). Seules les lignes d'objets ramassés ou perdus lui servent ; rien de ce chat n'est enregistré ni envoyé.
+Avec l'option « quantités mises à jour avec le chat de Wakfu », l'application lit aussi le chat que Wakfu écrit sur votre PC (`%APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log`). Seules les lignes d'objets ramassés, perdus ou craftés lui servent ; rien de ce chat n'est enregistré ni envoyé.
 
 ## Licence
 

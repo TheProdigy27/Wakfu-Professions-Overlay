@@ -2,11 +2,12 @@ import { appendFile, mkdtemp, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ChatItemChange } from '../../../src/core/chat/chatLine';
+import type { ChatEvent } from '../../../src/core/chat/chatLine';
 import { ChatWatcher, chatLogPath } from '../../../src/main/chatLog';
 
 const loot = (qty: number, name: string) => `21:53:17,445 - [Information (jeu)] Vous avez ramassé ${qty}x ${name} .\r\n`;
 const drop = (qty: number, name: string) => `21:53:17,445 - [Information (jeu)] Vous avez perdu ${qty}x ${name} .\r\n`;
+const crafted = (name: string) => `21:53:17,446 - [Information (jeu)] Vous avez réussi votre recette de ${name}.\r\n`;
 const OTHER = '21:53:20,915 - [Information (combat)] Combat terminé, cliquez ici pour rouvrir l\'écran de fin de combat. \r\n';
 
 let dir: string;
@@ -24,13 +25,18 @@ afterEach(async () => {
 
 /** Suivi activé ; les lectures sont lancées à la main (check), le minuteur ne se déclenche pas pendant le test. */
 async function start() {
-  const onChanges = vi.fn<(changes: ChatItemChange[]) => void>();
+  const onEvents = vi.fn<(events: ChatEvent[]) => void>();
   const log = vi.fn<(message: string) => void>();
-  watcher = new ChatWatcher({ file, onChanges, log, pollMs: 3_600_000 });
+  watcher = new ChatWatcher({ file, onEvents, log, pollMs: 3_600_000 });
   watcher.setEnabled(true);
   await watcher.check();
-  const received = () => onChanges.mock.calls.flatMap(([changes]) => changes.map((c) => `${c.qty} ${c.name}`));
-  return { watcher, onChanges, log, received };
+  const received = () =>
+    onEvents.mock.calls.flatMap(([events]) =>
+      events.map((e) =>
+        e.kind === 'item' ? `${e.qty} ${e.name}` : `${e.name} crafté : ${e.items.map((i) => `${i.qty} ${i.name}`).join(', ')}`,
+      ),
+    );
+  return { watcher, onEvents, log, received };
 }
 
 describe('ChatWatcher', () => {
@@ -42,14 +48,14 @@ describe('ChatWatcher', () => {
 
   it("seulement les lignes écrites après l'activation, dans l'ordre", async () => {
     await writeFile(file, loot(5, 'Poudre') + OTHER);
-    const { watcher, onChanges, received } = await start();
-    expect(onChanges).not.toHaveBeenCalled();
+    const { watcher, onEvents, received } = await start();
+    expect(onEvents).not.toHaveBeenCalled();
     await appendFile(file, loot(7, 'Serre de Kroapule') + OTHER + drop(30, 'Poudre'));
     await watcher.check();
     expect(received()).toEqual(['7 Serre de Kroapule', '-30 Poudre']);
     // Rien de nouveau : aucun appel.
     await watcher.check();
-    expect(onChanges).toHaveBeenCalledTimes(1);
+    expect(onEvents).toHaveBeenCalledTimes(1);
   });
 
   it('une ligne en cours d\'écriture attend sa fin, même coupée au milieu d\'un caractère', async () => {
@@ -96,5 +102,30 @@ describe('ChatWatcher', () => {
     await appendFile(file, loot(1, 'Fayot'));
     await watcher.check();
     expect(received()).toEqual(['1 Fayot']);
+  });
+
+  it('craft lu en deux fois : les objets déjà annoncés sont joints au craft ; pas ceux lus avant une désactivation', async () => {
+    await writeFile(file, '');
+    const { watcher, received } = await start();
+    await appendFile(file, drop(5, 'Truffe du Désert') + drop(5, 'Fayot'));
+    await watcher.check();
+    await appendFile(file, loot(1, 'Fibre Durable') + crafted('Fibre Durable'));
+    await watcher.check();
+    await appendFile(file, drop(5, 'Fayot'));
+    await watcher.check();
+    watcher.setEnabled(false);
+    watcher.setEnabled(true);
+    await watcher.check();
+    await appendFile(file, loot(1, 'Fibre Durable') + crafted('Fibre Durable'));
+    await watcher.check();
+    expect(received()).toEqual([
+      '-5 Truffe du Désert',
+      '-5 Fayot',
+      '1 Fibre Durable',
+      'Fibre Durable crafté : -5 Truffe du Désert, -5 Fayot, 1 Fibre Durable',
+      '-5 Fayot',
+      '1 Fibre Durable',
+      'Fibre Durable crafté : 1 Fibre Durable',
+    ]);
   });
 });

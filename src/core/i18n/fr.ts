@@ -36,6 +36,8 @@ export const fr = {
     obsoleteHint: 'Recherchez un objet de remplacement : cette liste restera dans les listes récentes.',
     noTarget: 'Aucun objet choisi.',
     searchHint: 'Recherchez un objet à crafter par son nom.',
+    /** Suivi du nom de l'objet et de la quantité : la liste en cours vient d'être terminée en jeu. */
+    crafted: 'Craft terminé :',
     quantity: 'Quantité',
   },
   data: {
@@ -171,7 +173,7 @@ export const fr = {
     owned: 'Quantités possédées',
     ownedFromChat: 'Les mettre à jour avec le chat de Wakfu : objets ramassés, craftés, achetés ou vendus',
     ownedFromChatHint:
-      "Pour les objets de la liste en cours, dès que l'option est cochée. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.",
+      "Pour les objets de la liste en cours, dès que l'option est cochée. Une fois l'objet visé crafté, sa liste quitte l'écran et les récents. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.",
     performance: 'Performances',
     hardwareAcceleration: 'Accélération matérielle',
     nextStart: 'Prise en compte au prochain démarrage.',

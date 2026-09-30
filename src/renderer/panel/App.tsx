@@ -170,7 +170,7 @@ function Body() {
       </p>
     );
   }
-  if (!needs) return <p className="empty">{compact ? m.body.noTarget : m.body.searchHint}</p>;
+  if (!needs) return <NoList compact={compact} />;
   if (compact) return <ShoppingList {...needs} compact />;
 
   const { list } = needs;
@@ -221,6 +221,29 @@ function Body() {
         {list.ui.view === 'order' && <CraftOrder {...needs} />}
       </div>
     </>
+  );
+}
+
+/** Aucune liste : invitation à chercher un objet, sous le craft en jeu qui vient de terminer la liste en cours. */
+function NoList({ compact }: { compact: boolean }) {
+  const m = useMessages();
+  const crafted = usePanel((s) => s.crafted);
+  const item = usePanel((s) => (s.crafted ? s.catalog?.index.items.get(s.crafted.itemId) : undefined));
+  return (
+    <div className="empty">
+      {crafted && (
+        <p className="crafted" role="status">
+          <Glyph name="check" />
+          {m.body.crafted}
+          <ItemIcon item={item} />
+          <span>
+            <ItemName item={item} itemId={crafted.itemId} />
+            <span className="qty">×{crafted.qty}</span>
+          </span>
+        </p>
+      )}
+      <p>{compact ? m.body.noTarget : m.body.searchHint}</p>
+    </div>
   );
 }
 

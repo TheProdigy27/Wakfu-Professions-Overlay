@@ -1,9 +1,9 @@
 // État du panneau (Zustand) : données du jeu, liste en cours et historique (enregistrés par main), crafts par métier,
-// prix de l'HDV, réglages, fenêtre, objets ramassés ou perdus en jeu.
+// prix de l'HDV, réglages, fenêtre, objets ramassés ou perdus et crafts réussis en jeu.
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import { applyChatChanges } from '../../core/chat/applyChat';
-import type { ChatItemChange } from '../../core/chat/chatLine';
+import { applyChatEvents, createChatLookup, type ChatLookup } from '../../core/chat/applyChat';
+import type { ChatEvent } from '../../core/chat/chatLine';
 import type { SnapshotChange } from '../../core/data/diffIndex';
 import type { DataStatus } from '../../core/data/dataStatus';
 import type { GameIndexFile, Names } from '../../core/data/indexFile';
@@ -48,6 +48,8 @@ interface PanelState {
   loaded: boolean;
   /** Bandeau : écarts de recettes après une mise à jour du jeu. */
   notices: SnapshotChange[];
+  /** Objet de la liste en cours, crafté en jeu : elle a quitté l'écran, un message le dit jusqu'à la liste suivante. */
+  crafted: CraftList['target'] | null;
   settingsOpen: boolean;
   /** Accueil : premier lancement, ou « Revoir l'accueil » dans les réglages. */
   onboarding: boolean;
@@ -75,6 +77,7 @@ export const usePanel = create<PanelState>()(() => ({
   prefs: {},
   loaded: false,
   notices: [],
+  crafted: null,
   settingsOpen: false,
   onboarding: false,
   jobsOpen: false,
@@ -103,6 +106,7 @@ export function selectTarget(itemId: number): void {
     list: withSnapshot(newList(itemId, catalog.index.version, prefs), catalog.index),
     history: list ? pushHistory(history, list) : history,
     notices: [],
+    crafted: null,
     jobsOpen: false,
     back: leaving(state),
   });
@@ -120,6 +124,7 @@ export function restoreList(id: string): void {
     list: reconciled.list,
     history: list ? pushHistory(rest, list) : rest,
     notices: reconciled.changes,
+    crafted: null,
     jobsOpen: false,
     back: leaving(state),
   });
@@ -152,7 +157,7 @@ export function goBack(): void {
     list: reconciled?.list ?? lists.current,
     history: lists.history,
     // Bandeau des recettes modifiées : celui de la liste retrouvée.
-    ...(changed ? { notices: reconciled?.changes ?? [] } : {}),
+    ...(changed ? { notices: reconciled?.changes ?? [], crafted: null } : {}),
   });
 }
 
@@ -256,8 +261,8 @@ export function useListCost(needs: { catalog: Catalog; list: CraftList; result: 
 
 /** Index compact courant : chaque langue en tire son catalogue. */
 let indexFile: GameIndexFile | null = null;
-/** Noms des objets dans les quatre langues : le chat de Wakfu les donne dans celle du client de jeu. */
-let namesById = new Map<number, Names>();
+/** Noms des objets dans les quatre langues, et recettes : le chat de Wakfu nomme les objets dans la langue du client. */
+let chatLookup: ChatLookup | null = null;
 
 /** Noms du jeu dans la langue de l'interface, et recherche sur ces noms. */
 function buildCatalog(file: GameIndexFile, locale: Locale): Catalog {
@@ -271,8 +276,9 @@ async function refreshCatalog(): Promise<void> {
   const file = await window.api.getIndex();
   if (!file) return;
   indexFile = file;
-  namesById = new Map(file.items.map(([id, names]) => [id, names]));
   const catalog = buildCatalog(file, currentLocale());
+  const namesById = new Map<number, Names>(file.items.map(([id, names]) => [id, names]));
+  chatLookup = createChatLookup(catalog.index, (id) => namesById.get(id));
   const { list, notices } = usePanel.getState();
   const reconciled = list ? reconcile(list, catalog.index) : null;
   usePanel.setState({
@@ -289,12 +295,22 @@ function applyLocale(locale: Locale): void {
   if (indexFile && catalog && catalog.index.locale !== locale) usePanel.setState({ catalog: buildCatalog(indexFile, locale) });
 }
 
-/** Objets ramassés ou perdus en jeu : quantités possédées de la liste en cours, sauf si elle est en lecture seule. */
-function applyChat(changes: ChatItemChange[]): void {
-  const { loaded, list, catalog } = usePanel.getState();
-  if (!loaded || !list || !catalog || isObsolete(list, catalog.index)) return;
-  const next = applyChatChanges(list, changes, (id) => namesById.get(id));
-  if (next !== list) usePanel.setState({ list: next });
+/**
+ * Objets ramassés ou perdus en jeu : quantités possédées de la liste en cours, sauf si elle est en lecture seule. Une
+ * liste dont l'objet est crafté dans la quantité voulue quitte l'écran ou les récents.
+ */
+function applyChat(events: ChatEvent[]): void {
+  const { loaded, list, history, catalog } = usePanel.getState();
+  if (!loaded || !catalog || !chatLookup) return;
+  const active = list && !isObsolete(list, catalog.index) ? list : null;
+  const result = applyChatEvents(active, history, events, chatLookup);
+  if (result.list === active && result.history === history) return;
+  const finished = result.done.find((l) => l.id === active?.id);
+  usePanel.setState({
+    ...(result.list !== active ? { list: result.list } : {}),
+    history: result.history,
+    ...(finished ? { crafted: finished.target } : {}),
+  });
 }
 
 /** Chaque modification des listes part vers main, qui écrit state.json au plus 300 ms plus tard. */
@@ -320,7 +336,7 @@ export async function initStore(): Promise<void> {
     applyLocale(app.locale);
   });
   api.onUpdate((update) => usePanel.setState({ update }));
-  api.onChatChanges(applyChat);
+  api.onChatEvents(applyChat);
   api.onOpenSettings(() => {
     if (usePanel.getState().window.compact) api.setCompact(false);
     usePanel.setState({ settingsOpen: true, onboarding: false });

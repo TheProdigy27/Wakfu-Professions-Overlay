@@ -1,10 +1,11 @@
-// Suivi du chat de Wakfu pour le réglage « Mettre à jour les quantités avec le chat de Wakfu ». Le jeu écrit son chat
-// dans %APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log (log4j, UTF-8) ; vers 1 Mo, le fichier est renommé en
-// wakfu_chat.log.1 et un nouveau commence. Seules les lignes écrites après l'activation comptent. Le fichier est ouvert
-// le temps d'une lecture, une fois par seconde, sans jamais gêner le jeu qui l'écrit.
+// Suivi du chat de Wakfu pour le réglage « Mettre à jour les quantités avec le chat de Wakfu » : objets ramassés ou
+// perdus, crafts réussis. Le jeu écrit son chat dans %APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log (log4j, UTF-8) ;
+// vers 1 Mo, le fichier est renommé en wakfu_chat.log.1 et un nouveau commence. Seules les lignes écrites après
+// l'activation comptent. Le fichier est ouvert le temps d'une lecture, une fois par seconde, sans jamais gêner le jeu qui
+// l'écrit.
 import { open, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { parseChatLine, type ChatItemChange } from '../core/chat/chatLine';
+import { ChatReader, type ChatEvent } from '../core/chat/chatLine';
 
 export const CHAT_POLL_MS = 1000;
 /** Au-delà, le début de ce qui a été écrit depuis la dernière lecture est sauté. */
@@ -39,8 +40,8 @@ async function readRange(file: string, start: number, end: number): Promise<Buff
 
 export interface ChatWatcherOptions {
   file: string;
-  /** Objets ramassés ou perdus, dans l'ordre du chat. */
-  onChanges: (changes: ChatItemChange[]) => void;
+  /** Objets ramassés ou perdus et crafts réussis, dans l'ordre du chat. */
+  onEvents: (events: ChatEvent[]) => void;
   log: (message: string) => void;
   pollMs?: number;
 }
@@ -54,6 +55,8 @@ export class ChatWatcher {
   private offset: number | null = null;
   /** Début d'une ligne pas encore terminée. */
   private partial = Buffer.alloc(0);
+  /** Garde les lignes d'objets d'un craft dont l'annonce n'est pas encore écrite. */
+  private reader = new ChatReader();
   /** Lectures à la suite, jamais en même temps. */
   private queue: Promise<void> = Promise.resolve();
   /** Fichier absent ou illisible déjà écrit dans le journal : pas une ligne par seconde. */
@@ -69,6 +72,7 @@ export class ChatWatcher {
     this.timer = null;
     this.offset = null;
     this.partial = Buffer.alloc(0);
+    this.reader = new ChatReader();
     this.problem = null;
     this.options.log(`chat de Wakfu : suivi ${enabled ? 'activé' : 'désactivé'}`);
     if (enabled) void this.poll(this.generation);
@@ -128,14 +132,14 @@ export class ChatWatcher {
   }
 
   private parse(buffer: Buffer): void {
-    const changes: ChatItemChange[] = [];
+    const events: ChatEvent[] = [];
     let start = 0;
     for (let end = buffer.indexOf(NEWLINE); end !== -1; end = buffer.indexOf(NEWLINE, start)) {
-      const change = parseChatLine(buffer.toString('utf8', start, end).replace(/\r$/, ''));
-      if (change) changes.push(change);
+      const event = this.reader.read(buffer.toString('utf8', start, end).replace(/\r$/, ''));
+      if (event) events.push(event);
       start = end + 1;
     }
     this.partial = Buffer.from(buffer.subarray(start));
-    if (changes.length) this.options.onChanges(changes);
+    if (events.length) this.options.onEvents(events);
   }
 }

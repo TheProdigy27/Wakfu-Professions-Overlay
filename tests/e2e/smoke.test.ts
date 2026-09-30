@@ -1,9 +1,9 @@
 // Test de bout en bout : l'application construite démarre hors réseau (WPO_OFFLINE) sur l'index
 // de fixture, puis parcours complet : recherche, T1a, champs des prix, case « je l'ai » partagée entre les vues,
 // variante, ordre de craft, copie des noms, mode compact, raccourci ; la liste est restaurée au redémarrage ;
-// l'interface passe en anglais ; enfin les crafts par métier.
+// l'interface passe en anglais ; les crafts par métier ; enfin des crafts lus dans un chat de Wakfu simulé.
 // Cible : out/ (npm run build), ou l'exécutable empaqueté si WPO_E2E_EXE le désigne (release/win-unpacked/…).
-import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { appendFile, copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -16,6 +16,8 @@ const ROOT = path.resolve(import.meta.dirname, '../..');
 const EXE = process.env['WPO_E2E_EXE'];
 
 let userData: string;
+/** Chat de Wakfu simulé (WPO_CHAT_LOG), dans le dossier de données du test. */
+const chatLog = () => path.join(userData, 'wakfu_chat.log');
 let app: ElectronApplication | null = null;
 let page: Page;
 const consoleErrors: string[] = [];
@@ -27,6 +29,7 @@ async function launch(): Promise<void> {
   delete env['ELECTRON_RUN_AS_NODE'];
   delete env['ELECTRON_RENDERER_URL'];
   env['WPO_OFFLINE'] = '1';
+  env['WPO_CHAT_LOG'] = chatLog();
   const executablePath = EXE ? path.resolve(ROOT, EXE) : (createRequire(import.meta.url)('electron') as string);
   app = await electron.launch({
     executablePath,
@@ -291,6 +294,61 @@ describe('application construite, hors réseau', () => {
     await page.locator('.jobs .close').click();
     expect(await target()).toBe('Larduous Hat');
     expect(await page.locator('.target .meta').innerText()).toContain('Mythical');
+  });
+
+  it("craft terminé en jeu : la liste quitte l'écran ; une liste des récents craftée à son tour les quitte", async () => {
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await page.getByRole('checkbox', { name: /Wakfu chat/ }).check();
+    await page.getByRole('button', { name: 'Close' }).click();
+    // Premier relevé du chat : fichier absent, donc tout ce que le jeu y écrira ensuite comptera.
+    const mainLog = path.join(userData, 'logs', 'main.log');
+    await expect
+      .poll(() => readFile(mainLog, 'utf8').then((log) => log.includes(`${chatLog()} introuvable`)), { timeout: 10_000 })
+      .toBe(true);
+    // Client de jeu en français, interface en anglais.
+    const lines = (...texts: string[]) => texts.map((text) => `20:00:00,000 - [Information (jeu)] ${text}\r\n`).join('');
+    await writeFile(
+      chatLog(),
+      lines(
+        'Vous avez perdu 2x Orbe Durable .',
+        'Vous avez perdu 7x Poudre .',
+        'Vous avez perdu 2x Truffe Aromatisée .',
+        'Vous avez perdu 2x Sang du Dragon-Cochon .',
+        'Vous avez perdu 15x Sioupère-Glou Durable .',
+        'Vous avez perdu 9x Fibre Durable .',
+        'Vous avez ramassé 1x Coiffe Lardante .',
+        'Vous avez réussi votre recette de Coiffe Lardante.',
+      ),
+    );
+    const crafted = page.locator('.crafted');
+    await expect.poll(() => crafted.count(), { timeout: 10_000 }).toBe(1);
+    expect(await crafted.innerText()).toContain('Craft complete:');
+    expect(await crafted.locator('.item-name').getAttribute('title')).toBe('Mythical, lvl. 122');
+    expect(await crafted.locator('.qty').innerText()).toBe('×1');
+    expect(await page.locator('.target').count()).toBe(0);
+    // Dans les récents, la Coiffe légendaire, pas encore craftée.
+    await page.getByRole('button', { name: 'Recent' }).click();
+    expect(await page.locator('.history-menu .item-name').getAttribute('title')).toBe('Legendary, lvl. 125');
+    expect(await page.locator('.history-menu li').count()).toBe(1);
+    await page.keyboard.press('Escape');
+
+    // La légendaire, améliorée depuis la mythique : le jeu n'écrit pas la perte de celle-ci.
+    await appendFile(
+      chatLog(),
+      lines(
+        'Vous avez perdu 14x Poudre .',
+        'Vous avez perdu 3x Orbe Durable .',
+        'Vous avez perdu 3x Truffe Aromatisée .',
+        'Vous avez perdu 3x Sang du Dragon-Cochon .',
+        'Vous avez perdu 25x Sioupère-Glou Durable .',
+        'Vous avez perdu 14x Fil Durable .',
+        'Vous avez ramassé 1x Coiffe Lardante .',
+        'Vous avez réussi votre recette de Coiffe Lardante.',
+      ),
+    );
+    await expect.poll(() => page.getByRole('button', { name: 'Recent' }).isDisabled(), { timeout: 10_000 }).toBe(true);
+    // Le message reste celui de la liste qui était à l'écran.
+    expect(await crafted.locator('.item-name').getAttribute('title')).toBe('Mythical, lvl. 122');
   });
 
   it('aucune erreur dans la console du panneau', () => {

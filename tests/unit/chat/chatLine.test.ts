@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseChatLine } from '../../../src/core/chat/chatLine';
+import { ChatReader, parseChatLine, parseCraftLine, type ChatEvent } from '../../../src/core/chat/chatLine';
 
 /** Espace fine insécable : séparateur des milliers du client français. */
 const NNBSP = ' ';
@@ -77,5 +77,95 @@ describe('parseChatLine', () => {
       '',
     ];
     for (const line of ignored) expect(parseChatLine(line), line).toBeNull();
+  });
+});
+
+describe('parseCraftLine', () => {
+  it('craft réussi, tel que l\'écrit le client français, avec l\'heure de la ligne', () => {
+    expect(parseCraftLine('22:16:42,500 - [Information (jeu)] Vous avez réussi votre recette de Lady Gladague.')).toEqual({
+      locale: 'fr',
+      name: 'Lady Gladague',
+      time: ((22 * 60 + 16) * 60 + 42) * 1000 + 500,
+    });
+    expect(
+      parseCraftLine("22:42:55,298 - [Information (jeu)] Vous avez réussi votre recette de Petit Atelier d'Herboriste.")?.name,
+    ).toBe("Petit Atelier d'Herboriste");
+  });
+
+  it('textes du jeu en anglais, espagnol et portugais', () => {
+    expect(parseCraftLine('10:00:00,000 - [Game Log] You have successfully completed the Larduous Hat recipe.')).toMatchObject({
+      locale: 'en',
+      name: 'Larduous Hat',
+    });
+    expect(
+      parseCraftLine('10:00:00,000 - [Información (juego)] Has realizado con éxito la receta de Sombrero de Pan Z.'),
+    ).toMatchObject({ locale: 'es', name: 'Sombrero de Pan Z' });
+    expect(
+      parseCraftLine('10:00:00,000 - [Registro de Jogo] Você completou a receita Chapéu Banhoso com sucesso.'),
+    ).toMatchObject({ locale: 'pt', name: 'Chapéu Banhoso' });
+  });
+
+  it('ignore les autres lignes : objets, craft raté, autres canaux, messages de joueurs', () => {
+    const ignored = [
+      '22:16:42,499 - [Information (jeu)] Vous avez ramassé 1x Lady Gladague .',
+      '22:16:42,500 - [Information (jeu)] Vous avez raté votre recette de Lady Gladague !',
+      '22:16:42,500 - [Information (combat)] Vous avez réussi votre recette de Lady Gladague.',
+      '16:00:00,000 - [Privé] De Joueur : [Information (jeu)] Vous avez réussi votre recette de Lady Gladague.',
+      'Vous avez réussi votre recette de Lady Gladague.',
+    ];
+    for (const line of ignored) expect(parseCraftLine(line), line).toBeNull();
+  });
+});
+
+describe('ChatReader', () => {
+  const at = (time: string, text: string) => `${time} - [Information (jeu)] ${text}`;
+  const read = (reader: ChatReader, lines: string[]) => lines.map((l) => reader.read(l)).filter((e): e is ChatEvent => !!e);
+  const crafts = (events: ChatEvent[]) =>
+    events.flatMap((e) => (e.kind === 'craft' ? [`${e.name} : ${e.items.map((i) => `${i.qty} ${i.name}`).join(', ')}`] : []));
+
+  it('un craft : ses objets perdus et ramassés, annoncés un à un, puis joints au craft', () => {
+    const events = read(new ChatReader(), [
+      at('23:10:35,338', "Boulanger : +495 points d'XP.  Prochain niveau dans : 300."),
+      at('23:10:35,339', 'Vous avez perdu 10x Chardon Couronné .'),
+      at('23:10:35,339', "Vous avez perdu 10x Fleur d'Irisse ."),
+      at('23:10:35,341', 'Vous avez ramassé 2x Huile Grossière .'),
+      at('23:10:35,341', 'Vous avez réussi votre recette de Huile Grossière.'),
+    ]);
+    const items = [
+      { locale: 'fr', name: 'Chardon Couronné', qty: -10 },
+      { locale: 'fr', name: "Fleur d'Irisse", qty: -10 },
+      { locale: 'fr', name: 'Huile Grossière', qty: 2 },
+    ] as const;
+    expect(events).toEqual([
+      ...items.map((i) => ({ kind: 'item', ...i })),
+      { kind: 'craft', locale: 'fr', name: 'Huile Grossière', items },
+    ]);
+  });
+
+  it('seulement les lignes écrites juste avant : ni un objet ramassé plus tôt, ni celles du craft précédent', () => {
+    const events = read(new ChatReader(), [
+      at('23:09:09,991', 'Vous avez ramassé 1x Chardon Couronné .'),
+      at('23:10:35,339', 'Vous avez perdu 10x Chardon Couronné .'),
+      at('23:10:35,341', 'Vous avez ramassé 2x Huile Grossière .'),
+      at('23:10:35,341', 'Vous avez réussi votre recette de Huile Grossière.'),
+      at('23:10:35,500', 'Vous avez réussi votre recette de Huile Grossière.'),
+      at('23:10:42,874', 'Vous avez perdu 5x Feuille de Menthe .'),
+      at('23:10:42,874', 'Vous avez ramassé 1x Huile Rudimentaire .'),
+      at('23:10:42,874', 'Vous avez réussi votre recette de Huile Rudimentaire.'),
+    ]);
+    expect(crafts(events)).toEqual([
+      'Huile Grossière : -10 Chardon Couronné, 2 Huile Grossière',
+      'Huile Grossière : ',
+      'Huile Rudimentaire : -5 Feuille de Menthe, 1 Huile Rudimentaire',
+    ]);
+  });
+
+  it('craft à cheval sur minuit', () => {
+    const events = read(new ChatReader(), [
+      at('23:59:59,900', 'Vous avez perdu 5x Fayot .'),
+      at('00:00:00,050', 'Vous avez ramassé 1x Fibre Durable .'),
+      at('00:00:00,050', 'Vous avez réussi votre recette de Fibre Durable.'),
+    ]);
+    expect(crafts(events)).toEqual(['Fibre Durable : -5 Fayot, 1 Fibre Durable']);
   });
 });

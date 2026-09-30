@@ -20,7 +20,7 @@ A craft preparation panel for **Wakfu**, shown on top of the game: search for an
 - **"I have it"** checkbox and owned quantities, **craft / buy** choice for each intermediate, choice of recipe **variant** when there are several.
 - **Marketplace prices**, entered by hand (tick "Prices", right of the tabs, to show the fields in the tree and the shopping list) and kept for all lists: total cost of the list, and for each item to craft "Craft: … · Buy: …", the cheaper one in green. What you already own costs nothing; enter 0 for what you harvest yourself. A price entered more than a week ago is shown in grey.
 - **Copy an item's name** with the icon next to the target item's name, or at the end of the line when hovering it in the tree, shopping list and craft order: paste it into a search in the game, for example at the Marketplace.
-- **Quantities updated in game** (settings option): the list items you pick up, craft, buy or sell are added or removed on their own, from the Wakfu chat, and the "I have it" box gets ticked as soon as you have enough. What you already had (inventory, bank) and trades between players are still entered by hand.
+- **Quantities updated in game** (settings option): the list items you pick up, craft, buy or sell are added or removed on their own, from the Wakfu chat, and the "I have it" box gets ticked as soon as you have enough. Once the target item is crafted in the wanted quantity, its list leaves the screen and "Recent", which only keeps the crafts still to do. What you already had (inventory, bank) and trades between players are still entered by hand.
 - **Compact** mode, adjustable **opacity**, global **shortcut** (`Ctrl+Shift+W` by default) to show or hide the panel without leaving the game.
 - Interface in **English, French, Spanish and Portuguese**. Item names follow the language you choose: they come straight from the game data.
 - Lists are saved as you go; the last 10 stay under "Recent".
@@ -70,7 +70,7 @@ No telemetry, no account. The app only contacts:
 
 Everything else (lists, settings, log) stays on your PC, in `%APPDATA%\Wakfu Professions Overlay`.
 
-With the "quantities updated from the Wakfu chat" option, the app also reads the chat that Wakfu writes on your PC (`%APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log`). Only the lines about items picked up or lost are used; nothing from this chat is saved or sent.
+With the "quantities updated from the Wakfu chat" option, the app also reads the chat that Wakfu writes on your PC (`%APPDATA%\zaap\gamesLogs\wakfu\logs\wakfu_chat.log`). Only the lines about items picked up, lost or crafted are used; nothing from this chat is saved or sent.
 
 ## License
 

@@ -32,6 +32,7 @@ export const es: Messages = {
     obsoleteHint: 'Busca un objeto de reemplazo: esta lista seguirá en las listas recientes.',
     noTarget: 'Ningún objeto elegido.',
     searchHint: 'Busca por su nombre un objeto que fabricar.',
+    crafted: 'Fabricación terminada:',
     quantity: 'Cantidad',
   },
   data: {
@@ -157,7 +158,7 @@ export const es: Messages = {
     owned: 'Cantidades que tengo',
     ownedFromChat: 'Actualizarlas con el chat de Wakfu: objetos recogidos, fabricados, comprados o vendidos',
     ownedFromChatHint:
-      'Para los objetos de la lista actual, en cuanto la opción está marcada. Lo que ya tenías (inventario, banco) y los intercambios entre jugadores se siguen indicando a mano.',
+      'Para los objetos de la lista actual, en cuanto la opción está marcada. Una vez fabricado el objeto buscado, su lista sale de la pantalla y de las recientes. Lo que ya tenías (inventario, banco) y los intercambios entre jugadores se siguen indicando a mano.',
     performance: 'Rendimiento',
     hardwareAcceleration: 'Aceleración por hardware',
     nextStart: 'Se aplicará en el próximo inicio.',

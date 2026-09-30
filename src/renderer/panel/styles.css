@@ -323,6 +323,19 @@ input[type='checkbox'] {
   margin: 0;
 }
 
+/* Liste en cours terminée par un craft en jeu. */
+.empty .crafted {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.crafted .glyph {
+  color: var(--ok);
+}
+
 progress.download {
   display: block;
   width: 100%;

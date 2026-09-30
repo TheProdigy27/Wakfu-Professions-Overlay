@@ -142,7 +142,7 @@ async function start(store: JsonStore): Promise<void> {
   const chat = new ChatWatcher({
     file: CHAT_LOG,
     log,
-    onChanges: (changes) => panel.send(IPC.chatChanges, changes),
+    onEvents: (events) => panel.send(IPC.chatEvents, events),
   });
   chat.setEnabled(settings.settings.ownedFromChat);
   settings.onChange((state) => chat.setEnabled(state.ownedFromChat));
