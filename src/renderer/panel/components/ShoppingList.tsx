@@ -1,11 +1,10 @@
 // Liste de courses : ressources et intermédiaires achetés, avec requis, possédé, reste et prix de l'HDV.
-import { useEffect, useState } from 'react';
 import { rarityName } from '../../../core/data/rarity';
 import type { NeedsResult } from '../../../core/needs/computeNeeds';
 import { shoppingList, shoppingText, type ShoppingLine } from '../../../core/needs/shopping';
 import { hasAll, needsInput, setMissingOnly, setOwned, toggleHave, type CraftList } from '../../../core/state/craftList';
-import { updateList, useMessages, type Catalog } from '../store';
-import { HarvestSource, ItemIcon, ItemName } from './Item';
+import { updateList, useMessages, usePanel, type Catalog } from '../store';
+import { CopyName, HarvestSource, ItemIcon, ItemName, useCopied } from './Item';
 import { PriceInput } from './Price';
 
 interface ShoppingProps {
@@ -44,19 +43,14 @@ export function ShoppingList({ catalog, list, result, compact = false }: Shoppin
 /** Copie ce qui reste à obtenir, en texte, dans le presse-papiers (pour une note, un message…). */
 function CopyButton({ catalog, list, result }: { catalog: Catalog; list: CraftList; result: NeedsResult }) {
   const m = useMessages();
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 1500);
-    return () => clearTimeout(timer);
-  }, [copied]);
+  const [copied, markCopied] = useCopied();
 
   const copy = () => {
     const target = catalog.index.items.get(list.target.itemId);
     const name = target ? `${target.name} (${rarityName(target.rarity, m)})` : m.common.unknownItem(list.target.itemId);
     const lines = shoppingList(catalog.index, result, needsInput(list), { missingOnly: true });
     window.api.copyText(shoppingText(catalog.index, `${name} ×${list.target.qty}`, lines, m));
-    setCopied(true);
+    markCopied();
   };
 
   return (
@@ -70,6 +64,7 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
   const { title, lines, catalog, list, compact } = props;
   const m = useMessages();
   const t = m.shopping;
+  const pricesShown = usePanel((s) => s.pricesShown) && !compact;
   return (
     <section>
       {!compact && <h3>{title}</h3>}
@@ -82,7 +77,8 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
               <th>{t.columns.required}</th>
               <th>{t.columns.owned}</th>
               <th>{t.columns.missing}</th>
-              <th title={m.cost.columnTitle}>{m.cost.column}</th>
+              {pricesShown && <th title={m.cost.columnTitle}>{m.cost.column}</th>}
+              <th className="copy-col" />
             </tr>
           </thead>
         )}
@@ -124,11 +120,14 @@ function Section(props: { title: string; lines: ShoppingLine[]; catalog: Catalog
                 <td className="num missing" title={compact ? t.missingTitle(line.required) : undefined}>
                   {compact ? `×${line.missing}` : line.missing}
                 </td>
-                {!compact && (
+                {pricesShown && (
                   <td className="num">
                     <PriceInput itemId={line.itemId} toObtain={line.missing} />
                   </td>
                 )}
+                <td className="copy-col">
+                  <CopyName item={item} />
+                </td>
               </tr>
             );
           })}

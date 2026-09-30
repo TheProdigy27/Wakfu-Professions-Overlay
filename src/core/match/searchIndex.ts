@@ -1,6 +1,6 @@
-// Recherche : Fuse.js sur les noms craftables, ou identifiant « #29236 ».
+// Recherche : Fuse.js sur les noms craftables, tolérante aux fautes de frappe.
 import Fuse from 'fuse.js';
-import type { GameIndex, Item } from '../data/loadIndex';
+import type { Item } from '../data/loadIndex';
 import { normalize } from './normalize';
 import type { NameVocabulary } from './vocabulary';
 
@@ -11,15 +11,10 @@ export interface SearchIndex {
   search(query: string, limit?: number): Item[];
 }
 
-export function createSearchIndex(index: GameIndex, vocab: NameVocabulary): SearchIndex {
+export function createSearchIndex(vocab: NameVocabulary): SearchIndex {
   const fuse = new Fuse(vocab.norms, { ignoreLocation: true, threshold: 0.4, includeScore: true });
   return {
     search(query, limit = SEARCH_LIMIT) {
-      const id = /^#\s*(\d+)$/.exec(query.trim());
-      if (id) {
-        const item = index.items.get(Number(id[1]));
-        return item ? [item] : [];
-      }
       const q = normalize(query);
       if (!q) return [];
       const out: Item[] = [];

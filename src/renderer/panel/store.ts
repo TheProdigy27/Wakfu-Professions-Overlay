@@ -58,6 +58,8 @@ interface PanelState {
   jobLevels: JobLevels;
   /** Prix unitaires de l'HDV, communs à toutes les listes, enregistrés. */
   prices: Prices;
+  /** Champs de saisie des prix affichés (arbre, courses), le temps de la session : masqués au démarrage. */
+  pricesShown: boolean;
   /** Écrans quittés, le plus récent en dernier : bouton « Retour », le temps de la session. */
   back: Screen[];
 }
@@ -79,6 +81,7 @@ export const usePanel = create<PanelState>()(() => ({
   jobsFilter: { jobId: null, query: '', upgrades: true },
   jobLevels: {},
   prices: {},
+  pricesShown: false,
   back: [],
 }));
 
@@ -192,6 +195,10 @@ export function setPrice(itemId: number, kamas: number | null): void {
   usePanel.setState((s) => ({ prices: withPrice(s.prices, itemId, kamas) }));
 }
 
+export function showPrices(show: boolean): void {
+  usePanel.setState({ pricesShown: show });
+}
+
 /** Par-dessus l'écran affiché : depuis les réglages, on y revient en fermant l'accueil. */
 export function showOnboarding(show: boolean): void {
   usePanel.setState({ onboarding: show });
@@ -256,7 +263,7 @@ let namesById = new Map<number, Names>();
 function buildCatalog(file: GameIndexFile, locale: Locale): Catalog {
   const index = loadIndex(file, locale);
   const vocab = new NameVocabulary(index);
-  return { index, vocab, search: createSearchIndex(index, vocab) };
+  return { index, vocab, search: createSearchIndex(vocab) };
 }
 
 /** Nouvel index (démarrage, nouvelle version du jeu) : la liste en cours est rapprochée des nouvelles données. */

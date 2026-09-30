@@ -366,6 +366,67 @@ progress.download::-webkit-progress-value {
   font-style: italic;
 }
 
+/* Copie du nom d'un objet : toujours visible pour l'objet visé ; dans les listes, en bout de ligne, au survol. */
+.copy-name {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  vertical-align: text-bottom;
+}
+
+.copy-name:hover {
+  color: var(--text);
+}
+
+.copy-name.copied {
+  color: var(--ok);
+}
+
+.target-name .copy-name {
+  margin-left: 4px;
+}
+
+/* Arbre : à la hauteur de la case et du champ du prix. */
+.row > .copy-name {
+  margin-top: 3px;
+}
+
+.shop-table .copy-col {
+  width: 18px;
+  padding: 0 6px 0 0;
+}
+
+.tree .copy-name,
+.shop-table .copy-name,
+.order-row .copy-name {
+  opacity: 0;
+}
+
+.row:hover .copy-name,
+.shop-table tr:hover .copy-name,
+.order-row:hover .copy-name,
+.copy-name:focus-visible,
+.copy-name.copied {
+  opacity: 1;
+}
+
+/* Mode compact : l'icône suit le nom de l'objet visé dans l'en-tête, les boutons restent à droite. */
+.header .title:has(+ .copy-name) {
+  flex: 0 1 auto;
+}
+
+.header .copy-name {
+  margin: 0 auto 0 -4px;
+  -webkit-app-region: no-drag;
+}
+
 .meta {
   color: var(--muted);
   font-size: 12px;
@@ -431,9 +492,26 @@ progress.download::-webkit-progress-value {
 
 .tabs {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
   padding: 0 6px;
   border-bottom: 1px solid var(--border);
+}
+
+.tabs nav {
+  display: flex;
+  gap: 2px;
+}
+
+/* Case « Prix » : affiche les champs des prix de l'HDV. */
+.prices-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
 }
 
 .tabs button {
@@ -630,7 +708,7 @@ td.name-col {
 
 /* Prix de l'HDV : prix unitaire (sans flèches, inutiles pour des kamas), coût de revient, crafter / acheter. */
 .price {
-  width: 76px;
+  width: 60px;
   text-align: right;
 }
 

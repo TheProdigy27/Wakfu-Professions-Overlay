@@ -31,7 +31,7 @@ export const pt: Messages = {
     obsolete: (itemId, version) => `O item desta lista (#${itemId}) não existe mais nos dados do jogo ${version}.`,
     obsoleteHint: 'Pesquise um item substituto: esta lista continuará nas listas recentes.',
     noTarget: 'Nenhum item escolhido.',
-    searchHint: 'Pesquise um item para fabricar, pelo nome ou pelo identificador (#29236).',
+    searchHint: 'Pesquise pelo nome um item para fabricar.',
     quantity: 'Quantidade',
   },
   data: {
@@ -100,6 +100,8 @@ export const pt: Messages = {
     harvestTitle: 'Profissão de coleta e nível necessário',
     needsPlan: (plan) => `Requer: ${plan}`,
     planTitle: 'Item a ser usado uma vez para aprender esta receita',
+    copyName: 'Copiar o nome',
+    nameCopied: 'Nome copiado',
   },
   // Rareté 0 : nom traduit d'après le français, non vérifié en jeu.
   rarities: ['Item antigo', 'Comum', 'Raro', 'Mítico', 'Lendário', 'Relíquia', 'Lembrança', 'Épico'],
@@ -121,7 +123,7 @@ export const pt: Messages = {
     ok: 'Entendi',
   },
   search: {
-    placeholder: 'Pesquisar um item (nome ou #id)…',
+    placeholder: 'Pesquisar um item…',
     loading: 'Carregando os dados do jogo…',
     none: 'Nenhum item encontrado',
   },
@@ -257,6 +259,8 @@ export const pt: Messages = {
       `Para ×${qty} em toda a lista. Fabricar: os ingredientes que ainda faltam obter; o que você já tem não custa nada. A opção mais barata aparece em verde.`,
     column: 'Preço',
     columnTitle: 'Preço unitário no Mercado, em kamas',
+    toggle: 'Preços',
+    toggleTitle: 'Mostrar os campos para inserir os preços do Mercado',
     price: 'Preço unitário no Mercado, em kamas (0 para o que você mesmo coleta)',
     age: (days) => (days === 0 ? 'Informado hoje' : days === 1 ? 'Informado ontem' : `Informado há ${days} dias`),
     line: (qty, amount) => `${qty} a obter: ${amount}`,

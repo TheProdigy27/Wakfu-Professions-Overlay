@@ -31,7 +31,7 @@ export const es: Messages = {
     obsolete: (itemId, version) => `El objeto de esta lista (#${itemId}) ya no existe en los datos del juego ${version}.`,
     obsoleteHint: 'Busca un objeto de reemplazo: esta lista seguirá en las listas recientes.',
     noTarget: 'Ningún objeto elegido.',
-    searchHint: 'Busca un objeto que fabricar, por su nombre o su identificador (#29236).',
+    searchHint: 'Busca por su nombre un objeto que fabricar.',
     quantity: 'Cantidad',
   },
   data: {
@@ -100,6 +100,8 @@ export const es: Messages = {
     harvestTitle: 'Oficio de recolección y nivel requerido',
     needsPlan: (plan) => `Requiere: ${plan}`,
     planTitle: 'Objeto que se usa una vez para aprender esta receta',
+    copyName: 'Copiar el nombre',
+    nameCopied: 'Nombre copiado',
   },
   // Rareté 0 : nom traduit d'après le français, non vérifié en jeu.
   rarities: ['Objeto antiguo', 'Común', 'Raro', 'Mítico', 'Legendario', 'Reliquia', 'Recuerdo', 'Épico'],
@@ -121,7 +123,7 @@ export const es: Messages = {
     ok: 'Entendido',
   },
   search: {
-    placeholder: 'Buscar un objeto (nombre o #id)…',
+    placeholder: 'Buscar un objeto…',
     loading: 'Cargando los datos del juego…',
     none: 'Ningún objeto encontrado',
   },
@@ -258,6 +260,8 @@ export const es: Messages = {
       `Para ×${qty} en toda la lista. Fabricar: los ingredientes que faltan por conseguir; lo que ya tienes no cuesta nada. La opción más barata aparece en verde.`,
     column: 'Precio',
     columnTitle: 'Precio por unidad en el mercadillo, en kamas',
+    toggle: 'Precios',
+    toggleTitle: 'Mostrar los campos para introducir los precios del mercadillo',
     price: 'Precio por unidad en el mercadillo, en kamas (0 para lo que recolectas tú mismo)',
     age: (days) => (days === 0 ? 'Introducido hoy' : days === 1 ? 'Introducido ayer' : `Introducido hace ${days} días`),
     line: (qty, amount) => `${qty} por conseguir: ${amount}`,

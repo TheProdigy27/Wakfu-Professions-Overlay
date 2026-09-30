@@ -11,7 +11,7 @@ let search: SearchIndex;
 beforeAll(async () => {
   index = (await buildRealIndex()).index;
   vocab = new NameVocabulary(index);
-  search = createSearchIndex(index, vocab);
+  search = createSearchIndex(vocab);
 });
 
 describe(`données réelles ${REAL_DATA_VERSION} : recherche`, () => {
@@ -25,10 +25,9 @@ describe(`données réelles ${REAL_DATA_VERSION} : recherche`, () => {
     expect(search.search(q).slice(0, 2).map((i) => i.id)).toEqual([IDS.COIFFE_M, IDS.COIFFE_L]);
   });
 
-  it('noms faits de ponctuation tapés tels quels, ou par identifiant', () => {
+  it('noms faits de ponctuation tapés tels quels', () => {
     expect(search.search('!"(-è@)"').map((i) => i.id)).toContain(IDS.PONCTUATION_1);
     expect(search.search('".#@)é').map((i) => i.id)).toContain(IDS.PONCTUATION_2);
-    expect(search.search('#29236').map((i) => i.id)).toEqual([IDS.PONCTUATION_1]);
   });
 
   it('chaque objet craftable est trouvé par son nom exact, toutes raretés, parmi les 10 résultats', () => {

@@ -10,7 +10,7 @@ A craft preparation panel for **Wakfu**, shown on top of the game: search for an
 
 ## What it does
 
-- **Search** for an item by name (typo-tolerant) or by ID (`#29236`), with one line per rarity.
+- **Search** for an item by name (typo-tolerant), with one line per rarity.
 - **Crafts by profession** ("Professions" button): everything a profession makes, sorted by level. Enter your level, remembered for each profession, to see only the crafts available to you. One click prepares the craft.
 - Full craft **tree**, as many levels deep as needed (intermediates included).
 - Combined **shopping list**: what you need, what you already have, what is missing. Copy it to the clipboard.
@@ -18,7 +18,8 @@ A craft preparation panel for **Wakfu**, shown on top of the game: search for an
 - **Craft order**: intermediates first, with the profession and level required.
 - **Blueprints**: a craft you must learn first says so, with the name of the blueprint to use, for example "Requires: "Kokoncord" Blueprint".
 - **"I have it"** checkbox and owned quantities, **craft / buy** choice for each intermediate, choice of recipe **variant** when there are several.
-- **Marketplace prices**, entered by hand ("Price" column of the shopping list, or in the tree) and kept for all lists: total cost of the list, and for each item to craft "Craft: … · Buy: …", the cheaper one in green. What you already own costs nothing; enter 0 for what you harvest yourself. A price entered more than a week ago is shown in grey.
+- **Marketplace prices**, entered by hand (tick "Prices", right of the tabs, to show the fields in the tree and the shopping list) and kept for all lists: total cost of the list, and for each item to craft "Craft: … · Buy: …", the cheaper one in green. What you already own costs nothing; enter 0 for what you harvest yourself. A price entered more than a week ago is shown in grey.
+- **Copy an item's name** with the icon next to the target item's name, or at the end of the line when hovering it in the tree, shopping list and craft order: paste it into a search in the game, for example at the Marketplace.
 - **Quantities updated in game** (settings option): the list items you pick up, craft, buy or sell are added or removed on their own, from the Wakfu chat, and the "I have it" box gets ticked as soon as you have enough. What you already had (inventory, bank) and trades between players are still entered by hand.
 - **Compact** mode, adjustable **opacity**, global **shortcut** (`Ctrl+Shift+W` by default) to show or hide the panel without leaving the game.
 - Interface in **English, French, Spanish and Portuguese**. Item names follow the language you choose: they come straight from the game data.

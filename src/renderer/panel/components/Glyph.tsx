@@ -13,6 +13,13 @@ const PATHS = {
   close: <path d="M4 4l8 8M12 4l-8 8" />,
   expand: <path className="filled" d="M6 4l4 4-4 4z" />,
   collapse: <path className="filled" d="M4 6l4 4 4-4z" />,
+  copy: (
+    <>
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+      <path d="M5.5 10.5H4A1.5 1.5 0 0 1 2.5 9V4A1.5 1.5 0 0 1 4 2.5H9A1.5 1.5 0 0 1 10.5 4V5.5" />
+    </>
+  ),
+  check: <path d="M3 8.5l3 3 7-7" />,
 };
 
 export type GlyphName = keyof typeof PATHS;

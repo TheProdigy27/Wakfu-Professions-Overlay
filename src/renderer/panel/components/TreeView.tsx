@@ -4,9 +4,9 @@ import type { Messages } from '../../../core/i18n';
 import type { NeedNode, NeedsResult } from '../../../core/needs/computeNeeds';
 import type { ListCost } from '../../../core/needs/cost';
 import { hasAll, setMode, toggleCollapsed, toggleHave, type CraftList } from '../../../core/state/craftList';
-import { selectRecipe, updateList, useMessages, type Catalog } from '../store';
+import { selectRecipe, updateList, useMessages, usePanel, type Catalog } from '../store';
 import { Glyph } from './Glyph';
-import { HarvestSource, ItemIcon, ItemName, PlanNeeded } from './Item';
+import { CopyName, HarvestSource, ItemIcon, ItemName, PlanNeeded } from './Item';
 import { CraftOrBuyLine, PriceInput } from './Price';
 
 interface TreeProps {
@@ -59,6 +59,7 @@ function detail(index: GameIndex, node: NeedNode, m: Messages): string {
 function TreeNode({ node, depth, catalog, list, result, cost }: TreeProps & { node: NeedNode; depth: number }) {
   const m = useMessages();
   const t = m.tree;
+  const pricesShown = usePanel((s) => s.pricesShown);
   const { index } = catalog;
   const item = index.items.get(node.itemId);
   const recipes = index.recipesByItem.get(node.itemId) ?? [];
@@ -128,7 +129,10 @@ function TreeNode({ node, depth, catalog, list, result, cost }: TreeProps & { no
           </div>
           {choice && <CraftOrBuyLine index={index} choice={choice} rowQty={node.qty - node.fromStock} />}
         </div>
-        {node.kind !== 'stock' && <PriceInput itemId={node.itemId} toObtain={node.toObtain} placeholder={m.cost.column} />}
+        {pricesShown && node.kind !== 'stock' && (
+          <PriceInput itemId={node.itemId} toObtain={node.toObtain} placeholder={m.cost.column} />
+        )}
+        <CopyName item={item} />
       </div>
       {hasChildren && !collapsed && (
         <ul>

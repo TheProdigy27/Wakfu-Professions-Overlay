@@ -7,7 +7,7 @@ import { Banners } from './components/Banners';
 import { CraftOrder } from './components/CraftOrder';
 import { Glyph } from './components/Glyph';
 import { HistoryMenu } from './components/HistoryMenu';
-import { ItemIcon, ItemName, itemMeta } from './components/Item';
+import { CopyName, ItemIcon, ItemName, itemMeta } from './components/Item';
 import { JobsButton, JobsView } from './components/JobsView';
 import { Onboarding } from './components/Onboarding';
 import { TotalCost } from './components/Price';
@@ -18,6 +18,7 @@ import { TreeView } from './components/TreeView';
 import {
   goBack,
   openSettings,
+  showPrices,
   updateList,
   useCanGoBack,
   useListCost,
@@ -106,6 +107,7 @@ function Header() {
           'Wakfu Professions Overlay'
         )}
       </span>
+      {compact && needs && <CopyName item={target} />}
       <div className="header-actions">
         {!compact && (
           <button
@@ -145,6 +147,7 @@ function Body() {
   const compact = usePanel((s) => s.window.compact);
   const catalog = usePanel((s) => s.catalog);
   const status = usePanel((s) => s.status);
+  const pricesShown = usePanel((s) => s.pricesShown);
   const obsolete = useObsolete();
   const needs = useNeeds();
   // Pas de prix en mode compact.
@@ -177,7 +180,10 @@ function Body() {
       <div className="target">
         <ItemIcon item={target} />
         <div className="target-text">
-          <ItemName item={target} itemId={list.target.itemId} />
+          <div className="target-name">
+            <ItemName item={target} itemId={list.target.itemId} />
+            <CopyName item={target} />
+          </div>
           {target && <span className="meta">{itemMeta(catalog.index, target, m)}</span>}
           {cost && <TotalCost index={catalog.index} cost={cost.total} />}
         </div>
@@ -186,20 +192,29 @@ function Body() {
           <TargetQty qty={list.target.qty} />
         </label>
       </div>
-      <nav className="tabs" role="tablist">
-        {VIEWS.map((view) => (
-          <button
-            key={view}
-            type="button"
-            role="tab"
-            aria-selected={list.ui.view === view}
-            className={list.ui.view === view ? 'active' : undefined}
-            onClick={() => updateList((l) => setView(l, view))}
-          >
-            {m.views[view]}
-          </button>
-        ))}
-      </nav>
+      <div className="tabs">
+        <nav role="tablist">
+          {VIEWS.map((view) => (
+            <button
+              key={view}
+              type="button"
+              role="tab"
+              aria-selected={list.ui.view === view}
+              className={list.ui.view === view ? 'active' : undefined}
+              onClick={() => updateList((l) => setView(l, view))}
+            >
+              {m.views[view]}
+            </button>
+          ))}
+        </nav>
+        {/* Champs des prix dans l'arbre et les courses ; rien à saisir dans l'ordre de craft. */}
+        {list.ui.view !== 'order' && (
+          <label className="prices-toggle" title={m.cost.toggleTitle}>
+            <input type="checkbox" checked={pricesShown} onChange={(e) => showPrices(e.target.checked)} />
+            {m.cost.toggle}
+          </label>
+        )}
+      </div>
       <div className="view">
         {list.ui.view === 'tree' && cost && <TreeView {...needs} cost={cost} />}
         {list.ui.view === 'shopping' && <ShoppingList {...needs} />}

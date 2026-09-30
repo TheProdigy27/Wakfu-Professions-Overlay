@@ -1,4 +1,4 @@
-// Recherche manuelle : nom approximatif ou identifiant « #29236 ».
+// Recherche d'un objet par son nom, même approximatif : une ligne par rareté.
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { rarityColor } from '../../../core/data/rarity';
 import { selectTarget, useMessages, usePanel } from '../store';

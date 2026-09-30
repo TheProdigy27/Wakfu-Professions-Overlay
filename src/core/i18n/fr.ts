@@ -35,7 +35,7 @@ export const fr = {
       `L'objet de cette liste (#${itemId}) n'existe plus dans les données du jeu ${version}.`,
     obsoleteHint: 'Recherchez un objet de remplacement : cette liste restera dans les listes récentes.',
     noTarget: 'Aucun objet choisi.',
-    searchHint: 'Recherchez un objet à crafter, par son nom ou son identifiant (#29236).',
+    searchHint: 'Recherchez un objet à crafter par son nom.',
     quantity: 'Quantité',
   },
   data: {
@@ -111,6 +111,9 @@ export const fr = {
     /** plan : nom de l'objet, par exemple « Plan "Kokordon" ». */
     needsPlan: (plan: string) => `Nécessite : ${plan}`,
     planTitle: 'Objet à utiliser une fois pour apprendre cette recette',
+    /** Icône à côté du nom : le copie, pour le coller dans une recherche du jeu. */
+    copyName: 'Copier le nom',
+    nameCopied: 'Nom copié',
   },
   /** Par numéro de rareté (rarity.ts). */
   rarities: ['Ancien Objet', 'Commun', 'Rare', 'Mythique', 'Légendaire', 'Relique', 'Souvenir', 'Épique'] as readonly string[],
@@ -133,7 +136,7 @@ export const fr = {
     ok: 'Compris',
   },
   search: {
-    placeholder: 'Rechercher un objet (nom ou #id)…',
+    placeholder: 'Rechercher un objet…',
     loading: 'Données du jeu en cours de chargement…',
     none: 'Aucun objet trouvé',
   },
@@ -280,6 +283,9 @@ export const fr = {
       `Pour ×${qty} dans toute la liste. Crafter : les ingrédients qui restent à obtenir, ce que vous possédez ne coûte rien. Le moins cher est en vert.`,
     column: 'Prix',
     columnTitle: "Prix unitaire à l'Hôtel de vente, en kamas",
+    /** Case à droite des onglets : affiche ou masque les champs des prix. */
+    toggle: 'Prix',
+    toggleTitle: "Afficher les champs pour saisir les prix de l'Hôtel de vente",
     price: "Prix unitaire à l'Hôtel de vente, en kamas (0 pour ce que vous récoltez vous-même)",
     age: (days: number) => (days === 0 ? "Saisi aujourd'hui" : days === 1 ? 'Saisi hier' : `Saisi il y a ${days} jours`),
     line: (qty: number, amount: string) => `${qty} à obtenir : ${amount}`,

@@ -10,7 +10,7 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 
 ## Ce que fait l'application
 
-- **Recherche** d'un objet par son nom (tolérante aux fautes de frappe) ou son identifiant (`#29236`), avec une ligne par rareté.
+- **Recherche** d'un objet par son nom (tolérante aux fautes de frappe), avec une ligne par rareté.
 - **Crafts par métier** (bouton « Métiers ») : tout ce qu'un métier fabrique, rangé par niveau. Indiquez votre niveau, mémorisé pour chaque métier, pour ne voir que les crafts qui vous sont accessibles. Un clic prépare le craft.
 - **Arbre** de craft complet, sur autant de niveaux que nécessaire (intermédiaires compris).
 - **Liste de courses** agrégée : ce qu'il faut, ce que vous avez déjà, ce qui manque. Copie dans le presse-papiers.
@@ -18,7 +18,8 @@ Panneau de préparation de craft pour **Wakfu**, affiché par-dessus le jeu : vo
 - **Ordre de craft** : les intermédiaires d'abord, avec le métier et le niveau requis.
 - **Plans** : un craft qu'il faut d'abord apprendre l'indique, avec le nom du plan à utiliser, par exemple « Nécessite : Plan "Kokordon" ».
 - Case **« je l'ai »** et quantités possédées, choix **crafter / acheter** pour chaque intermédiaire, choix de la **variante** de recette quand il y en a plusieurs.
-- **Prix de l'Hôtel de vente**, saisis à la main (colonne « Prix » des courses, ou dans l'arbre) et gardés pour toutes les listes : coût de revient de la liste, et pour chaque objet à crafter « Crafter : … · Acheter : … », le moins cher en vert. Ce que vous possédez déjà ne coûte rien ; mettez 0 pour ce que vous récoltez vous-même. Un prix saisi il y a plus d'une semaine s'affiche en gris.
+- **Prix de l'Hôtel de vente**, saisis à la main (cochez « Prix », à droite des onglets, pour afficher les champs dans l'arbre et les courses) et gardés pour toutes les listes : coût de revient de la liste, et pour chaque objet à crafter « Crafter : … · Acheter : … », le moins cher en vert. Ce que vous possédez déjà ne coûte rien ; mettez 0 pour ce que vous récoltez vous-même. Un prix saisi il y a plus d'une semaine s'affiche en gris.
+- **Copie du nom** d'un objet, par l'icône à côté du nom de l'objet visé, ou en bout de ligne au survol dans l'arbre, les courses et l'ordre de craft : à coller dans une recherche du jeu, par exemple à l'Hôtel de vente.
 - **Quantités mises à jour en jeu** (option des réglages) : les objets de la liste que vous ramassez, craftez, achetez ou vendez s'ajoutent ou se retirent tout seuls, d'après le chat de Wakfu, et la case « je l'ai » se coche dès que vous avez le compte. Ce que vous aviez déjà (inventaire, banque) et les échanges entre joueurs restent à indiquer à la main.
 - Mode **compact**, **opacité** réglable, **raccourci** global (`Ctrl+Maj+W` par défaut) pour afficher ou masquer le panneau sans quitter le jeu.
 - Interface en **français, anglais, espagnol et portugais**. Les noms des objets suivent la langue choisie : ils viennent directement des données du jeu.

@@ -1,7 +1,7 @@
 // Test de bout en bout : l'application construite démarre hors réseau (WPO_OFFLINE) sur l'index
-// de fixture, puis parcours complet : recherche, T1a, case « je l'ai » partagée entre les vues, variante, ordre de
-// craft, mode compact, raccourci ; la liste est restaurée au redémarrage ; l'interface passe en anglais ; enfin les
-// crafts par métier.
+// de fixture, puis parcours complet : recherche, T1a, champs des prix, case « je l'ai » partagée entre les vues,
+// variante, ordre de craft, copie des noms, mode compact, raccourci ; la liste est restaurée au redémarrage ;
+// l'interface passe en anglais ; enfin les crafts par métier.
 // Cible : out/ (npm run build), ou l'exécutable empaqueté si WPO_E2E_EXE le désigne (release/win-unpacked/…).
 import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -115,6 +115,15 @@ describe('application construite, hors réseau', () => {
     ]);
   });
 
+  it('prix : champs masqués au démarrage, affichés en cochant « Prix »', async () => {
+    const toggle = page.getByRole('checkbox', { name: 'Prix', exact: true });
+    expect(await page.locator('.shop-table .price').count()).toBe(0);
+    await toggle.check();
+    expect(await page.locator('.shop-table tbody .price').count()).toBe(10);
+    await toggle.uncheck();
+    expect(await page.locator('.shop-table .price').count()).toBe(0);
+  });
+
   it('cocher Krak-Ertz dans les courses le coche dans toutes les occurrences de l\'arbre', async () => {
     await toggleHave('Krak-Ertz');
     await page.getByRole('tab', { name: 'Arbre' }).click();
@@ -140,6 +149,22 @@ describe('application construite, hors réseau', () => {
       'Coiffe Lardante',
       'Coiffe Lardante',
     ]);
+  });
+
+  it("copier le nom : l'objet visé, puis un intermédiaire de l'ordre de craft", async () => {
+    const clipboard = () => app!.evaluate(({ clipboard }) => clipboard.readText());
+    // Presse-papiers de la machine : remis comme avant à la fin.
+    const saved = await clipboard();
+    try {
+      const target = page.locator('.target .copy-name');
+      await target.click();
+      await expect.poll(() => target.getAttribute('title')).toBe('Nom copié');
+      await expect.poll(clipboard).toBe('Coiffe Lardante');
+      await page.locator('.order-row', { hasText: 'Fil Durable' }).locator('.copy-name').click();
+      await expect.poll(clipboard).toBe('Fil Durable');
+    } finally {
+      await app!.evaluate(({ clipboard }, text) => clipboard.writeText(text), saved);
+    }
   });
 
   it('mode compact, puis retour au mode normal', async () => {

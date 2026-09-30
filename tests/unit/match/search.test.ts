@@ -7,7 +7,7 @@ import { IDS } from '../../helpers/needsCases';
 
 const { index } = loadFixture();
 const vocab = new NameVocabulary(index);
-const search = createSearchIndex(index, vocab);
+const search = createSearchIndex(vocab);
 const ids = (query: string, limit?: number) => search.search(query, limit).map((i) => i.id);
 
 describe('NameVocabulary', () => {
@@ -46,12 +46,6 @@ describe('createSearchIndex', () => {
     expect(ids('Wé')[0]).toBe(27193);
   });
 
-  it('accepte un identifiant #id', () => {
-    expect(ids('#29236')).toEqual([IDS.PONCTUATION_1]);
-    expect(ids(' # 27093 ')).toEqual([IDS.POUDRE]);
-    expect(ids('#999999')).toEqual([]);
-  });
-
   it('limite le nombre de résultats', () => {
     expect(search.search('')).toEqual([]);
     expect(search.search('e', 3)).toHaveLength(3);
@@ -62,7 +56,7 @@ describe('createSearchIndex', () => {
 describe('recherche dans les autres langues', () => {
   const searchIn = (locale: Locale) => {
     const localized = loadFixture(locale).index;
-    const s = createSearchIndex(localized, new NameVocabulary(localized));
+    const s = createSearchIndex(new NameVocabulary(localized));
     return (query: string) => s.search(query).map((i) => [i.id, i.name]);
   };
 
@@ -74,8 +68,7 @@ describe('recherche dans les autres langues', () => {
     // Accents ignorés, comme en français : « chapeu banhoso » trouve « Chapéu Banhoso ».
     expect(searchIn('pt')('chapeu banhoso')[0]).toEqual([IDS.COIFFE_M, 'Chapéu Banhoso']);
     expect(searchIn('es')('sombrero pan')[0]).toEqual([IDS.COIFFE_M, 'Sombrero de Pan Z']);
-    // Le nom français n'est plus cherché ; l'identifiant, lui, marche dans toutes les langues.
+    // Le nom français n'est plus cherché.
     expect(searchIn('en')('coiffe lardante')).toEqual([]);
-    expect(searchIn('es')(`#${IDS.COIFFE_L}`)).toEqual([[IDS.COIFFE_L, 'Sombrero de Pan Z']]);
   });
 });
