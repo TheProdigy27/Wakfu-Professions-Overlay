@@ -918,6 +918,11 @@ button.primary {
   border-color: var(--accent);
 }
 
+/* Nouvelle version de l'application prête : un clic l'installe et redémarre. */
+.header-actions button.update-ready {
+  color: var(--ok);
+}
+
 .hint {
   margin: 4px 0 0;
   color: var(--muted);

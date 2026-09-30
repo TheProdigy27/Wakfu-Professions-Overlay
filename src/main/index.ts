@@ -67,7 +67,7 @@ async function start(store: JsonStore): Promise<void> {
   panel.onState(({ compact, opacity }) => store.update((s) => ({ ...s, settings: { ...s.settings, compact, opacity } })));
   panel.onBounds((next) => store.update((s) => ({ ...s, window: next })));
   const updater = new Updater({ available: app.isPackaged && !OFFLINE, enabled: saved.autoUpdate, log });
-  // Données et application revérifiées à l'affichage si la dernière vérification date de plus de 6 h.
+  // À l'affichage : données revérifiées si la dernière vérification date de plus de 6 h, application d'une heure.
   panel.onShow(() => {
     void data.checkIfStale();
     updater.checkIfStale();

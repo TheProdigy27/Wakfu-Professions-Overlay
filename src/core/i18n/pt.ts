@@ -25,6 +25,7 @@ export const pt: Messages = {
     hideWithHotkey: (hotkey) => `Ocultar (${hotkey})`,
     back: 'Voltar',
     backTitle: 'Voltar (Alt+←, ou o botão "voltar" do mouse)',
+    updateReady: (version) => `Atualização pronta!\nClique para instalar a versão ${version} e reiniciar.`,
   },
   views: { tree: 'Árvore', shopping: 'Compras', order: 'Ordem' },
   body: {
@@ -57,8 +58,6 @@ export const pt: Messages = {
     },
   },
   banners: {
-    updateReady: (version, autoInstall) =>
-      `A versão ${version} do aplicativo está pronta${autoInstall ? ': ela será instalada ao fechar.' : '.'}`,
     storeProblem: {
       corrupt: (file) =>
         `Não foi possível ler suas listas e configurações: o arquivo foi guardado à parte (${file}) e o aplicativo recomeça do zero.`,

@@ -20,6 +20,7 @@ const PATHS = {
     </>
   ),
   check: <path d="M3 8.5l3 3 7-7" />,
+  update: <path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13.5h10" />,
 };
 
 export type GlyphName = keyof typeof PATHS;

@@ -28,6 +28,8 @@ export const fr = {
     hideWithHotkey: (hotkey: string) => `Masquer (${hotkey})`,
     back: 'Retour',
     backTitle: 'Retour (Alt+←, ou bouton « précédent » de la souris)',
+    /** Icône affichée une fois la nouvelle version de l'application téléchargée. */
+    updateReady: (version: string) => `Mise à jour prête !\nCliquez pour installer la version ${version} et redémarrer.`,
   },
   views: { tree: 'Arbre', shopping: 'Courses', order: 'Ordre' },
   body: {
@@ -64,8 +66,6 @@ export const fr = {
     },
   },
   banners: {
-    updateReady: (version: string, autoInstall: boolean) =>
-      `La version ${version} de l'application est prête${autoInstall ? ' : elle sera installée à la fermeture.' : '.'}`,
     storeProblem: {
       corrupt: (file: string) =>
         `Vos listes et réglages n'ont pas pu être relus : le fichier a été mis de côté (${file}) et l'application repart de zéro.`,

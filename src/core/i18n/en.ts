@@ -25,6 +25,7 @@ export const en: Messages = {
     hideWithHotkey: (hotkey) => `Hide (${hotkey})`,
     back: 'Back',
     backTitle: 'Back (Alt+←, or the mouse back button)',
+    updateReady: (version) => `Update ready!\nClick to install version ${version} and restart.`,
   },
   views: { tree: 'Tree', shopping: 'Shopping', order: 'Order' },
   body: {
@@ -57,8 +58,6 @@ export const en: Messages = {
     },
   },
   banners: {
-    updateReady: (version, autoInstall) =>
-      `Version ${version} of the app is ready${autoInstall ? ': it will be installed when you quit.' : '.'}`,
     storeProblem: {
       corrupt: (file) => `Your lists and settings could not be read: the file was set aside (${file}) and the app is starting over.`,
       newer: (file) => `Your lists were saved by a newer version of the app: they have been set aside (${file}).`,

@@ -25,6 +25,7 @@ export const es: Messages = {
     hideWithHotkey: (hotkey) => `Ocultar (${hotkey})`,
     back: 'Atrás',
     backTitle: 'Atrás (Alt+←, o el botón «atrás» del ratón)',
+    updateReady: (version) => `¡Actualización lista!\nHaz clic para instalar la versión ${version} y reiniciar.`,
   },
   views: { tree: 'Árbol', shopping: 'Compras', order: 'Orden' },
   body: {
@@ -57,8 +58,6 @@ export const es: Messages = {
     },
   },
   banners: {
-    updateReady: (version, autoInstall) =>
-      `La versión ${version} de la aplicación está lista${autoInstall ? ': se instalará al cerrarla.' : '.'}`,
     storeProblem: {
       corrupt: (file) =>
         `No se han podido leer tus listas y ajustes: el archivo se ha apartado (${file}) y la aplicación empieza de cero.`,

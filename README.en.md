@@ -53,7 +53,7 @@ Requirements: Windows 10 or 11, 64-bit. Expect about 400 MB of RAM (Electron).
 
 ## Updates
 
-At startup, the app checks whether a new version has been published on GitHub, downloads it in the background and installs it when you quit (or right away with "Restart now"). You can turn off automatic installation in the settings; checking manually is still possible.
+At startup, then every hour while it is open, the app checks whether a new version has been published on GitHub. It downloads it in the background and installs it when you quit. A green arrow at the top of the panel shows that it is ready: click it to install it right away and restart the app. You can turn off automatic installation in the settings; checking manually is still possible.
 
 The game data updates itself after a Wakfu update. If a recipe in one of your lists has changed, a banner tells you.
 

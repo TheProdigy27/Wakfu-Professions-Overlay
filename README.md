@@ -53,7 +53,7 @@ Configuration requise : Windows 10 ou 11, 64 bits. Comptez environ 400 Mo de mé
 
 ## Mises à jour
 
-L'application vérifie au démarrage si une nouvelle version est publiée sur GitHub, la télécharge en arrière-plan et l'installe à la fermeture (ou tout de suite avec « Redémarrer maintenant »). Vous pouvez désactiver l'installation automatique dans les réglages ; la recherche manuelle reste possible.
+L'application vérifie au démarrage, puis toutes les heures tant qu'elle est ouverte, si une nouvelle version est publiée sur GitHub. Elle la télécharge en arrière-plan et l'installe à la fermeture. Une flèche verte en haut du panneau indique qu'elle est prête : un clic dessus l'installe tout de suite et redémarre l'application. Vous pouvez désactiver l'installation automatique dans les réglages ; la recherche manuelle reste possible.
 
 Les données du jeu se mettent à jour d'elles-mêmes après une mise à jour de Wakfu. Si une recette de vos listes a changé, un bandeau l'indique.
 

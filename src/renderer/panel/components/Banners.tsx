@@ -1,5 +1,5 @@
-// Bandeaux d'état : listes non relues ou non enregistrées, raccourci indisponible, recettes modifiées par une mise à jour du jeu,
-// nouvelle version de l'application prête à installer.
+// Bandeaux d'état : listes non relues ou non enregistrées, raccourci indisponible, recettes modifiées par une mise à jour du jeu.
+// Une nouvelle version de l'application prête à installer est signalée par une icône de l'en-tête.
 import { useState } from 'react';
 import { describeChange } from '../../../core/data/diffIndex';
 import { acceleratorLabel } from '../../../core/state/hotkey';
@@ -9,27 +9,14 @@ import { Glyph } from './Glyph';
 export function Banners() {
   const m = useMessages();
   const app = usePanel((s) => s.app);
-  const update = usePanel((s) => s.update);
   const notices = usePanel((s) => s.notices);
   const index = usePanel((s) => s.catalog?.index);
   const [storeProblemSeen, setStoreProblemSeen] = useState(false);
-  const [updateSeen, setUpdateSeen] = useState<string | null>(null);
   if (!app) return null;
   const t = m.banners;
 
   return (
     <div className="banners">
-      {update?.state === 'ready' && updateSeen !== update.version && (
-        <div className="banner info" role="status">
-          <span>{t.updateReady(update.version, app.autoUpdate)}</span>
-          <button type="button" className="link" onClick={() => window.api.installUpdate()}>
-            {m.common.restartNow}
-          </button>
-          <button type="button" className="close" aria-label={m.common.close} onClick={() => setUpdateSeen(update.version)}>
-            <Glyph name="close" />
-          </button>
-        </div>
-      )}
       {app.storeProblem && !storeProblemSeen && (
         <div className="banner warning" role="alert">
           <span>{t.storeProblem[app.storeProblem.kind](app.storeProblem.file)}</span>

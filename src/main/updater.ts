@@ -1,11 +1,17 @@
 // Mises à jour de l'application : electron-updater, depuis les Releases GitHub.
-// Vérification au démarrage, puis à l'affichage du panneau si la dernière date de plus de 6 h (aucun minuteur) ;
-// téléchargement en arrière-plan, installation à la fermeture de l'application ou tout de suite à la demande.
+// Vérification au démarrage, puis toutes les heures tant que l'application est ouverte, panneau affiché ou non : une
+// version publiée pendant une session de jeu est proposée sans attendre le prochain lancement. Téléchargement en
+// arrière-plan, installation à la fermeture de l'application ou tout de suite à la demande.
 // Réglage désactivé : aucune vérification automatique, ni installation à la fermeture ; la recherche manuelle reste possible.
 import electronUpdater from 'electron-updater';
 import type { UpdateStatus } from '../preload/api';
 
-const SIX_HOURS = 6 * 3600 * 1000;
+export const CHECK_EVERY_MS = 3600 * 1000;
+/**
+ * L'échéance est relue toutes les 10 min, d'après l'horloge : une attente d'une heure d'un seul tenant pourrait
+ * se déclencher en retard après une mise en veille du PC.
+ */
+export const TICK_MS = 10 * 60 * 1000;
 const NOT_PUBLISHED = ['ERR_UPDATER_NO_PUBLISHED_VERSIONS', 'HTTP_ERROR_404'];
 /** Étiquette déjà poussée, mais Release encore en construction : latest.yml n'y est pas encore (2 min environ). */
 const BEING_PUBLISHED = 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND';
@@ -80,14 +86,16 @@ export class Updater {
     return () => this.listeners.delete(listener);
   }
 
-  /** Au démarrage. */
+  /** Au démarrage : vérifie, puis revérifie toutes les heures. */
   start(): void {
+    if (this.current.state === 'unavailable') return;
     if (this.enabled) void this.check();
+    setInterval(() => this.checkIfStale(), TICK_MS);
   }
 
-  /** À l'affichage du panneau : ne revérifie que si la dernière vérification date de plus de 6 h. */
+  /** À l'affichage du panneau, et régulièrement : ne revérifie que si la dernière vérification date d'une heure ou plus. */
   checkIfStale(): void {
-    if (this.enabled && (this.lastCheckAt === null || Date.now() - this.lastCheckAt >= SIX_HOURS)) void this.check();
+    if (this.enabled && (this.lastCheckAt === null || Date.now() - this.lastCheckAt >= CHECK_EVERY_MS)) void this.check();
   }
 
   /** Recherche une mise à jour et la télécharge. Sans effet pendant une recherche, un téléchargement, ou si une mise à jour attend. */

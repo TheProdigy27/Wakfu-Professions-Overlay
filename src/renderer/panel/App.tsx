@@ -85,6 +85,8 @@ function Header() {
   const compact = usePanel((s) => s.window.compact);
   const settingsOpen = usePanel((s) => s.settingsOpen);
   const hotkey = usePanel((s) => s.app?.hotkey);
+  // Version de l'application téléchargée, prête à installer.
+  const updateReady = usePanel((s) => (s.update?.state === 'ready' ? s.update.version : null));
   const canGoBack = useCanGoBack();
   const needs = useNeeds();
   const target = needs?.catalog.index.items.get(needs.list.target.itemId);
@@ -109,6 +111,17 @@ function Header() {
       </span>
       {compact && needs && <CopyName item={target} />}
       <div className="header-actions">
+        {updateReady && (
+          <button
+            type="button"
+            className="update-ready"
+            title={t.updateReady(updateReady)}
+            aria-label={t.updateReady(updateReady)}
+            onClick={() => window.api.installUpdate()}
+          >
+            <Glyph name="update" />
+          </button>
+        )}
         {!compact && (
           <button
             type="button"
